@@ -48,7 +48,31 @@
             <version>1.2.17</version>
         </dependency>
 
-
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>citeck-public</id>
+            <url>http://nexus.citeck.ru/repository/maven-public</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>citeck-plugin-public</id>
+            <url>http://nexus.citeck.ru/repository/maven-public</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <distributionManagement>
+        <repository>
+            <id>citeck-community-releases</id>
+            <url>${community.releases.distr.url}</url>
+        </repository>
+        <snapshotRepository>
+            <id>citeck-community-snapshots</id>
+            <url>${community.snapshots.distr.url}</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 </project>
