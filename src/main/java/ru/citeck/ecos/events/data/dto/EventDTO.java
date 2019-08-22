@@ -12,6 +12,7 @@ public abstract class EventDTO {
 
     protected String id;
     protected String type;
+    protected String docId;
     protected JsonNode additionalData = NullNode.getInstance();
 
 }
