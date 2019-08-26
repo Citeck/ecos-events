@@ -26,6 +26,9 @@ public class EventConnection {
     private static final String TYPE_TOPIC = "topic";
     private static final String EXCHANGE_NAME = "events";
     private static final String DEAD_LETTER_EXCHANGE_PARAM = "x-dead-letter-exchange";
+    private static final String MESSAGE_TTL_PARAM = "x-message-ttl";
+    private static final int MESSAGE_TTL_5_MIN = 300000;
+    private static final String RETRYING_POSTFIX = "._retry";
 
     private static final String TENANT_PATTERN = "tenant.%s.%s";
 
@@ -52,26 +55,38 @@ public class EventConnection {
     public void receive(String bindingKey, String queueName, String tenantId,
                         EventDeliveryCallback eventDeliveryCallback)
             throws IOException {
-        final String queueId = generateQueueName(queueName, tenantId);
-        final String exchangeId = generateExchangeName(tenantId);
+        final String workingQueueId = generateQueueName(queueName, tenantId);
+        final String workingExchangeId = generateExchangeName(tenantId);
+        final String retryingQueueId = workingQueueId + RETRYING_POSTFIX;
+        final String retryingExchangeId = workingExchangeId + RETRYING_POSTFIX;
 
         Channel channel = connection.createChannel();
 
-        channel.exchangeDeclare(exchangeId, TYPE_TOPIC, true, false, null);
+        channel.exchangeDeclare(workingExchangeId, TYPE_TOPIC, true, false, null);
 
-        Map<String, Object> args = new HashMap<>();
-        args.put(DEAD_LETTER_EXCHANGE_PARAM, exchangeId);
-        String queue = channel.queueDeclare(queueId, true, false, false, args).getQueue();
-        channel.queueBind(queue, exchangeId, bindingKey);
+        Map<String, Object> workingArgs = new HashMap<>();
+        workingArgs.put(DEAD_LETTER_EXCHANGE_PARAM, retryingExchangeId);
+
+        String workQueue = channel.queueDeclare(workingQueueId, true, false, false, workingArgs).getQueue();
+        channel.queueBind(workQueue, workingExchangeId, bindingKey);
 
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             eventDeliveryCallback.handle(consumerTag, delivery, channel);
             log.debug(String.format("Receive event, tenant <%s>, bindingKey <%s>, queueName <%s>, msg:\n%s", tenantId,
-                    bindingKey, queueId, new String(delivery.getBody(), StandardCharsets.UTF_8)));
+                    bindingKey, workingQueueId, new String(delivery.getBody(), StandardCharsets.UTF_8)));
         };
 
-        channel.basicConsume(queueId, false, deliverCallback, consumerTag -> {
+        channel.basicConsume(workingQueueId, false, deliverCallback, consumerTag -> {
         });
+
+        Map<String, Object> retryingArgs = new HashMap<>();
+        retryingArgs.put(DEAD_LETTER_EXCHANGE_PARAM, workingExchangeId);
+        retryingArgs.put(MESSAGE_TTL_PARAM, MESSAGE_TTL_5_MIN);
+
+        channel.exchangeDeclare(retryingExchangeId, TYPE_TOPIC);
+        String retryQueue = channel.queueDeclare(retryingQueueId, true, false, false,
+                retryingArgs).getQueue();
+        channel.queueBind(retryQueue, retryingExchangeId, "#");
     }
 
     private String generateExchangeName(String tenantId) {
