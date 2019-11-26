@@ -2,16 +2,18 @@ package ru.citeck.ecos.events.data.dto.task;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ru.citeck.ecos.events.data.dto.EventDTO;
+import ru.citeck.ecos.events.data.dto.EventCommonData;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Roman Makarskiy
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class TaskEventDTO extends EventDTO {
+public class TaskEventDto extends EventCommonData {
 
     private Date date;
     private Date dueDate;

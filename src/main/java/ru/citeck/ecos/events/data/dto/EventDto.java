@@ -8,11 +8,12 @@ import lombok.Data;
  * @author Roman Makarskiy
  */
 @Data
-public abstract class EventDTO {
+public class EventDto {
 
-    protected String id;
-    protected String type;
-    protected String docId;
-    protected JsonNode additionalData = NullNode.getInstance();
+    protected JsonNode data = NullNode.getInstance();
+
+    public String resolveType() {
+        return data.get("type").asText();
+    }
 
 }
