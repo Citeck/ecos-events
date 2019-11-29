@@ -14,6 +14,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class RecordEventDto extends EventCommonData {
 
-    private List<AttrChanged> changes = new ArrayList<>();
+    private List<Attribute> attrChanges = new ArrayList<>();
 
 }
