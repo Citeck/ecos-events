@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import ru.citeck.ecos.events.data.dto.EventDTO;
+import ru.citeck.ecos.events.data.dto.EventDto;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,10 +36,10 @@ public class EventConnection {
 
     }
 
-    public void emit(EventDTO eventDTO, String tenantId) {
+    public void emit(EventDto eventDTO, String tenantId) {
         try (Channel channel = connection.createChannel()) {
             final String exchangeId = generateExchangeName(tenantId);
-            final String type = eventDTO.getType();
+            final String type = eventDTO.resolveType();
 
             channel.exchangeDeclare(exchangeId, TYPE_TOPIC, true, false, null);
 
@@ -132,7 +132,6 @@ public class EventConnection {
             EventConnection eventConnection = new EventConnection();
 
             StringBuilder infoMsg = new StringBuilder("\n======= Start builder event connection =======\n");
-
 
             if (!ConnectionFactory.DEFAULT_HOST.equals(this.host)) {
                 infoMsg.append("host: ").append(this.host).append("\n");
