@@ -1,4 +1,4 @@
-package ru.citeck.ecos.events;
+package ru.citeck.ecos.events.old;
 
 /**
  * @author Roman Makarskiy

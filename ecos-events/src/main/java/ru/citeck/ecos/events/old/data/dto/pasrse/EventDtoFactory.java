@@ -1,13 +1,13 @@
-package ru.citeck.ecos.events.data.dto.pasrse;
+package ru.citeck.ecos.events.old.data.dto.pasrse;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import ru.citeck.ecos.events.data.dto.EventDto;
-import ru.citeck.ecos.events.data.dto.record.RecordEventDto;
-import ru.citeck.ecos.events.data.dto.task.TaskEventDto;
+import ru.citeck.ecos.events.old.data.dto.EventDto;
+import ru.citeck.ecos.events.old.data.dto.record.RecordEventDto;
+import ru.citeck.ecos.events.old.data.dto.task.TaskEventDto;
 
 import java.io.IOException;
 

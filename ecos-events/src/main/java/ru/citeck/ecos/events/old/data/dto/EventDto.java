@@ -1,4 +1,4 @@
-package ru.citeck.ecos.events.data.dto;
+package ru.citeck.ecos.events.old.data.dto;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;

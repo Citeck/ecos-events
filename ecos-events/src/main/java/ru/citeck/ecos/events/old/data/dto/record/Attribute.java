@@ -1,4 +1,4 @@
-package ru.citeck.ecos.events.data.dto.record;
+package ru.citeck.ecos.events.old.data.dto.record;
 
 import lombok.Data;
 

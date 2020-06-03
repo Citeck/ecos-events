@@ -1,4 +1,4 @@
-package ru.citeck.ecos.events.data.dto.task;
+package ru.citeck.ecos.events.old.data.dto.task;
 
 import lombok.RequiredArgsConstructor;
 

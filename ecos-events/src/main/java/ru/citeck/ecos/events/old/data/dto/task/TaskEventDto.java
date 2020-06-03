@@ -1,8 +1,8 @@
-package ru.citeck.ecos.events.data.dto.task;
+package ru.citeck.ecos.events.old.data.dto.task;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ru.citeck.ecos.events.data.dto.EventCommonData;
+import ru.citeck.ecos.events.old.data.dto.EventCommonData;
 
 import java.util.Date;
 import java.util.HashSet;

@@ -1,6 +1,6 @@
-package ru.citeck.ecos.events.data.dto.pasrse;
+package ru.citeck.ecos.events.old.data.dto.pasrse;
 
-import ru.citeck.ecos.events.data.dto.EventDto;
+import ru.citeck.ecos.events.old.data.dto.EventDto;
 
 /**
  * @author Roman Makarskiy

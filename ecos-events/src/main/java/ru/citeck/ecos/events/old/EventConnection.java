@@ -1,10 +1,10 @@
-package ru.citeck.ecos.events;
+package ru.citeck.ecos.events.old;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import ru.citeck.ecos.events.data.dto.EventDto;
+import ru.citeck.ecos.events.old.data.dto.EventDto;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

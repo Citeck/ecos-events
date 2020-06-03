@@ -1,4 +1,4 @@
-package ru.citeck.ecos.events;
+package ru.citeck.ecos.events.old;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Delivery;
