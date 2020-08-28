@@ -10,7 +10,6 @@ import ru.citeck.ecos.events.listener.ListenerHandler
 import ru.citeck.ecos.events.listener.ctx.EventTypeListeners
 import ru.citeck.ecos.events.listener.ctx.ListenerInfo
 import ru.citeck.ecos.events.listener.ctx.ListenersContext
-import ru.citeck.ecos.events.remote.RemoteEcosEvent
 import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.meta.RecordsMetaService
@@ -29,6 +28,8 @@ class EventService(serviceFactory: EventServiceFactory) {
         val log = KotlinLogging.logger {}
     }
 
+    private val remoteEvents = serviceFactory.remoteEvents
+
     private val emitters: MutableMap<EmitterConfig<*>, EventEmitter<*>> = ConcurrentHashMap()
 
     private val recordsService = serviceFactory.recordsServiceFactory.recordsService
@@ -43,6 +44,7 @@ class EventService(serviceFactory: EventServiceFactory) {
 
     fun <T : Any> getEmitter(config: EmitterConfig<T>) : EventEmitter<T> {
         val emitter = emitters.computeIfAbsent(config) {
+            remoteEvents?.addProducedEventType(config.eventType)
             EventEmitter(config) { record, event -> emitRecordEvent(record, event, config) }
         }
         @Suppress("UNCHECKED_CAST")
@@ -72,29 +74,20 @@ class EventService(serviceFactory: EventServiceFactory) {
         val time = Instant.now()
         val typeListeners = getListenersForType(config.eventType) ?: return eventId
 
-        val fullDataAtts: ObjectData
+        val fullDataAtts = ObjectData.create()
 
-        if (event is RemoteEcosEvent) {
+        if (typeListeners.recordAtts.isNotEmpty()) {
+            val attributes = recordsService.getAttributes(recordRef, typeListeners.recordAtts)
+            attributes.forEach { k, v -> fullDataAtts.set(k, v) }
+        }
 
-            fullDataAtts = event.attributes
+        if (typeListeners.modelAtts.isNotEmpty()) {
 
-        } else {
+            val model = HashMap<String, Any>()
+            model["event"] = event
 
-            fullDataAtts = ObjectData.create()
-
-            if (typeListeners.recordAtts.isNotEmpty()) {
-                val attributes = recordsService.getAttributes(recordRef, typeListeners.recordAtts)
-                attributes.forEach { k, v -> fullDataAtts.set(k, v) }
-            }
-
-            if (typeListeners.modelAtts.isNotEmpty()) {
-
-                val model = HashMap<String, Any>()
-                model["event"] = event
-
-                val modelAttributes = recordsMetaService.getMeta(model, typeListeners.modelAtts)
-                modelAttributes.forEach { k, v -> fullDataAtts.set(k, v) }
-            }
+            val modelAttributes = recordsMetaService.getMeta(model, typeListeners.modelAtts)
+            modelAttributes.forEach { k, v -> fullDataAtts.set(k, v) }
         }
 
         val ecosEvent = EcosEvent(

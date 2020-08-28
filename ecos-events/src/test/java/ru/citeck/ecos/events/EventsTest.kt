@@ -16,11 +16,10 @@ class EventsTest {
         val factory = EventServiceFactory(records)
 
         val eventService = factory.eventService
-        val listenersContext = factory.listenersContext
 
         val data = ArrayList<DataClass>()
 
-        listenersContext.addListener(ListenerConfig.create<DataClass> {
+        eventService.addListener(ListenerConfig.create<DataClass> {
             eventType = "test-type"
             dataClass = DataClass::class.java
             setAction { evData, _ ->

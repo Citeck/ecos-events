@@ -1,62 +1,84 @@
 package ru.citeck.ecos.events.listener.ctx
 
+import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events.EcosEvent
 import ru.citeck.ecos.events.EventConstants
 import ru.citeck.ecos.events.EventServiceFactory
 import ru.citeck.ecos.events.listener.ListenerConfig
 import ru.citeck.ecos.events.listener.ListenerHandler
+import ru.citeck.ecos.events.remote.RemoteListener
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateUtils
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
 class ListenersContext(serviceFactory: EventServiceFactory) {
 
-    private val recordsMetaService = serviceFactory.recordsServiceFactory.recordsMetaService
-
-    private val listeners: MutableMap<String, EventTypeListeners> = ConcurrentHashMap()
-
-    private val remoteAttsByType: MutableMap<String, Set<String>> = ConcurrentHashMap()
-    private var remoteAttsListener: (Map<String, Set<String>>) -> Unit = {}
-
-    private val rawListeners = ArrayList<ListenerConfig<*>>()
-
-    private var isDirty = true
-
-    fun getListeners(type: String) : EventTypeListeners? {
-        update()
-        return listeners[type]
+    companion object {
+        val log = KotlinLogging.logger {}
     }
 
-    fun listenRemoteAtts(listener: (Map<String, Set<String>>) -> Unit) {
-        this.remoteAttsListener = listener
-        update()
-        listener.invoke(remoteAttsByType)
+    private val recordsMetaService = serviceFactory.recordsServiceFactory.recordsMetaService
+
+    private var listeners: Map<String, EventTypeListeners> = emptyMap()
+
+    private val remoteAttsByType: MutableMap<String, Set<String>> = ConcurrentHashMap()
+    private var rawListeners: List<ListenerConfig<*>> = ArrayList()
+
+    private val remoteEvents = serviceFactory.remoteEvents
+    private var remoteListeners: Map<String, List<RemoteListener>> = emptyMap()
+
+    init {
+        if (remoteEvents != null) {
+            remoteEvents.doWithListeners { type, listeners -> setRemoteListeners(type, listeners) }
+        } else {
+            log.warn { "Remote events is null" }
+        }
+    }
+
+    fun getListeners(type: String) : EventTypeListeners? {
+        return listeners[type]
     }
 
     @Synchronized
     private fun update() {
-        if (isDirty) {
-            val currentRemoteAttsByType = HashMap(remoteAttsByType);
-            initListeners()
+        val currentRemoteAttsByType = HashMap(remoteAttsByType);
+        initListeners()
+        if (remoteEvents != null) {
             if (currentRemoteAttsByType != HashMap(remoteAttsByType)) {
-                remoteAttsListener.invoke(remoteAttsByType)
+                remoteEvents.listenEvents(remoteAttsByType)
             }
-            isDirty = false
         }
     }
 
     private fun initListeners() {
 
-        listeners.clear()
-        remoteAttsByType.clear()
+        val newListeners = HashMap<String, EventTypeListeners>()
 
         val listenersByType = HashMap<String, MutableList<ListenerConfig<*>>>()
         rawListeners.forEach { listener ->
             listenersByType.computeIfAbsent(listener.eventType) { ArrayList() }.add(listener)
+        }
+
+        if (remoteEvents != null) {
+            remoteListeners.values.flatten().map { listener ->
+                ListenerConfig.create<ObjectData> {
+                    val atts = HashMap<String, String>()
+                    listener.attributes.forEach { atts[it] = it }
+                    attributes = atts
+                    eventType = listener.eventType
+                    setAction { data, event -> remoteEvents.emitEvent(listener, event, data) }
+                    consistent = false
+                    dataClass = ObjectData::class.java
+                    local = true
+                }
+            }.forEach { listener ->
+                listenersByType.computeIfAbsent(listener.eventType) { ArrayList() }.add(listener)
+            }
         }
 
         listenersByType.forEach { (type, listeners) ->
@@ -97,8 +119,10 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
             if (remoteAtts.isNotEmpty()) {
                 this.remoteAttsByType[type] = remoteAtts
             }
-            this.listeners[type] = EventTypeListeners(recordAtts, modelAtts, listenersInfo)
+            newListeners[type] = EventTypeListeners(recordAtts, modelAtts, listenersInfo)
         }
+
+        this.listeners = newListeners
     }
 
     private fun getAttributesFromClass(clazz: Class<*>) : Map<String, String> {
@@ -113,29 +137,38 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
         return emptyMap()
     }
 
+    //todo: fix concurrent issues and remove synchronized
+
     @Synchronized
     fun removeListener(config: ListenerConfig<*>) {
-        rawListeners.removeIf { it === config }
-        isDirty = true
+        rawListeners = rawListeners.filter { it === config }
+        update()
     }
 
     @Synchronized
     fun addListeners(listeners: List<ListenerConfig<*>>) : List<ListenerHandler> {
-        rawListeners.addAll(listeners)
-        isDirty = true
-        return listeners.map { ListenerHandler(it, this) }
+        val newListeners = ArrayList(rawListeners)
+        newListeners.addAll(listeners)
+        return setListeners(newListeners)
     }
 
     @Synchronized
     fun addListener(listener: ListenerConfig<*>) : ListenerHandler {
-        rawListeners.add(listener)
-        isDirty = true
-        return ListenerHandler(listener, this)
+        return addListeners(listOf(listener))[0]
     }
 
     @Synchronized
     fun setListeners(listeners: List<ListenerConfig<*>>) : List<ListenerHandler> {
-        rawListeners.clear()
-        return addListeners(listeners)
+        rawListeners = ArrayList(listeners)
+        update()
+        return listeners.map { ListenerHandler(it, this) }
+    }
+
+    @Synchronized
+    private fun setRemoteListeners(type: String, listeners: List<RemoteListener>) {
+        val newValue = HashMap(remoteListeners)
+        newValue[type] = listeners
+        remoteListeners = newValue
+        update()
     }
 }

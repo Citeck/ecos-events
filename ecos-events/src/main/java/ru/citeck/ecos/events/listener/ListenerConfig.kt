@@ -11,7 +11,8 @@ data class ListenerConfig<T : Any>(
     val attributes: Map<String, String>,
     val local: Boolean,
     val action: UncheckedBiConsumer<T, EcosEvent>,
-    val filter: Predicate
+    val filter: Predicate,
+    val consistent: Boolean
 ) {
 
     companion object {
@@ -31,6 +32,7 @@ data class ListenerConfig<T : Any>(
         var local: Boolean = false
         var action: UncheckedBiConsumer<T, EcosEvent>? = null
         var filter: Predicate = VoidPredicate.INSTANCE
+        var consistent: Boolean = true
 
         fun addAttribute(key: String, value: String) {
             attributes[key] = value
@@ -55,7 +57,8 @@ data class ListenerConfig<T : Any>(
                     attributes,
                     local,
                     action!!,
-                    filter
+                    filter,
+                    consistent
             )
         }
     }

@@ -1,13 +1,13 @@
 package ru.citeck.ecos.events
 
 import ru.citeck.ecos.events.listener.ctx.ListenersContext
-import ru.citeck.ecos.events.remote.RemoteEventService
+import ru.citeck.ecos.events.remote.RemoteEvents
 import ru.citeck.ecos.records2.RecordsServiceFactory
 
-class EventServiceFactory(val recordsServiceFactory: RecordsServiceFactory) {
+open class EventServiceFactory(val recordsServiceFactory: RecordsServiceFactory) {
 
     val eventService: EventService by lazy { createEventService() }
-    val remoteEventService: RemoteEventService by lazy { createRemoteEventService() }
+    val remoteEvents: RemoteEvents? by lazy { createRemoteEvents() }
     val listenersContext: ListenersContext by lazy { createListenersContext() }
     val properties: EventProperties by lazy { createProperties() }
 
@@ -19,8 +19,8 @@ class EventServiceFactory(val recordsServiceFactory: RecordsServiceFactory) {
         return ListenersContext(this)
     }
 
-    open fun createRemoteEventService() : RemoteEventService {
-        return RemoteEventService(this)
+    open fun createRemoteEvents() : RemoteEvents? {
+        return null
     }
 
     open fun createEventService() : EventService {
