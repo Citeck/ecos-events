@@ -13,6 +13,7 @@ import org.junit.jupiter.api.TestInstance
 import ru.citeck.ecos.events.EventProperties
 import ru.citeck.ecos.events.EventService
 import ru.citeck.ecos.events.EventServiceFactory
+import ru.citeck.ecos.events.emitter.EmitterConfig
 import ru.citeck.ecos.events.listener.ListenerConfig
 import ru.citeck.ecos.events.remote.RemoteEvents
 import ru.citeck.ecos.rabbitmq.EcosRabbitConnection
@@ -80,7 +81,7 @@ class RemoteEventsTest {
         eventService0.addListener(ListenerConfig.create<DataClass> {
             eventType = testEventType
             dataClass = DataClass::class.java
-            setAction { evData, _ ->
+            setAction { evData ->
                 data0.add(evData)
             }
         })
@@ -88,7 +89,7 @@ class RemoteEventsTest {
         eventService1.addListener(ListenerConfig.create<DataClass> {
             eventType = testEventType
             dataClass = DataClass::class.java
-            setAction { evData, _ ->
+            setAction { evData ->
                 data1.add(evData)
             }
         })
@@ -96,23 +97,23 @@ class RemoteEventsTest {
         eventService2.addListener(ListenerConfig.create<TestRecordMetaWithEventData> {
             eventType = testEventType
             dataClass = TestRecordMetaWithEventData::class.java
-            setAction { evData, _ ->
+            setAction { evData ->
                 data2.add(evData)
             }
         })
 
-        val emitter = eventService1.getEmitter<DataClass> {
+        val emitter = eventService1.getEmitter<DataClass>(EmitterConfig.create {
             eventType = testEventType
             eventClass = DataClass::class.java
-        }
+        })
 
         val targetData = arrayListOf(
-            DataClass("aa", "bb"),
-            DataClass("cc", "dd"),
-            DataClass("ee", "ff")
+            DataClass("aa", "bb", testRecord),
+            DataClass("cc", "dd", testRecord),
+            DataClass("ee", "ff", testRecord)
         )
 
-        targetData.forEach { emitter.emit(testRecordRecordRef, it) }
+        targetData.forEach { emitter.emit(it) }
 
         Thread.sleep(1000)
 
@@ -149,8 +150,9 @@ class RemoteEventsTest {
     }
 
     data class DataClass(
-        @MetaAtt("\$event.field0") var field0: String?,
-        @MetaAtt("\$event.field1") var field1: String?
+        @MetaAtt("field0") var field0: String?,
+        @MetaAtt("field1") var field1: String?,
+        var rec: TestRecord
     )
 
     data class TestRecord(
@@ -159,9 +161,12 @@ class RemoteEventsTest {
     )
 
     data class TestRecordMetaWithEventData (
-        @MetaAtt("\$event.field0") var field0: String?,
-        @MetaAtt("\$event.field1") var field1: String?,
+        @MetaAtt("field0") var field0: String?,
+        @MetaAtt("field1") var field1: String?,
+
+        @MetaAtt("rec.field0Str")
         var field0Str: String?,
+        @MetaAtt("rec.field1Num")
         var field1Num: Int?
     )
 }

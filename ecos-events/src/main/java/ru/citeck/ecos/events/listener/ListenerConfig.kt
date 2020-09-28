@@ -1,7 +1,6 @@
 package ru.citeck.ecos.events.listener
 
-import ru.citeck.ecos.commons.utils.func.UncheckedBiConsumer
-import ru.citeck.ecos.events.EcosEvent
+import ru.citeck.ecos.commons.utils.func.UncheckedConsumer
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 
@@ -10,7 +9,7 @@ data class ListenerConfig<T : Any>(
     val dataClass: Class<T>,
     val attributes: Map<String, String>,
     val local: Boolean,
-    val action: UncheckedBiConsumer<T, EcosEvent>,
+    val action: UncheckedConsumer<T>,
     val filter: Predicate,
     val consistent: Boolean
 ) {
@@ -30,7 +29,7 @@ data class ListenerConfig<T : Any>(
         var dataClass: Class<T>? = null
         var attributes: MutableMap<String, String> = HashMap()
         var local: Boolean = false
-        var action: UncheckedBiConsumer<T, EcosEvent>? = null
+        var action: UncheckedConsumer<T>? = null
         var filter: Predicate = VoidPredicate.INSTANCE
         var consistent: Boolean = true
 
@@ -42,10 +41,10 @@ data class ListenerConfig<T : Any>(
             attributes.putAll(data)
         }
 
-        fun setAction(action: (T, EcosEvent) -> Unit) {
-            this.action = object : UncheckedBiConsumer<T, EcosEvent> {
-                override fun accept(arg0: T, arg1: EcosEvent) {
-                    action.invoke(arg0, arg1)
+        fun setAction(action: (T) -> Unit) {
+            this.action = object : UncheckedConsumer<T> {
+                override fun accept(arg: T) {
+                   action.invoke(arg)
                 }
             }
         }

@@ -66,14 +66,14 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
 
         if (remoteEvents != null) {
             remoteListeners.values.flatten().map { listener ->
-                ListenerConfig.create<ObjectData> {
+                ListenerConfig.create<EcosEvent> {
                     val atts = HashMap<String, String>()
                     listener.attributes.forEach { atts[it] = it }
                     attributes = atts
                     eventType = listener.eventType
-                    setAction { data, event -> remoteEvents.emitEvent(listener, event, data) }
+                    setAction { event -> remoteEvents.emitEvent(listener, event) }
                     consistent = false
-                    dataClass = ObjectData::class.java
+                    dataClass = EcosEvent::class.java
                     local = true
                 }
             }.forEach { listener ->
@@ -98,14 +98,7 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
                 }
 
                 attributes.values.forEach {
-                    if (it.startsWith("$")
-                            || it.startsWith(".att(n:\"$")
-                            || it.startsWith(".atts(\"$")) {
-
-                        modelAtts[it] = it.replaceFirst("$", "")
-                    } else {
-                        recordAtts.add(it);
-                    }
+                    recordAtts.add(it);
                 }
 
                 if (!config.local) {
@@ -119,7 +112,7 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
             if (remoteAtts.isNotEmpty()) {
                 this.remoteAttsByType[type] = remoteAtts
             }
-            newListeners[type] = EventTypeListeners(recordAtts, modelAtts, listenersInfo)
+            newListeners[type] = EventTypeListeners(recordAtts, listenersInfo)
         }
 
         this.listeners = newListeners

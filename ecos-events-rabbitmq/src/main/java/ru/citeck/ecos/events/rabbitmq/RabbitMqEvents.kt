@@ -2,7 +2,6 @@ package ru.citeck.ecos.events.rabbitmq
 
 import com.rabbitmq.client.BuiltinExchangeType
 import mu.KotlinLogging
-import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events.EcosEvent
 import ru.citeck.ecos.rabbitmq.EcosRabbitConnection
 import ru.citeck.ecos.events.EventServiceFactory
@@ -10,7 +9,6 @@ import ru.citeck.ecos.events.remote.RemoteEvents
 import ru.citeck.ecos.events.remote.RemoteListener
 import ru.citeck.ecos.rabbitmq.EcosRabbitChannel
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
-import java.lang.Exception
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -53,7 +51,7 @@ class RabbitMqEvents(val factory: EventServiceFactory,
                         channel.queueBind(eventsQueue, eventsQueue, eventsQueue)
                     }
 
-                    channel.addConsumer(eventsQueue, RemoteEcosEvent::class.java) { event, _ ->
+                    channel.addConsumer(eventsQueue, EcosEvent::class.java) { event, _ ->
                         onEventReceived(event)
                     }
                 })
@@ -119,12 +117,12 @@ class RabbitMqEvents(val factory: EventServiceFactory,
         eventListeners = events
     }
 
-    override fun emitEvent(listener: RemoteListener, event: EcosEvent, data: ObjectData) {
+    override fun emitEvent(listener: RemoteListener, event: EcosEvent) {
         val queueName = EventRabbitMqConstants.EVENTS_QUEUE_ID.format(listener.appName)
-        outcomeChannel.publishMsg(queueName, RemoteEcosEvent(event, data))
+        outcomeChannel.publishMsg(queueName, event)
     }
 
-    fun onEventReceived(event: RemoteEcosEvent) {
-        factory.eventService.emitRemoteEvent(event.event, event.data)
+    fun onEventReceived(event: EcosEvent) {
+        factory.eventService.emitRemoteEvent(event)
     }
 }

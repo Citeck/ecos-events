@@ -20,7 +20,6 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.BiConsumer
-import kotlin.collections.HashMap
 
 class EventService(serviceFactory: EventServiceFactory) {
 
@@ -32,75 +31,55 @@ class EventService(serviceFactory: EventServiceFactory) {
 
     private val emitters: MutableMap<EmitterConfig<*>, EventEmitter<*>> = ConcurrentHashMap()
 
-    private val recordsService = serviceFactory.recordsServiceFactory.recordsService
     private val predicateService = serviceFactory.recordsServiceFactory.predicateService
     private var recordsMetaService: RecordsMetaService = serviceFactory.recordsServiceFactory.recordsMetaService
 
     private val listenersContext: ListenersContext = serviceFactory.listenersContext
 
-    fun <T : Any> getEmitter(builder: EmitterConfig.Builder<T>.() -> Unit) : EventEmitter<T> {
-        return getEmitter(EmitterConfig.create(builder))
-    }
-
     fun <T : Any> getEmitter(config: EmitterConfig<T>) : EventEmitter<T> {
         val emitter = emitters.computeIfAbsent(config) {
             remoteEvents?.addProducedEventType(config.eventType)
-            EventEmitter(config) { record, event -> emitRecordEvent(record, event, config) }
+            EventEmitter(config) { event -> emitRecordEvent(event, config) }
         }
         @Suppress("UNCHECKED_CAST")
         return emitter as EventEmitter<T>
     }
 
-    fun emitRemoteEvent(event: EcosEvent, attributes: ObjectData) {
+    fun emitRemoteEvent(event: EcosEvent) {
         val typeListeners = getListenersForType(event.type) ?: return
-        emitExactEvent(event, attributes, typeListeners, false)
+        emitExactEvent(event, typeListeners, false)
     }
 
     private fun emitExactEvent(event: EcosEvent,
-                               attributes: ObjectData,
                                listeners: EventTypeListeners,
                                isLocalEvent: Boolean) {
 
         listeners.listeners.forEach { listener ->
             if (isLocalEvent || !listener.config.local) {
-                triggerListener(listener, attributes, event)
+                triggerListener(listener, event)
             }
         }
     }
 
-    private fun emitRecordEvent(recordRef: RecordRef, event: Any, config: EmitterConfig<*>) : UUID {
+    private fun emitRecordEvent(event: Any, config: EmitterConfig<*>) : UUID {
 
         val eventId = UUID.randomUUID()
         val time = Instant.now()
         val typeListeners = getListenersForType(config.eventType) ?: return eventId
 
-        val fullDataAtts = ObjectData.create()
-
-        if (typeListeners.recordAtts.isNotEmpty()) {
-            val attributes = recordsService.getAttributes(recordRef, typeListeners.recordAtts)
-            attributes.forEach { k, v -> fullDataAtts.set(k, v) }
-        }
-
-        if (typeListeners.modelAtts.isNotEmpty()) {
-
-            val model = HashMap<String, Any>()
-            model["event"] = event
-
-            val modelAttributes = recordsMetaService.getMeta(model, typeListeners.modelAtts)
-            modelAttributes.forEach { k, v -> fullDataAtts.set(k, v) }
-        }
+        val fullDataAtts = recordsMetaService.getMeta(event, typeListeners.attributes).attributes
 
         val ecosEvent = EcosEvent(
                 eventId,
                 time,
                 config.eventType,
-                recordRef,
                 "current",
                 config.source,
-                "sourceApp"
+                "sourceApp",
+                fullDataAtts
         )
 
-        emitExactEvent(ecosEvent, fullDataAtts, typeListeners, true)
+        emitExactEvent(ecosEvent, typeListeners, true)
         return eventId
     }
 
@@ -115,18 +94,16 @@ class EventService(serviceFactory: EventServiceFactory) {
         return typeListeners
     }
 
-    private fun triggerListener(listener: ListenerInfo,
-                                fullData: ObjectData,
-                                event: EcosEvent) {
+    private fun triggerListener(listener: ListenerInfo, event: EcosEvent) {
 
         if (listener.config.filter !is VoidPredicate) {
             val filterAtts = ObjectData.create()
-            fullData.forEach(BiConsumer { k, v ->
+            event.attributes.forEach(BiConsumer { k, v ->
                 if (k.startsWith(EventConstants.FILTER_ATT_PREFIX)) {
                     filterAtts.set(k.replaceFirst(EventConstants.FILTER_ATT_PREFIX, ""), v)
                 }
             })
-            val element = RecordElement(RecordMeta(event.recordRef, filterAtts))
+            val element = RecordElement(RecordMeta(RecordRef.EMPTY, filterAtts))
             if (!predicateService.isMatch(element, listener.config.filter)) {
                 return
             }
@@ -135,22 +112,24 @@ class EventService(serviceFactory: EventServiceFactory) {
         val listenerAtts = ObjectData.create()
 
         listener.attributes.forEach { (k, v) ->
-            listenerAtts.set(k, fullData.get(v))
+            listenerAtts.set(k, event.attributes.get(v))
         }
 
         val clazz = listener.config.dataClass
         val action = listener.config.action
 
         if (clazz == RecordRef::class.java) {
-            action.accept(event.recordRef, event)
+            action.accept(event)
         } else if (clazz == ObjectData::class.java) {
-            action.accept(listenerAtts, event)
+            action.accept(listenerAtts)
         } else if (clazz == Unit::class.java) {
-            action.accept(Unit, event)
+            action.accept(Unit)
+        } else if (clazz == EcosEvent::class.java) {
+            action.accept(event)
         } else {
             val converted = Json.mapper.convert(listenerAtts, clazz)
             if (converted != null) {
-                action.accept(converted, event)
+                action.accept(converted)
             } else {
                 throw IllegalStateException("Event data can't be converted to $clazz. Data: $listenerAtts");
             }
