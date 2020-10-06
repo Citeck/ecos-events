@@ -3,11 +3,11 @@ package ru.citeck.ecos.events.rabbitmq
 import com.rabbitmq.client.BuiltinExchangeType
 import mu.KotlinLogging
 import ru.citeck.ecos.events.EcosEvent
-import ru.citeck.ecos.rabbitmq.EcosRabbitConnection
+import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.events.EventServiceFactory
 import ru.citeck.ecos.events.remote.RemoteEvents
 import ru.citeck.ecos.events.remote.RemoteListener
-import ru.citeck.ecos.rabbitmq.EcosRabbitChannel
+import ru.citeck.ecos.rabbitmq.RabbitMqChannel
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
 
 class RabbitMqEvents(val factory: EventServiceFactory,
-                     rabbitMqConnection: EcosRabbitConnection,
+                     rabbitMqConnection: RabbitMqConn,
                      val ecosZooKeeper: EcosZooKeeper) : RemoteEvents {
 
     companion object {
@@ -25,7 +25,7 @@ class RabbitMqEvents(val factory: EventServiceFactory,
     private var onRemoteListenersChanged: (String, List<RemoteListener>) -> Unit = { _, _ -> }
     private var eventListeners: Map<String, Set<String>> = emptyMap()
 
-    private lateinit var outcomeChannel: EcosRabbitChannel
+    private lateinit var outcomeChannel: RabbitMqChannel
 
     private val producedEventTypes: MutableSet<String> = Collections.newSetFromMap(ConcurrentHashMap())
     private val remoteListeners: MutableMap<String, List<RemoteListener>> = ConcurrentHashMap()

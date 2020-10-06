@@ -74,8 +74,7 @@ class EventService(serviceFactory: EventServiceFactory) {
                 time,
                 config.eventType,
                 "current",
-                config.source,
-                "sourceApp",
+                EventSource(config.source, emptySet(), "", ""),
                 fullDataAtts
         )
 

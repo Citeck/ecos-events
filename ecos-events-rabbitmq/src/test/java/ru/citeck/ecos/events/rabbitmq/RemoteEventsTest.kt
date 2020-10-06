@@ -16,7 +16,7 @@ import ru.citeck.ecos.events.EventServiceFactory
 import ru.citeck.ecos.events.emitter.EmitterConfig
 import ru.citeck.ecos.events.listener.ListenerConfig
 import ru.citeck.ecos.events.remote.RemoteEvents
-import ru.citeck.ecos.rabbitmq.EcosRabbitConnection
+import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.RecordsServiceFactory
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
@@ -53,7 +53,7 @@ class RemoteEventsTest {
         val ecosZooKeeper = EcosZooKeeper(client).withNamespace("ecos")
 
         val factory: ConnectionFactory = MockConnectionFactory()
-        val connection = EcosRabbitConnection(factory)
+        val connection = RabbitMqConn(factory)
 
         connection.waitUntilReady(5_000)
 
@@ -127,7 +127,7 @@ class RemoteEventsTest {
     }
 
     private fun createApp(name: String,
-                          rabbitConnection: EcosRabbitConnection,
+                          rabbitConnection: RabbitMqConn,
                           ecosZooKeeper: EcosZooKeeper,
                           records: Map<RecordRef, Any>) : EventService {
 
