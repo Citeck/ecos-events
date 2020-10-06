@@ -6,7 +6,7 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.events.emitter.EmitterConfig
 import ru.citeck.ecos.events.emitter.EventEmitter
 import ru.citeck.ecos.events.listener.ListenerConfig
-import ru.citeck.ecos.events.listener.ListenerHandler
+import ru.citeck.ecos.events.listener.ListenerHandle
 import ru.citeck.ecos.events.listener.ctx.EventTypeListeners
 import ru.citeck.ecos.events.listener.ctx.ListenerInfo
 import ru.citeck.ecos.events.listener.ctx.ListenersContext
@@ -136,7 +136,7 @@ class EventService(serviceFactory: EventServiceFactory) {
         }
     }
 
-    fun addListener(listener: ListenerConfig<*>) : ListenerHandler {
+    fun addListener(listener: ListenerConfig<*>) : ListenerHandle {
         return listenersContext.addListener(listener)
     }
 }

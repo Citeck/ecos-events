@@ -2,12 +2,11 @@ package ru.citeck.ecos.events.listener.ctx
 
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.MLText
-import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events.EcosEvent
 import ru.citeck.ecos.events.EventConstants
 import ru.citeck.ecos.events.EventServiceFactory
 import ru.citeck.ecos.events.listener.ListenerConfig
-import ru.citeck.ecos.events.listener.ListenerHandler
+import ru.citeck.ecos.events.listener.ListenerHandle
 import ru.citeck.ecos.events.remote.RemoteListener
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateUtils
@@ -139,22 +138,22 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
     }
 
     @Synchronized
-    fun addListeners(listeners: List<ListenerConfig<*>>) : List<ListenerHandler> {
+    fun addListeners(listeners: List<ListenerConfig<*>>) : List<ListenerHandle> {
         val newListeners = ArrayList(rawListeners)
         newListeners.addAll(listeners)
         return setListeners(newListeners)
     }
 
     @Synchronized
-    fun addListener(listener: ListenerConfig<*>) : ListenerHandler {
+    fun addListener(listener: ListenerConfig<*>) : ListenerHandle {
         return addListeners(listOf(listener))[0]
     }
 
     @Synchronized
-    fun setListeners(listeners: List<ListenerConfig<*>>) : List<ListenerHandler> {
+    fun setListeners(listeners: List<ListenerConfig<*>>) : List<ListenerHandle> {
         rawListeners = ArrayList(listeners)
         update()
-        return listeners.map { ListenerHandler(it, this) }
+        return listeners.map { ListenerHandle(it, this) }
     }
 
     @Synchronized

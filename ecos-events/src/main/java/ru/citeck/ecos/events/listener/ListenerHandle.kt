@@ -2,7 +2,7 @@ package ru.citeck.ecos.events.listener
 
 import ru.citeck.ecos.events.listener.ctx.ListenersContext
 
-class ListenerHandler(
+class ListenerHandle(
     val config: ListenerConfig<*>,
     val context: ListenersContext
 ) {
