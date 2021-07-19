@@ -32,23 +32,23 @@ class RemoteEventsTest {
         private val RECORD_SOURCE_TEMPLATE = "source_%s"
     }
 
-    var zkServer: TestingServer? = null
+    private var zkServer: TestingServer? = null
 
     lateinit var eventService0: EventService
     lateinit var eventService1: EventService
     lateinit var eventService2: EventService
 
-    val testRecordRecordRef = RecordRef.create(RECORD_SOURCE_TEMPLATE.format("app1"), "rec")
-    val testRecord = TestRecord("abcdefg", 999)
+    private val testRecordRecordRef = RecordRef.create(RECORD_SOURCE_TEMPLATE.format("app1"), "rec")
+    private val testRecord = TestRecord("abcdefg", 999)
 
     @BeforeAll
     fun setUp() {
-        zkServer = TestingServer(2181, true)
+        zkServer = TestingServer()
 
         val retryPolicy: RetryPolicy = RetryForever(7_000)
 
         val client = CuratorFrameworkFactory
-                .newClient("localhost:2181", retryPolicy)
+                .newClient(zkServer!!.connectString, retryPolicy)
         client.start()
         val ecosZooKeeper = EcosZooKeeper(client).withNamespace("ecos")
 
