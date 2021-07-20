@@ -3,7 +3,7 @@ package ru.citeck.ecos.events2
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
-import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import kotlin.test.assertEquals
 

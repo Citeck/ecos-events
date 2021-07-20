@@ -21,7 +21,8 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
         val log = KotlinLogging.logger {}
     }
 
-    private val recordsMetaService = serviceFactory.recordsServiceFactory.recordsMetaService
+    private val dtoSchemaReader = serviceFactory.recordsServiceFactory.dtoSchemaReader
+    private val attSchemaWriter = serviceFactory.recordsServiceFactory.attSchemaWriter
 
     private var listeners: Map<String, EventTypeListeners> = emptyMap()
 
@@ -124,7 +125,9 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
                 && clazz != EcosEvent::class.java
                 && clazz != MLText::class.java) {
 
-            return recordsMetaService.getAttributes(clazz)
+            val attsSchema = dtoSchemaReader.read(clazz)
+
+            return attSchemaWriter.writeToMap(attsSchema)
         }
         return emptyMap()
     }

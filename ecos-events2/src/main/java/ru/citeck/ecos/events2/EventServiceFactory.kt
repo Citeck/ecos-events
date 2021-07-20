@@ -2,7 +2,7 @@ package ru.citeck.ecos.events2
 
 import ru.citeck.ecos.events2.listener.ctx.ListenersContext
 import ru.citeck.ecos.events2.remote.RemoteEvents
-import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records3.RecordsServiceFactory
 
 open class EventServiceFactory(val recordsServiceFactory: RecordsServiceFactory) {
 

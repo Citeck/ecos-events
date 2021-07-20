@@ -18,7 +18,7 @@ import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.remote.RemoteEvents
 import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.RecordsServiceFactory
+import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
@@ -39,6 +39,7 @@ class RemoteEventsTest {
     lateinit var eventService2: EventService
 
     private val testRecordRecordRef = RecordRef.create(RECORD_SOURCE_TEMPLATE.format("app1"), "rec")
+        .toString()
     private val testRecord = TestRecord("abcdefg", 999)
 
     @BeforeAll
@@ -129,10 +130,11 @@ class RemoteEventsTest {
     private fun createApp(name: String,
                           rabbitConnection: RabbitMqConn,
                           ecosZooKeeper: EcosZooKeeper,
-                          records: Map<RecordRef, Any>) : EventService {
+                          records: Map<String, Any>) : EventService {
+
 
         val recordsServiceFactory = RecordsServiceFactory()
-        recordsServiceFactory.recordsService.register(
+        recordsServiceFactory.recordsServiceV1.register(
                 RecordsDaoBuilder.create(RECORD_SOURCE_TEMPLATE.format(name))
                         .addRecords(records)
                         .build()
