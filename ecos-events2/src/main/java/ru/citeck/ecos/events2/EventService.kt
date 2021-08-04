@@ -28,8 +28,8 @@ class EventService(serviceFactory: EventServiceFactory) {
 
     private val emitters: MutableMap<EmitterConfig<*>, EventEmitter<*>> = ConcurrentHashMap()
 
-    private val predicateService = serviceFactory.recordsServiceFactory.predicateService
-    private val recordsService = serviceFactory.recordsServiceFactory.recordsServiceV1
+    private val predicateService = serviceFactory.recordsServiceFactory!!.predicateService
+    private val recordsService = serviceFactory.recordsServiceFactory!!.recordsServiceV1
 
     private val listenersContext: ListenersContext = serviceFactory.listenersContext
 

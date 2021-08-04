@@ -21,8 +21,8 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
         val log = KotlinLogging.logger {}
     }
 
-    private val dtoSchemaReader = serviceFactory.recordsServiceFactory.dtoSchemaReader
-    private val attSchemaWriter = serviceFactory.recordsServiceFactory.attSchemaWriter
+    private val dtoSchemaReader = serviceFactory.recordsServiceFactory!!.dtoSchemaReader
+    private val attSchemaWriter = serviceFactory.recordsServiceFactory!!.attSchemaWriter
 
     private var listeners: Map<String, EventTypeListeners> = emptyMap()
 
