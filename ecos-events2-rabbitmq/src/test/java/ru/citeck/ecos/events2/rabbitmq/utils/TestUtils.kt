@@ -33,7 +33,7 @@ class TestUtils {
 
             val serviceFactory = object : EventServiceFactory(recordsServiceFactory) {
                 override fun createRemoteEvents(): RemoteEvents {
-                    return RabbitMqEvents(this, rabbitConnection, ecosZooKeeper)
+                    return RabbitMqEvents(rabbitConnection, this, ecosZooKeeper)
                 }
 
                 override fun createProperties(): EventProperties {

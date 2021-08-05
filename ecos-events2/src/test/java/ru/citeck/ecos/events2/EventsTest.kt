@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.records3.RecordsServiceFactory
-import ru.citeck.ecos.records2.graphql.meta.annotation.MetaAtt
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import kotlin.test.assertEquals
 
 class EventsTest {
@@ -33,9 +33,9 @@ class EventsTest {
         })
 
         val targetData = arrayListOf(
-                DataClass("aa", "bb"),
-                DataClass("cc", "dd"),
-                DataClass("ee", "ff")
+            DataClass("aa", "bb"),
+            DataClass("cc", "dd"),
+            DataClass("ee", "ff")
         )
         targetData.forEach { emitter.emit(it) }
 
@@ -43,7 +43,7 @@ class EventsTest {
     }
 
     data class DataClass(
-        @MetaAtt("field0") var field0: String?,
-        @MetaAtt("field1") var field1: String?
+        @AttName("field0") var field0: String?,
+        @AttName("field1") var field1: String?
     )
 }

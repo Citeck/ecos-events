@@ -22,7 +22,7 @@ import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import kotlin.test.assertEquals
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RemoteEventsTest {
+class RemoteEventsMultipleAppsTest {
 
     private var zkServer: TestingServer? = null
 
@@ -67,7 +67,7 @@ class RemoteEventsTest {
     }
 
     @Test
-    fun test() {
+    fun multipleAppsTest() {
 
         val data0 = ArrayList<DataClass>()
         val data1 = ArrayList<DataClass>()
@@ -75,8 +75,6 @@ class RemoteEventsTest {
         val dataWithRecordRef = ArrayList<DataClassWithRecordRef>()
 
         val testEventType = "test-event-type"
-
-
 
         eventService0.addListener(ListenerConfig.create<DataClass> {
             eventType = testEventType
@@ -148,23 +146,23 @@ class RemoteEventsTest {
         assertEquals(targetDataWithRecordRef, dataWithRecordRef)
     }
 
-    data class DataClassWithRecordRef(
+    private data class DataClassWithRecordRef(
         val record: RecordRef,
         val someStr: String
     )
 
-    data class DataClass(
+    private data class DataClass(
         @AttName("field0") var field0: String?,
         @AttName("field1") var field1: String?,
         var rec: TestRecord
     )
 
-    data class TestRecord(
+    private data class TestRecord(
         var field0Str: String,
         var field1Num: Int
     )
 
-    data class TestRecordMetaWithEventData(
+    private data class TestRecordMetaWithEventData(
         @AttName("field0") var field0: String?,
         @AttName("field1") var field1: String?,
 

@@ -259,13 +259,13 @@ class RemoteListenersTest {
         zkServer?.stop()
     }
 
-    data class NodeData(
+    private data class NodeData(
         val id: String,
         val data: String,
         val creator: PersonRecord? = null
     )
 
-    data class NodeDataWithCreatorMeta(
+    private data class NodeDataWithCreatorMeta(
         val id: String,
         val data: String,
         val creator: PersonRecord? = null,
@@ -277,12 +277,12 @@ class RemoteListenersTest {
         val creatorLastName: String? = null
     )
 
-    data class PersonRecord(
+    private data class PersonRecord(
         val firstName: String,
         val lastName: String
     )
 
-    data class FullNodeData(
+    private data class FullNodeData(
         val id: String,
         val data: String,
         val version: Int,
@@ -290,19 +290,19 @@ class RemoteListenersTest {
         val modified: Date
     )
 
-    data class MinimalNodeData(
+    private data class MinimalNodeData(
         val id: String,
         val data: String
     )
 
-    data class MediumNodeData(
+    private data class MediumNodeData(
         val id: String,
         val data: String,
         val modified: Date,
         val version: Int
     )
 
-    data class OneNodeData(
+    private data class OneNodeData(
         val creator: String
     )
 
