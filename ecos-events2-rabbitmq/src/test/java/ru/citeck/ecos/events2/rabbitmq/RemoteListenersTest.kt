@@ -79,7 +79,6 @@ class RemoteListenersTest {
             }
         })
 
-        //TODO: необходимо время для синхронизации листенеров. проверить после переписывания на TreeCache?
         Thread.sleep(1000)
 
         emitter.emit(emitData)
@@ -171,8 +170,6 @@ class RemoteListenersTest {
         Thread.sleep(1000)
         assertEquals(emitData0, receiveData0)
 
-
-
         eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeDataWithCreatorMeta> {
             eventType = NEW_NODE_TYPE
             dataClass = NodeDataWithCreatorMeta::class.java
@@ -181,7 +178,7 @@ class RemoteListenersTest {
             }
         })
 
-        Thread.sleep(1000)
+        Thread.sleep(500)
         val listenerWithCreatorMeta = ecosZooKeeper.getValue("/events/${NEW_NODE_TYPE}/app1",
             RemoteListener::class.java)
         assertEquals(5, listenerWithCreatorMeta!!.attributes.size)
@@ -194,7 +191,6 @@ class RemoteListenersTest {
         assertEquals(emitData1.creator, receiveData1!!.creator)
         assertEquals(personIvanRecord.firstName, receiveData1!!.creatorFirstName)
         assertEquals(personIvanRecord.lastName, receiveData1!!.creatorLastName)
-
     }
 
     @Test
@@ -202,6 +198,7 @@ class RemoteListenersTest {
 
         var receiveDataMinimal: MinimalNodeData? = null
         var receiveDataMedium: MediumNodeData? = null
+        var receiveDataOne: OneNodeData? = null
 
         val emitData = FullNodeData("13-ab-kk-0", "some data 0", 2, "Galina", Date())
 
@@ -221,14 +218,26 @@ class RemoteListenersTest {
             }
         })
 
+        eventServiceReceiverApp1.addListener(ListenerConfig.create<OneNodeData> {
+            eventType = NEW_NODE_TYPE
+            dataClass = OneNodeData::class.java
+            setAction { evData ->
+                receiveDataOne = evData
+            }
+        })
+
         val emitter = eventServiceEmitterApp0.getEmitter<FullNodeData>(EmitterConfig.create {
             eventType = NEW_NODE_TYPE
             eventClass = FullNodeData::class.java
         })
 
+        Thread.sleep(1000)
+
+
         val listenerWithCreatorMeta = ecosZooKeeper.getValue("/events/${NEW_NODE_TYPE}/app1",
             RemoteListener::class.java)
-        assertEquals(4, listenerWithCreatorMeta!!.attributes.size)
+
+        assertEquals(5, listenerWithCreatorMeta!!.attributes.size)
 
         emitter.emit(emitData)
 
@@ -241,6 +250,8 @@ class RemoteListenersTest {
         assertEquals(emitData.data, receiveDataMedium!!.data)
         assertEquals(emitData.modified, receiveDataMedium!!.modified)
         assertEquals(emitData.version, receiveDataMedium!!.version)
+
+        assertEquals(emitData.creator, receiveDataOne!!.creator)
     }
 
     @AfterEach
@@ -289,6 +300,10 @@ class RemoteListenersTest {
         val data: String,
         val modified: Date,
         val version: Int
+    )
+
+    data class OneNodeData(
+        val creator: String
     )
 
 }

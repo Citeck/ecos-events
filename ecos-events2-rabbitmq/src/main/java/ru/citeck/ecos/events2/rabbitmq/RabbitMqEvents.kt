@@ -3,20 +3,23 @@ package ru.citeck.ecos.events2.rabbitmq
 import com.rabbitmq.client.BuiltinExchangeType
 import mu.KotlinLogging
 import ru.citeck.ecos.events2.EcosEvent
-import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.events2.EventServiceFactory
 import ru.citeck.ecos.events2.remote.RemoteEvents
 import ru.citeck.ecos.events2.remote.RemoteListener
 import ru.citeck.ecos.rabbitmq.RabbitMqChannel
+import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
+import kotlin.collections.HashMap
 
-class RabbitMqEvents(val factory: EventServiceFactory,
-                     rabbitMqConnection: RabbitMqConn,
-                     val ecosZooKeeper: EcosZooKeeper) : RemoteEvents {
+class RabbitMqEvents(
+    rabbitMqConnection: RabbitMqConn,
+    private val factory: EventServiceFactory,
+    private val ecosZooKeeper: EcosZooKeeper
+) : RemoteEvents {
 
     companion object {
         val log = KotlinLogging.logger {}
@@ -66,7 +69,7 @@ class RabbitMqEvents(val factory: EventServiceFactory,
     override fun addProducedEventType(eventType: String) {
         if (producedEventTypes.add(eventType)) {
             updateRemoteListeners(eventType)
-            ecosZooKeeper.watchChildren("/events/${eventType}") { updateRemoteListeners(eventType) }
+            ecosZooKeeper.watchChildrenRecursive("/events/${eventType}") { updateRemoteListeners(eventType) }
         }
     }
 
@@ -114,7 +117,7 @@ class RabbitMqEvents(val factory: EventServiceFactory,
             }
         }
 
-        eventListeners = events
+        eventListeners = HashMap(events)
     }
 
     override fun emitEvent(listener: RemoteListener, event: EcosEvent) {
