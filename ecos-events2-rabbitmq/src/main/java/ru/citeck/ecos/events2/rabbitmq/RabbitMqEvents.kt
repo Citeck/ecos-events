@@ -12,8 +12,6 @@ import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.function.Consumer
-import kotlin.collections.HashMap
 
 class RabbitMqEvents(
     rabbitMqConnection: RabbitMqConn,
@@ -45,7 +43,7 @@ class RabbitMqEvents(
             val initFlag = AtomicBoolean()
 
             repeat(factory.properties.concurrentEventConsumers) {
-                rabbitMqConnection.doWithNewChannel(Consumer { channel ->
+                rabbitMqConnection.doWithNewChannel { channel ->
 
                     if (initFlag.compareAndSet(false, true)) {
                         outcomeChannel = channel
@@ -57,7 +55,7 @@ class RabbitMqEvents(
                     channel.addConsumer(eventsQueue, EcosEvent::class.java) { event, _ ->
                         onEventReceived(event)
                     }
-                })
+                }
             }
         }
     }
