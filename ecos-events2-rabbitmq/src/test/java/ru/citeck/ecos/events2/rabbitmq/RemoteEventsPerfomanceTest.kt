@@ -94,7 +94,8 @@ class RemoteEventsPerfomanceTest {
     @Test
     fun oneEmitterPerfomanceTest() {
 
-        val dataCount = 5_000
+        val dataCount = 10_000
+        val maxTime = 7_000L
 
         val dataToEmit0 = generateRandomNodeData(dataCount)
 
@@ -149,7 +150,7 @@ class RemoteEventsPerfomanceTest {
             "oneEmitterPerfomanceTest receiveTime: $receiveTime"
         }
 
-        assertThat(receiveTime).isLessThan(7_000)
+        assertThat(receiveTime).isLessThan(maxTime)
 
         assertThat(receivedDataFromListener0.size).isEqualTo(dataCount)
         assertThat(receivedDataFromListener0).containsAnyElementsOf(dataToEmit0)
@@ -164,8 +165,9 @@ class RemoteEventsPerfomanceTest {
     @Test
     fun twoEmitterPerfomanceTest() {
 
-        val dataCount = 5_000
+        val dataCount = 10_000
         val emitterCount = 2
+        val maxTime = 10_000L
 
         val dataToEmit0 = generateRandomNodeData(dataCount)
         val dataToEmit1 = generateRandomNodeData(dataCount)
@@ -225,7 +227,7 @@ class RemoteEventsPerfomanceTest {
             "twoEmitterPerfomanceTest receiveTime: $receiveTime"
         }
 
-        assertThat(receiveTime).isLessThan(10_000)
+        assertThat(receiveTime).isLessThan(maxTime)
 
         assertThat(receivedDataFromListener0.size).isEqualTo(dataCount * emitterCount)
         assertThat(receivedDataFromListener0).containsAnyElementsOf(dataToEmit0)
@@ -243,8 +245,9 @@ class RemoteEventsPerfomanceTest {
     @Test
     fun threeEmitterPerfomanceTest() {
 
-        val dataCount = 5_000
+        val dataCount = 10_000
         val emitterCount = 3
+        val maxTime = 13_000L
 
         val dataToEmit0 = generateRandomNodeData(dataCount)
         val dataToEmit1 = generateRandomNodeData(dataCount)
@@ -309,7 +312,7 @@ class RemoteEventsPerfomanceTest {
             "threeEmitterPerfomanceTest receiveTime: $receiveTime"
         }
 
-        assertThat(receiveTime).isLessThan(13_000)
+        assertThat(receiveTime).isLessThan(maxTime)
 
         assertThat(receivedDataFromListener0.size).isEqualTo(dataCount * emitterCount)
         assertThat(receivedDataFromListener0).containsAnyElementsOf(dataToEmit0)
