@@ -25,7 +25,7 @@ import kotlin.test.assertNull
 class RemoteListenersAddTest {
 
     companion object {
-        const val NEW_NODE_TYPE: String = "type-new"
+        const val NODE_TYPE: String = "type"
     }
 
     private var zkServer: TestingServer? = null
@@ -73,7 +73,7 @@ class RemoteListenersAddTest {
 
         eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
             id = "config0"
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receiveData0 = evData
@@ -82,7 +82,7 @@ class RemoteListenersAddTest {
 
         eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
             id = "config0"
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receiveData1 = evData
@@ -90,7 +90,7 @@ class RemoteListenersAddTest {
         })
 
         val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             eventClass = NodeData::class.java
         })
 
@@ -111,7 +111,7 @@ class RemoteListenersAddTest {
 
         eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
             id = "config0"
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receiveData0 = evData
@@ -120,7 +120,7 @@ class RemoteListenersAddTest {
 
         eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
             id = "config0"
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receiveData1 = evData
@@ -128,7 +128,7 @@ class RemoteListenersAddTest {
         })
 
         val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             eventClass = NodeData::class.java
         })
 
@@ -139,7 +139,7 @@ class RemoteListenersAddTest {
 
         eventServiceReceiverApp0.removeListener(ListenerConfig.create<NodeData> {
             id = "config0"
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receiveData0 = evData

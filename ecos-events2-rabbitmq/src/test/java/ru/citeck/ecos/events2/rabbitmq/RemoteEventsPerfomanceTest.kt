@@ -29,7 +29,7 @@ import java.util.*
 class RemoteEventsPerfomanceTest {
 
     companion object {
-        const val NEW_NODE_TYPE: String = "type-new"
+        const val NODE_TYPE: String = "type"
         val log = KotlinLogging.logger {}
     }
 
@@ -107,12 +107,12 @@ class RemoteEventsPerfomanceTest {
         val receivedDataFromListener2 = mutableListOf<NodeData>()
 
         val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             eventClass = NodeData::class.java
         })
 
         eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receivedDataFromListener0.add(evData)
@@ -120,7 +120,7 @@ class RemoteEventsPerfomanceTest {
         })
 
         eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receivedDataFromListener1.add(evData)
@@ -128,7 +128,7 @@ class RemoteEventsPerfomanceTest {
         })
 
         eventServiceReceiverApp2.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receivedDataFromListener2.add(evData)
@@ -180,12 +180,12 @@ class RemoteEventsPerfomanceTest {
         val receivedDataFromListener2 = mutableListOf<NodeData>()
 
         val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             eventClass = NodeData::class.java
         })
 
         eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receivedDataFromListener0.add(evData)
@@ -193,7 +193,7 @@ class RemoteEventsPerfomanceTest {
         })
 
         eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receivedDataFromListener1.add(evData)
@@ -201,7 +201,7 @@ class RemoteEventsPerfomanceTest {
         })
 
         eventServiceReceiverApp2.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receivedDataFromListener2.add(evData)
@@ -261,12 +261,12 @@ class RemoteEventsPerfomanceTest {
         val receivedDataFromListener2 = mutableListOf<NodeData>()
 
         val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             eventClass = NodeData::class.java
         })
 
         eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receivedDataFromListener0.add(evData)
@@ -274,7 +274,7 @@ class RemoteEventsPerfomanceTest {
         })
 
         eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receivedDataFromListener1.add(evData)
@@ -282,7 +282,7 @@ class RemoteEventsPerfomanceTest {
         })
 
         eventServiceReceiverApp2.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receivedDataFromListener2.add(evData)

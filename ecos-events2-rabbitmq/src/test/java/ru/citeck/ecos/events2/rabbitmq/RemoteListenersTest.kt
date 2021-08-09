@@ -24,7 +24,7 @@ import kotlin.test.assertEquals
 class RemoteListenersTest {
 
     companion object {
-        const val NEW_NODE_TYPE: String = "type-new"
+        const val NODE_TYPE: String = "type"
     }
 
     private var zkServer: TestingServer? = null
@@ -67,12 +67,12 @@ class RemoteListenersTest {
         val emitData = NodeData("13-ab-kk", "data")
 
         val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             eventClass = NodeData::class.java
         })
 
         eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receiveData = evData
@@ -95,7 +95,7 @@ class RemoteListenersTest {
         val emitData = NodeData("13-ab-kk-1", "some data")
 
         eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receiveData = evData
@@ -103,7 +103,7 @@ class RemoteListenersTest {
         })
 
         val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             eventClass = NodeData::class.java
         })
 
@@ -121,7 +121,7 @@ class RemoteListenersTest {
         val emitData = NodeData("13-ab-kk-1", "some data", personIvanRecord)
 
         eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeDataWithCreatorMeta> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeDataWithCreatorMeta::class.java
             setAction { evData ->
                 receiveData = evData
@@ -129,7 +129,7 @@ class RemoteListenersTest {
         })
 
         val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             eventClass = NodeData::class.java
         })
 
@@ -154,7 +154,7 @@ class RemoteListenersTest {
         val emitData1 = NodeData("13-ab-kk-1", "some data 1", personIvanRecord)
 
         eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeData::class.java
             setAction { evData ->
                 receiveData0 = evData
@@ -162,7 +162,7 @@ class RemoteListenersTest {
         })
 
         val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             eventClass = NodeData::class.java
         })
 
@@ -171,7 +171,7 @@ class RemoteListenersTest {
         assertEquals(emitData0, receiveData0)
 
         eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeDataWithCreatorMeta> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = NodeDataWithCreatorMeta::class.java
             setAction { evData ->
                 receiveData1 = evData
@@ -179,7 +179,7 @@ class RemoteListenersTest {
         })
 
         Thread.sleep(500)
-        val listenerWithCreatorMeta = ecosZooKeeper.getValue("/events/${NEW_NODE_TYPE}/app1",
+        val listenerWithCreatorMeta = ecosZooKeeper.getValue("/events/${NODE_TYPE}/app1",
             RemoteListener::class.java)
         assertEquals(5, listenerWithCreatorMeta!!.attributes.size)
 
@@ -203,7 +203,7 @@ class RemoteListenersTest {
         val emitData = FullNodeData("13-ab-kk-0", "some data 0", 2, "Galina", Date())
 
         eventServiceReceiverApp1.addListener(ListenerConfig.create<MinimalNodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = MinimalNodeData::class.java
             setAction { evData ->
                 receiveDataMinimal = evData
@@ -211,7 +211,7 @@ class RemoteListenersTest {
         })
 
         eventServiceReceiverApp1.addListener(ListenerConfig.create<MediumNodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = MediumNodeData::class.java
             setAction { evData ->
                 receiveDataMedium = evData
@@ -219,7 +219,7 @@ class RemoteListenersTest {
         })
 
         eventServiceReceiverApp1.addListener(ListenerConfig.create<OneNodeData> {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             dataClass = OneNodeData::class.java
             setAction { evData ->
                 receiveDataOne = evData
@@ -227,14 +227,14 @@ class RemoteListenersTest {
         })
 
         val emitter = eventServiceEmitterApp0.getEmitter<FullNodeData>(EmitterConfig.create {
-            eventType = NEW_NODE_TYPE
+            eventType = NODE_TYPE
             eventClass = FullNodeData::class.java
         })
 
         Thread.sleep(1000)
 
 
-        val listenerWithCreatorMeta = ecosZooKeeper.getValue("/events/${NEW_NODE_TYPE}/app1",
+        val listenerWithCreatorMeta = ecosZooKeeper.getValue("/events/${NODE_TYPE}/app1",
             RemoteListener::class.java)
 
         assertEquals(5, listenerWithCreatorMeta!!.attributes.size)
