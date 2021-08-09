@@ -24,7 +24,7 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
     private var listeners: Map<String, EventTypeListeners> = emptyMap()
 
     private val remoteAttsByType: MutableMap<String, Set<String>> = ConcurrentHashMap()
-    private var rawListeners: List<ListenerConfig<*>> = ArrayList()
+    private var rawListeners: Set<ListenerConfig<*>> = emptySet()
 
     private val remoteEvents = serviceFactory.remoteEvents
     private var remoteListeners: Map<String, List<RemoteListener>> = emptyMap()
@@ -133,13 +133,13 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
 
     @Synchronized
     fun removeListener(config: ListenerConfig<*>) {
-        rawListeners = rawListeners.filter { it != config }
+        rawListeners = rawListeners.filter { it != config }.toSet()
         update()
     }
 
     @Synchronized
     fun removeListener(id: String) {
-        rawListeners = rawListeners.filter { it.id != id }
+        rawListeners = rawListeners.filter { it.id != id }.toSet()
         update()
     }
 
@@ -157,7 +157,7 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
 
     @Synchronized
     fun setListeners(listeners: List<ListenerConfig<*>>) : List<ListenerHandle> {
-        rawListeners = ArrayList(listeners)
+        rawListeners = ArrayList(listeners).toSet()
         update()
         return listeners.map { ListenerHandle(it, this) }
     }
