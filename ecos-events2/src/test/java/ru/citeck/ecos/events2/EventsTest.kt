@@ -42,7 +42,7 @@ class EventsTest {
         assertEquals(targetData, data)
     }
 
-    data class DataClass(
+    private data class DataClass(
         @AttName("field0") var field0: String?,
         @AttName("field1") var field1: String?
     )

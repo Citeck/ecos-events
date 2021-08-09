@@ -3,8 +3,11 @@ package ru.citeck.ecos.events2.listener
 import ru.citeck.ecos.commons.utils.func.UncheckedConsumer
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
+import java.util.*
+import kotlin.collections.HashMap
 
 data class ListenerConfig<T : Any>(
+    val id: String,
     val eventType: String,
     val dataClass: Class<T>,
     val attributes: Map<String, String>,
@@ -16,7 +19,7 @@ data class ListenerConfig<T : Any>(
 
     companion object {
 
-        fun <T : Any> create(block: Builder<T>.() -> Unit) : ListenerConfig<T> {
+        fun <T : Any> create(block: Builder<T>.() -> Unit): ListenerConfig<T> {
             val builder = Builder<T>()
             block.invoke(builder)
             return builder.build()
@@ -25,6 +28,7 @@ data class ListenerConfig<T : Any>(
 
     class Builder<T : Any> {
 
+        var id: String? = null
         var eventType: String? = null
         var dataClass: Class<T>? = null
         var attributes: MutableMap<String, String> = HashMap()
@@ -49,16 +53,38 @@ data class ListenerConfig<T : Any>(
             }
         }
 
-        fun build() : ListenerConfig<T> {
+        fun build(): ListenerConfig<T> {
+            if (id.isNullOrBlank()) {
+                id = UUID.randomUUID().toString()
+            }
+
             return ListenerConfig(
-                    eventType!!,
-                    dataClass!!,
-                    attributes,
-                    local,
-                    action!!,
-                    filter,
-                    consistent
+                id!!,
+                eventType!!,
+                dataClass!!,
+                attributes,
+                local,
+                action!!,
+                filter,
+                consistent
             )
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ListenerConfig<*>
+
+        if (id != other.id) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
+
+
 }

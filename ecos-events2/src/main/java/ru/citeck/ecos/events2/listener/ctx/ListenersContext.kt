@@ -11,9 +11,6 @@ import ru.citeck.ecos.events2.remote.RemoteListener
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
-import kotlin.collections.HashSet
 
 class ListenersContext(serviceFactory: EventServiceFactory) {
 
@@ -136,7 +133,13 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
 
     @Synchronized
     fun removeListener(config: ListenerConfig<*>) {
-        rawListeners = rawListeners.filter { it === config }
+        rawListeners = rawListeners.filter { it != config }
+        update()
+    }
+
+    @Synchronized
+    fun removeListener(id: String) {
+        rawListeners = rawListeners.filter { it.id != id }
         update()
     }
 

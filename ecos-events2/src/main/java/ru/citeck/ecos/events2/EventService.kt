@@ -139,4 +139,13 @@ class EventService(serviceFactory: EventServiceFactory) {
     fun addListener(listener: ListenerConfig<*>): ListenerHandle {
         return listenersContext.addListener(listener)
     }
+
+    fun removeListener(listener: ListenerConfig<*>) {
+        return listenersContext.removeListener(listener)
+    }
+
+    fun removeListener(id: String) {
+        return listenersContext.removeListener(id)
+    }
+
 }
