@@ -20,7 +20,7 @@ def getChangeString() {
 }
 // Changes func
 properties([
-    buildDiscarder(logRotator(daysToKeepStr: '', numToKeepStr: '7')),
+    buildDiscarder(logRotator(daysToKeepStr: '', numToKeepStr: '3')),
 ])
 timestamps {
   node {
@@ -33,7 +33,7 @@ timestamps {
           doGenerateSubmoduleConfigurations: false,
           extensions: [],
           submoduleCfg: [],
-          userRemoteConfigs: [[credentialsId: 'bc074014-bab1-4fb0-b5a4-4cfa9ded5e66',url: "git@bitbucket.org:citeck/ecos-events.git"]]
+          userRemoteConfigs: [[credentialsId: 'awx.integrations',url: "git@bitbucket.org:citeck/ecos-events.git"]]
         ])
       }
       def project_version = readMavenPom().getVersion()
