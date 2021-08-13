@@ -26,8 +26,8 @@
 
         <ecos.jackson.version>2.10.4.3</ecos.jackson.version>
         <ecos.snakeyaml.version>2.2.0</ecos.snakeyaml.version>
-        <ecos.commons.version>2.3.1</ecos.commons.version>
-        <ecos.records.version>3.28.0</ecos.records.version>
+        <ecos.commons.version>2.5.0</ecos.commons.version>
+        <ecos.records.version>3.32.0</ecos.records.version>
 
         <groovy.version>2.5.9</groovy.version>
 

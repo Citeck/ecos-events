@@ -16,8 +16,8 @@
     <properties>
 
         <rabbitmq-mock.version>1.0.11</rabbitmq-mock.version>
-        <ecos.rabbitmq.version>1.1.0</ecos.rabbitmq.version>
-        <ecos.zookeeper.version>1.0.0-SNAPSHOT</ecos.zookeeper.version>
+        <ecos.rabbitmq.version>2.2.0</ecos.rabbitmq.version>
+        <ecos.zookeeper.version>1.0.0</ecos.zookeeper.version>
         <ecos.curator.version>5.2.0</ecos.curator.version>
 
     </properties>
