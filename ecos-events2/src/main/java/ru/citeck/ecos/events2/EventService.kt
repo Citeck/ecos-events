@@ -14,6 +14,7 @@ import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.RecordElement
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
+import ru.citeck.ecos.records3.record.request.RequestContext
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -21,7 +22,11 @@ import java.util.concurrent.ConcurrentHashMap
 class EventService(serviceFactory: EventServiceFactory) {
 
     companion object {
-        val log = KotlinLogging.logger {}
+        const val EVENT_ATTR = "event"
+
+        private val log = KotlinLogging.logger {}
+
+        private const val CURRENT_USER = "current"
     }
 
     private val remoteEvents = serviceFactory.remoteEvents
@@ -64,16 +69,32 @@ class EventService(serviceFactory: EventServiceFactory) {
 
         val eventId = UUID.randomUUID()
         val time = Instant.now()
+        val user = CURRENT_USER
         val typeListeners = getListenersForType(config.eventType) ?: return eventId
+        val eventSource = EventSource(config.source, emptySet(), "", "")
 
-        val fullDataAtts = recordsService.getAtts(event, typeListeners.attributes)
+        val eventInfo = EcosEventInfo(
+            id = eventId,
+            time = time,
+            user = user,
+            source = eventSource
+        )
+
+        val fullDataAtts = RequestContext.doWithAtts(
+            mapOf(
+                EVENT_ATTR to eventInfo
+            )
+        )
+        { _ ->
+            recordsService.getAtts(event, typeListeners.attributes)
+        }
 
         val ecosEvent = EcosEvent(
             eventId,
             time,
             config.eventType,
-            "current",
-            EventSource(config.source, emptySet(), "", ""),
+            user,
+            eventSource,
             fullDataAtts
         )
 
