@@ -1,10 +1,13 @@
 package ru.citeck.ecos.events2
 
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.events2.EventConstants.CURRENT_USER_ATT
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
+import ru.citeck.ecos.records2.rest.RemoteRecordsUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.records3.record.request.RequestContext
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -55,6 +58,8 @@ class EventsTest {
         val emitData = DataClass("aa", "bb")
         var receiveData: DataClassWithEventInfo? = null
 
+        val userIvan = "ivan.petrov"
+
         eventService.addListener(ListenerConfig.create<DataClassWithEventInfo> {
             eventType = "test-type"
             dataClass = DataClassWithEventInfo::class.java
@@ -68,7 +73,11 @@ class EventsTest {
             eventClass = DataClass::class.java
         })
 
-        emitter.emit(emitData)
+        RequestContext.doWithAtts(
+            mapOf(CURRENT_USER_ATT to userIvan)
+        ) { _ ->
+            emitter.emit(emitData)
+        }
 
         assertNotNull(receiveData)
         assertEquals(emitData.field0, receiveData!!.field0)
@@ -76,7 +85,7 @@ class EventsTest {
 
         assertTrue(receiveData!!.eventId.isNotBlank())
         assertNotNull(receiveData!!.eventTime)
-        assertTrue(receiveData!!.eventUser.isNotBlank())
+        assertEquals(userIvan, receiveData!!.eventUser)
     }
 
     private data class DataClass(

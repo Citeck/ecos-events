@@ -3,6 +3,7 @@ package ru.citeck.ecos.events2
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.events2.EventConstants.CONTEXT_CURRENT_USER_ATT
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.emitter.EventEmitter
 import ru.citeck.ecos.events2.listener.ListenerConfig
@@ -26,8 +27,6 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
         const val EVENT_ATTR = "event"
 
         private val log = KotlinLogging.logger {}
-
-        private const val CURRENT_USER_ATT = "\$currentUser"
     }
 
     private val remoteEvents = serviceFactory.remoteEvents
@@ -106,7 +105,8 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
     }
 
     private fun resolveCurrentUser(): String {
-        return recordsService.getAtts(mapOf<String, Any>(), listOf(CURRENT_USER_ATT)).getAtt(CURRENT_USER_ATT).asText()
+        return recordsService.getAtts(mapOf<String, Any>(), listOf(CONTEXT_CURRENT_USER_ATT))
+            .getAtt(CONTEXT_CURRENT_USER_ATT).asText()
     }
 
     private fun getListenersForType(eventType: String): EventTypeListeners? {
