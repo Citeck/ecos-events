@@ -95,7 +95,7 @@ class RemoteEventsPerfomanceTest {
     fun oneEmitterPerfomanceTest() {
 
         val dataCount = 10_000
-        val maxTime = 7_000L
+        val maxTime = 10_000L
 
         val dataToEmit0 = generateRandomNodeData(dataCount)
 
@@ -167,7 +167,7 @@ class RemoteEventsPerfomanceTest {
 
         val dataCount = 10_000
         val emitterCount = 2
-        val maxTime = 10_000L
+        val maxTime = 15_000L
 
         val dataToEmit0 = generateRandomNodeData(dataCount)
         val dataToEmit1 = generateRandomNodeData(dataCount)
@@ -247,7 +247,7 @@ class RemoteEventsPerfomanceTest {
 
         val dataCount = 10_000
         val emitterCount = 3
-        val maxTime = 13_000L
+        val maxTime = 17_000L
 
         val dataToEmit0 = generateRandomNodeData(dataCount)
         val dataToEmit1 = generateRandomNodeData(dataCount)
