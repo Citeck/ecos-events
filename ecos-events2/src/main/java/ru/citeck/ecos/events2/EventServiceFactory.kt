@@ -24,6 +24,6 @@ open class EventServiceFactory(var recordsServiceFactory: RecordsServiceFactory?
     }
 
     open fun createEventService() : EventService {
-        return EventService(this)
+        return EventServiceImpl(this)
     }
 }

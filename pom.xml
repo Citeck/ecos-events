@@ -7,7 +7,7 @@
 
     <groupId>ru.citeck.ecos.events2</groupId>
     <artifactId>ecos-events2-project</artifactId>
-    <version>2.1.0</version>
+    <version>2.2.0</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -28,7 +28,7 @@
         <ecos.commons.version>2.5.0</ecos.commons.version>
         <ecos.records.version>3.32.0</ecos.records.version>
 
-        <ecos.zookeeper.version>1.1.0</ecos.zookeeper.version>
+        <ecos.zookeeper.version>1.2.2</ecos.zookeeper.version>
         <ecos.curator.version>5.2.0</ecos.curator.version>
         <ecos.rabbitmq.version>2.2.0</ecos.rabbitmq.version>
         <rabbitmq-mock.version>1.1.1</rabbitmq-mock.version>

@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import ru.citeck.ecos.events2.EventProperties
 import ru.citeck.ecos.events2.EventService
 import ru.citeck.ecos.events2.EventServiceFactory
@@ -14,6 +15,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
 
 @Configuration
+@Profile("!test")
 open class EventServiceConfig(
     private val ecosZookeeper: EcosZooKeeper,
     private val rabbitMqConnProvider: RabbitMqConnProvider,
