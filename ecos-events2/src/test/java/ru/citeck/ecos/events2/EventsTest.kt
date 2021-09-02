@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test
 import ru.citeck.ecos.events2.EventConstants.CURRENT_USER_ATT
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
-import ru.citeck.ecos.records2.rest.RemoteRecordsUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.request.RequestContext

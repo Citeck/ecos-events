@@ -152,7 +152,8 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
 
     @Synchronized
     fun addListener(listener: ListenerConfig<*>) : ListenerHandle {
-        return addListeners(listOf(listener))[0]
+        val newListeners = addListeners(listOf(listener))
+        return newListeners.first { it.config.id == listener.id }
     }
 
     @Synchronized
