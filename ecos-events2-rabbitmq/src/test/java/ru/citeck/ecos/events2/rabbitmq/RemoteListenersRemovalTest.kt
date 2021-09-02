@@ -216,6 +216,70 @@ class RemoteListenersRemovalTest {
     }
 
     @Test
+    fun multipleRemoveListenersByHandleTest() {
+
+        var receiveData0: NodeData? = null
+        var receiveData1: NodeData? = null
+        var receiveData2: NodeData? = null
+
+        val emitData0 = NodeData("13-ab-kk-0", "some data 0", personIvanRecord)
+
+        val listenerHandle0 = eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
+            id = "config0"
+            eventType = NODE_TYPE
+            dataClass = NodeData::class.java
+            setAction { evData ->
+                receiveData0 = evData
+            }
+        })
+
+        val listenerHandle1 = eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
+            id = "config1"
+            eventType = NODE_TYPE
+            dataClass = NodeData::class.java
+            setAction { evData ->
+                receiveData1 = evData
+            }
+        })
+
+        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
+            id = "config2"
+            eventType = NODE_TYPE
+            dataClass = NodeData::class.java
+            setAction { evData ->
+                receiveData2 = evData
+            }
+        })
+
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
+            eventType = NODE_TYPE
+            eventClass = NodeData::class.java
+        })
+
+        emitter.emit(emitData0)
+        Thread.sleep(500)
+        assertEquals(emitData0, receiveData0)
+        assertEquals(emitData0, receiveData1)
+        assertEquals(emitData0, receiveData2)
+
+        listenerHandle0.remove()
+        listenerHandle1.remove()
+        receiveData0 = null
+        receiveData1 = null
+        receiveData2 = null
+
+        Thread.sleep(500)
+
+        emitter.emit(emitData0)
+
+        Thread.sleep(500)
+
+        assertNull(receiveData0)
+        assertNull(receiveData1)
+        assertEquals(emitData0, receiveData2)
+    }
+
+    @Test
     fun multipleRemoveListenersMultipleEmittersTest() {
 
         val receiveData00: MutableList<NodeData> = mutableListOf()
