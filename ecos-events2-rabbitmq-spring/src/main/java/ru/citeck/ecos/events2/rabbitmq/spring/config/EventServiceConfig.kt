@@ -26,10 +26,10 @@ open class EventServiceConfig(
         private val log = KotlinLogging.logger {}
     }
 
-    @Value("\${ecos.event.app.instance-id}")
+    @Value("\${eureka.instance.instanceId}")
     private lateinit var appInstanceId: String
 
-    @Value("\${ecos.event.app.name}")
+    @Value("\${spring.application.name}")
     private lateinit var appName: String
 
     @Value("\${ecos.event.concurrent-event-consumers:10}")
