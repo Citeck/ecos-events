@@ -7,6 +7,7 @@ import ecos.org.apache.curator.framework.CuratorFramework
 import ecos.org.apache.curator.framework.CuratorFrameworkFactory
 import ecos.org.apache.curator.retry.RetryForever
 import ecos.org.apache.curator.test.TestingServer
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.*
 import ru.citeck.ecos.events2.EventService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
@@ -36,7 +37,8 @@ class RemoteListenersTest {
 
     private val personIvanRecordRef = RecordRef.create(TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
         "ivan").toString()
-    private val personIvanRecord = PersonRecord("Ivan", "Petrov")
+    private val personIvanRecord = PersonRecord("Ivan", "Petrov", listOf("89002003050",
+        "89001001003987"))
 
     @BeforeEach
     fun setUp() {
@@ -142,6 +144,7 @@ class RemoteListenersTest {
         assertEquals(emitData.creator, receiveData!!.creator)
         assertEquals(personIvanRecord.firstName, receiveData!!.creatorFirstName)
         assertEquals(personIvanRecord.lastName, receiveData!!.creatorLastName)
+        Assertions.assertThat(emitData.creator!!.phones).containsExactlyInAnyOrderElementsOf(receiveData!!.creatorPhones)
     }
 
     @Test
@@ -274,12 +277,16 @@ class RemoteListenersTest {
         val creatorFirstName: String? = null,
 
         @AttName("creator.lastName")
-        val creatorLastName: String? = null
+        val creatorLastName: String? = null,
+
+        @AttName("creator.phones[]")
+        val creatorPhones: List<String>
     )
 
     private data class PersonRecord(
         val firstName: String,
-        val lastName: String
+        val lastName: String,
+        val phones: List<String>
     )
 
     private data class FullNodeData(
