@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import ru.citeck.ecos.events2.EventsProperties
-import ru.citeck.ecos.events2.EventService
+import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.rabbitmq.RabbitMqEvents
 import ru.citeck.ecos.events2.remote.RemoteEvents
@@ -36,9 +36,9 @@ open class EventsServiceConfig(
     }
 
     @Bean
-    override fun createEventService(): EventService {
+    override fun createEventsService(): EventsService {
         log.info { "Event Service init" }
-        return super.createEventService()
+        return super.createEventsService()
     }
 
     override fun createProperties(): EventsProperties {

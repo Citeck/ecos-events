@@ -7,7 +7,7 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 
 open class EventsServiceFactory {
 
-    val eventService: EventService by lazy { createEventService() }
+    val eventsService: EventService by lazy { createEventsService() }
     val remoteEvents: RemoteEvents? by lazy { createRemoteEvents() }
     val listenersContext: ListenersContext by lazy { createListenersContext() }
     val properties: EventsProperties by lazy { createProperties() }
@@ -31,7 +31,7 @@ open class EventsServiceFactory {
         return null
     }
 
-    open fun createEventService() : EventService {
+    open fun createEventsService() : EventService {
         return EventsServiceImpl(this)
     }
 }
