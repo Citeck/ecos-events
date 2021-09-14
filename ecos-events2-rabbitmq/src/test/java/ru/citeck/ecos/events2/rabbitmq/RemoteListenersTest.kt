@@ -7,7 +7,9 @@ import ecos.org.apache.curator.framework.CuratorFramework
 import ecos.org.apache.curator.framework.CuratorFrameworkFactory
 import ecos.org.apache.curator.retry.RetryForever
 import ecos.org.apache.curator.test.TestingServer
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import ru.citeck.ecos.events2.EventService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
@@ -18,7 +20,6 @@ import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
-import kotlin.test.assertEquals
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class RemoteListenersTest {
@@ -29,35 +30,23 @@ class RemoteListenersTest {
 
     private var zkServer: TestingServer? = null
 
-    private lateinit var zkClient: CuratorFramework
-    private lateinit var ecosZooKeeper: EcosZooKeeper
+    private lateinit var servers: TestUtils.MockServers
     private lateinit var eventServiceEmitterApp0: EventService
     private lateinit var eventServiceReceiverApp1: EventService
 
     private val personIvanRecordRef = RecordRef.create(TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
         "ivan").toString()
-    private val personIvanRecord = PersonRecord("Ivan", "Petrov")
+    private val personIvanRecord = PersonRecord("Ivan", "Petrov", listOf("89002003050",
+        "89001001003987"))
 
     @BeforeEach
     fun setUp() {
-        zkServer = TestingServer()
+        servers = TestUtils.createServers()
 
-        val retryPolicy: RetryPolicy = RetryForever(7_000)
-
-        zkClient = CuratorFrameworkFactory
-            .newClient(zkServer!!.connectString, retryPolicy)
-        zkClient.start()
-        ecosZooKeeper = EcosZooKeeper(zkClient).withNamespace("ecos")
-
-        val factory: ConnectionFactory = MockConnectionFactory()
-        val connection = RabbitMqConn(factory)
-
-        connection.waitUntilReady(5_000)
-
-        eventServiceEmitterApp0 = TestUtils.createApp("app0", connection, ecosZooKeeper, mapOf(
+        eventServiceEmitterApp0 = TestUtils.createApp("app0", servers, mapOf(
             Pair(personIvanRecordRef, personIvanRecord)
         ))
-        eventServiceReceiverApp1 = TestUtils.createApp("app1", connection, ecosZooKeeper, emptyMap())
+        eventServiceReceiverApp1 = TestUtils.createApp("app1", servers, emptyMap())
     }
 
     @Test
@@ -142,6 +131,7 @@ class RemoteListenersTest {
         assertEquals(emitData.creator, receiveData!!.creator)
         assertEquals(personIvanRecord.firstName, receiveData!!.creatorFirstName)
         assertEquals(personIvanRecord.lastName, receiveData!!.creatorLastName)
+        Assertions.assertThat(emitData.creator!!.phones).containsExactlyInAnyOrderElementsOf(receiveData!!.creatorPhones)
     }
 
     @Test
@@ -173,15 +163,15 @@ class RemoteListenersTest {
         eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeDataWithCreatorMeta> {
             eventType = NODE_TYPE
             dataClass = NodeDataWithCreatorMeta::class.java
-            setAction { evData ->
+            withAction { evData ->
                 receiveData1 = evData
             }
         })
 
         Thread.sleep(500)
-        val listenerWithCreatorMeta = ecosZooKeeper.getValue("/events/${NODE_TYPE}/app1",
+        val listenerWithCreatorMeta = servers.zookeeper.getValue("/events/${NODE_TYPE}/app1",
             RemoteListener::class.java)
-        assertEquals(5, listenerWithCreatorMeta!!.attributes.size)
+        assertEquals(6, listenerWithCreatorMeta!!.attributes.size)
 
         emitter.emit(emitData1)
         Thread.sleep(1000)
@@ -234,7 +224,7 @@ class RemoteListenersTest {
         Thread.sleep(1000)
 
 
-        val listenerWithCreatorMeta = ecosZooKeeper.getValue("/events/${NODE_TYPE}/app1",
+        val listenerWithCreatorMeta = servers.zookeeper.getValue("/events/${NODE_TYPE}/app1",
             RemoteListener::class.java)
 
         assertEquals(5, listenerWithCreatorMeta!!.attributes.size)
@@ -274,12 +264,16 @@ class RemoteListenersTest {
         val creatorFirstName: String? = null,
 
         @AttName("creator.lastName")
-        val creatorLastName: String? = null
+        val creatorLastName: String? = null,
+
+        @AttName("creator.phones[]")
+        val creatorPhones: List<String>
     )
 
     private data class PersonRecord(
         val firstName: String,
-        val lastName: String
+        val lastName: String,
+        val phones: List<String>
     )
 
     private data class FullNodeData(
@@ -305,5 +299,4 @@ class RemoteListenersTest {
     private data class OneNodeData(
         val creator: String
     )
-
 }

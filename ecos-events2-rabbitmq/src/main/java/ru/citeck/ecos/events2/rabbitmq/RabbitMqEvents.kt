@@ -31,15 +31,22 @@ class RabbitMqEvents(
     private val producedEventTypes: MutableSet<String> = Collections.newSetFromMap(ConcurrentHashMap())
     private val remoteListeners: MutableMap<String, List<RemoteListener>> = ConcurrentHashMap()
 
+    private val appName: String
+    private val appInstanceId: String
+
     init {
 
-        if (factory.properties.appName.isBlank()) {
+        val recProps = factory.recordsServices.properties
+        appName = recProps.appName
+        appInstanceId = recProps.appInstanceId
+
+        if (appName.isBlank()) {
 
             log.warn { "App name is blank. Consumers won't be registered" }
 
         } else {
 
-            val eventsQueue = EventRabbitMqConstants.EVENTS_QUEUE_ID.format(factory.properties.appName)
+            val eventsQueue = EventRabbitMqConstants.EVENTS_QUEUE_ID.format(appName)
             val initFlag = AtomicBoolean()
 
             repeat(factory.properties.concurrentEventConsumers) {
@@ -77,7 +84,7 @@ class RabbitMqEvents(
 
         val listeners = mutableListOf<RemoteListener>()
         children.forEach {
-            if (it != factory.properties.appName) {
+            if (it != appName) {
                 val listener = ecosZooKeeper.getValue("/events/${eventType}/${it}", RemoteListener::class.java)
                 if (listener != null) {
                     listeners.add(listener)
@@ -102,24 +109,24 @@ class RabbitMqEvents(
         events.forEach { (k, v) ->
             val listener = RemoteListener(
                 k,
-                factory.properties.appName,
-                factory.properties.appInstanceId,
+                appName,
+                appInstanceId,
                 v
             )
-            ecosZooKeeper.setValue("/events/${k}/${factory.properties.appName}", listener)
+            ecosZooKeeper.setValue("/events/${k}/$appName", listener)
         }
 
         eventListeners.forEach { (k, _) ->
             if (events[k] == null) {
-                ecosZooKeeper.setValue("/events/${k}/${factory.properties.appName}", null)
+                ecosZooKeeper.setValue("/events/${k}/$appName", null)
             }
         }
 
         eventListeners = HashMap(events)
     }
 
-    override fun emitEvent(listener: RemoteListener, event: EcosEvent) {
-        val queueName = EventRabbitMqConstants.EVENTS_QUEUE_ID.format(listener.appName)
+    override fun emitEvent(target: String, event: EcosEvent) {
+        val queueName = EventRabbitMqConstants.EVENTS_QUEUE_ID.format(target)
         outcomeChannel.publishMsg(queueName, event)
     }
 

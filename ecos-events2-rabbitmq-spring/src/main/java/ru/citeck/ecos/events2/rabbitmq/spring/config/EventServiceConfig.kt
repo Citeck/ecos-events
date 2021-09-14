@@ -1,6 +1,7 @@
 package ru.citeck.ecos.events2.rabbitmq.spring.config
 
 import mu.KotlinLogging
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -13,27 +14,26 @@ import ru.citeck.ecos.events2.remote.RemoteEvents
 import ru.citeck.ecos.rabbitmq.RabbitMqConnProvider
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
+import javax.annotation.PostConstruct
 
 @Configuration
 @Profile("!test")
 open class EventServiceConfig(
     private val ecosZookeeper: EcosZooKeeper,
-    private val rabbitMqConnProvider: RabbitMqConnProvider,
-    recordsServiceFactory: RecordsServiceFactory
-) : EventServiceFactory(recordsServiceFactory) {
+    private val rabbitMqConnProvider: RabbitMqConnProvider
+) : EventServiceFactory() {
 
     companion object {
         private val log = KotlinLogging.logger {}
     }
 
-    @Value("\${eureka.instance.instanceId}")
-    private lateinit var appInstanceId: String
-
-    @Value("\${spring.application.name}")
-    private lateinit var appName: String
-
     @Value("\${ecos.event.concurrent-event-consumers:10}")
     private var concurrentEventConsumers: Int = 10
+
+    @PostConstruct
+    override fun init() {
+        super.init()
+    }
 
     @Bean
     override fun createEventService(): EventService {
@@ -44,8 +44,6 @@ open class EventServiceConfig(
     override fun createProperties(): EventProperties {
 
         val prop = EventProperties(
-            appInstanceId = appInstanceId,
-            appName = appName,
             concurrentEventConsumers = concurrentEventConsumers
         )
 
@@ -59,4 +57,8 @@ open class EventServiceConfig(
         return RabbitMqEvents(conn!!, this, ecosZookeeper)
     }
 
+    @Autowired
+    fun setRecordsServiceFactory(recordsServiceFactory: RecordsServiceFactory) {
+        this.recordsServices = recordsServiceFactory
+    }
 }

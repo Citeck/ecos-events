@@ -1,15 +1,20 @@
 package ru.citeck.ecos.events2.listener.ctx
 
 import mu.KotlinLogging
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
+import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events2.EcosEvent
 import ru.citeck.ecos.events2.EventConstants
 import ru.citeck.ecos.events2.EventServiceFactory
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.events2.remote.RemoteListener
+import ru.citeck.ecos.events2.txn.RemoteEventTxnAction
+import ru.citeck.ecos.events2.txn.RemoteEventTxnActionExecutor
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateUtils
+import ru.citeck.ecos.records3.record.request.RequestContext
 import java.util.concurrent.ConcurrentHashMap
 
 class ListenersContext(serviceFactory: EventServiceFactory) {
@@ -18,8 +23,9 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
         val log = KotlinLogging.logger {}
     }
 
-    private val dtoSchemaReader = serviceFactory.recordsServiceFactory!!.dtoSchemaReader
-    private val attSchemaWriter = serviceFactory.recordsServiceFactory!!.attSchemaWriter
+    private val dtoSchemaReader = serviceFactory.recordsServices.dtoSchemaReader
+    private val attSchemaWriter = serviceFactory.recordsServices.attSchemaWriter
+    private val txnActionManager = serviceFactory.recordsServices.txnActionManager
 
     private var listeners: Map<String, EventTypeListeners> = emptyMap()
 
@@ -43,7 +49,7 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
 
     @Synchronized
     private fun update() {
-        val currentRemoteAttsByType = HashMap(remoteAttsByType);
+        val currentRemoteAttsByType = HashMap(remoteAttsByType)
         initListeners()
         if (remoteEvents != null) {
             if (currentRemoteAttsByType != HashMap(remoteAttsByType)) {
@@ -68,7 +74,13 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
                     listener.attributes.forEach { atts[it] = it }
                     attributes = atts
                     eventType = listener.eventType
-                    setAction { event -> remoteEvents.emitEvent(listener, event) }
+                    withAction { event ->
+                        txnActionManager.execute(
+                            RemoteEventTxnActionExecutor.ID,
+                            RemoteEventTxnAction(listener.appName, event),
+                            RequestContext.getCurrent()
+                        )
+                    }
                     consistent = false
                     dataClass = EcosEvent::class.java
                     local = true
@@ -80,7 +92,6 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
 
         listenersByType.forEach { (type, listeners) ->
 
-            val modelAtts = HashMap<String, String>()
             val recordAtts = HashSet<String>()
             val remoteAtts = HashSet<String>()
 
@@ -117,10 +128,16 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
 
     private fun getAttributesFromClass(clazz: Class<*>) : Map<String, String> {
 
+        if (clazz.isAssignableFrom(Map::class.java)) {
+            return emptyMap()
+        }
+
         if (clazz != Unit::class.java
                 && clazz != RecordRef::class.java
                 && clazz != EcosEvent::class.java
-                && clazz != MLText::class.java) {
+                && clazz != MLText::class.java
+                && clazz != ObjectData::class.java
+                && clazz != DataValue::class.java) {
 
             val attsSchema = dtoSchemaReader.read(clazz)
 
@@ -128,8 +145,6 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
         }
         return emptyMap()
     }
-
-    //todo: fix concurrent issues and remove synchronized
 
     @Synchronized
     fun removeListener(config: ListenerConfig<*>) {

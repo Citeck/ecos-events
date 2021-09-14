@@ -8,6 +8,8 @@ import ecos.org.apache.curator.framework.CuratorFrameworkFactory
 import ecos.org.apache.curator.retry.RetryForever
 import ecos.org.apache.curator.test.TestingServer
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -18,8 +20,6 @@ import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
 import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class RemoteListenersAddTest {
@@ -43,25 +43,14 @@ class RemoteListenersAddTest {
 
     @BeforeEach
     fun setUp() {
-        zkServer = TestingServer()
 
-        val retryPolicy: RetryPolicy = RetryForever(7_000)
+        val servers = TestUtils.createServers()
 
-        zkClient = CuratorFrameworkFactory
-            .newClient(zkServer!!.connectString, retryPolicy)
-        zkClient.start()
-        ecosZooKeeper = EcosZooKeeper(zkClient).withNamespace("ecos")
-
-        val factory: ConnectionFactory = MockConnectionFactory()
-        val connection = RabbitMqConn(factory)
-
-        connection.waitUntilReady(5_000)
-
-        eventServiceEmitterApp0 = TestUtils.createApp("app0", connection, ecosZooKeeper, mapOf(
+        eventServiceEmitterApp0 = TestUtils.createApp("app0", servers, mapOf(
             Pair(personIvanRecordRef, personIvanRecord)
         ))
 
-        eventServiceReceiverApp0 = TestUtils.createApp("app_rec_0", connection, ecosZooKeeper, emptyMap())
+        eventServiceReceiverApp0 = TestUtils.createApp("app_rec_0", servers, emptyMap())
     }
 
     @Test

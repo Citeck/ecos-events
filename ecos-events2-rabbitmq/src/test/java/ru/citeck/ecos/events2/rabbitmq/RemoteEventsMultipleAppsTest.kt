@@ -7,6 +7,7 @@ import ecos.org.apache.curator.framework.CuratorFrameworkFactory
 import ecos.org.apache.curator.retry.RetryForever
 import ecos.org.apache.curator.test.TestingServer
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -19,7 +20,6 @@ import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
-import kotlin.test.assertEquals
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RemoteEventsMultipleAppsTest {
@@ -37,28 +37,17 @@ class RemoteEventsMultipleAppsTest {
 
     @BeforeAll
     fun setUp() {
-        zkServer = TestingServer()
 
-        val retryPolicy: RetryPolicy = RetryForever(7_000)
+        val servers = TestUtils.createServers()
 
-        val client = CuratorFrameworkFactory
-            .newClient(zkServer!!.connectString, retryPolicy)
-        client.start()
-        val ecosZooKeeper = EcosZooKeeper(client).withNamespace("ecos")
-
-        val factory: ConnectionFactory = MockConnectionFactory()
-        val connection = RabbitMqConn(factory)
-
-        connection.waitUntilReady(5_000)
-
-        eventService0 = TestUtils.createApp("app0", connection, ecosZooKeeper, emptyMap())
+        eventService0 = TestUtils.createApp("app0", servers, emptyMap())
         eventService1 = TestUtils.createApp(
-            "app1", connection, ecosZooKeeper, mapOf(
+            "app1", servers, mapOf(
                 Pair(testRecordRecordRef, testRecord)
             )
         )
-        eventService2 = TestUtils.createApp("app2", connection, ecosZooKeeper, emptyMap())
-        eventService3 = TestUtils.createApp("app3", connection, ecosZooKeeper, emptyMap())
+        eventService2 = TestUtils.createApp("app2", servers, emptyMap())
+        eventService3 = TestUtils.createApp("app3", servers, emptyMap())
     }
 
     @AfterAll
@@ -79,7 +68,7 @@ class RemoteEventsMultipleAppsTest {
         eventService0.addListener(ListenerConfig.create<DataClass> {
             eventType = testEventType
             dataClass = DataClass::class.java
-            setAction { evData ->
+            withAction { evData ->
                 data0.add(evData)
             }
         })
@@ -87,7 +76,7 @@ class RemoteEventsMultipleAppsTest {
         eventService1.addListener(ListenerConfig.create<DataClass> {
             eventType = testEventType
             dataClass = DataClass::class.java
-            setAction { evData ->
+            withAction { evData ->
                 data1.add(evData)
             }
         })
@@ -95,7 +84,7 @@ class RemoteEventsMultipleAppsTest {
         eventService2.addListener(ListenerConfig.create<TestRecordMetaWithEventData> {
             eventType = testEventType
             dataClass = TestRecordMetaWithEventData::class.java
-            setAction { evData ->
+            withAction { evData ->
                 data2.add(evData)
             }
         })
@@ -103,7 +92,7 @@ class RemoteEventsMultipleAppsTest {
         eventService3.addListener(ListenerConfig.create<DataClassWithRecordRef> {
             eventType = testEventType
             dataClass = DataClassWithRecordRef::class.java
-            setAction { evData ->
+            withAction { evData ->
                 dataWithRecordRef.add(evData)
             }
         })
@@ -125,8 +114,8 @@ class RemoteEventsMultipleAppsTest {
         )
 
         val targetDataWithRecordRef = arrayListOf(
-            DataClassWithRecordRef(RecordRef.valueOf("ecos-config@test-config"), "some-str"),
-            DataClassWithRecordRef(RecordRef.valueOf("notification@temlate/email-template"), "some-str_0")
+            DataClassWithRecordRef(RecordRef.valueOf("app0/ecos-config@test-config"), "some-str"),
+            DataClassWithRecordRef(RecordRef.valueOf("app0/notification@temlate/email-template"), "some-str_0")
         )
 
         targetData.forEach { emitter.emit(it) }
