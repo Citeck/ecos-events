@@ -9,7 +9,7 @@ interface EventsService {
 
     fun <T : Any> getEmitter(config: EmitterConfig<T>): EventsEmitter<T>
 
-    fun emitRemoteEvent(event: EcosEvent)
+    fun emitEventFromRemote(event: EcosEvent)
 
     fun addListener(listener: ListenerConfig<*>): ListenerHandle
 

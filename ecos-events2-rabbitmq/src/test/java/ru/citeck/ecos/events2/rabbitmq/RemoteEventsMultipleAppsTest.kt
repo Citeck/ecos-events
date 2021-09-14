@@ -1,35 +1,28 @@
 package ru.citeck.ecos.events2.rabbitmq
 
-import com.github.fridujo.rabbitmq.mock.MockConnectionFactory
-import com.rabbitmq.client.ConnectionFactory
-import ecos.org.apache.curator.RetryPolicy
-import ecos.org.apache.curator.framework.CuratorFrameworkFactory
-import ecos.org.apache.curator.retry.RetryForever
 import ecos.org.apache.curator.test.TestingServer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import ru.citeck.ecos.events2.EventService
+import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils.Companion.RECORD_SOURCE_TEMPLATE
-import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.zookeeper.EcosZooKeeper
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RemoteEventsMultipleAppsTest {
 
-    private var zkServer: TestingServer? = null
+    private lateinit var servers: TestUtils.MockServers
 
-    private lateinit var eventService0: EventService
-    private lateinit var eventService1: EventService
-    private lateinit var eventService2: EventService
-    private lateinit var eventService3: EventService
+    private lateinit var eventService0: EventsService
+    private lateinit var eventService1: EventsService
+    private lateinit var eventService2: EventsService
+    private lateinit var eventService3: EventsService
 
     private val testRecordRecordRef = RecordRef.create(RECORD_SOURCE_TEMPLATE.format("app1"), "rec")
         .toString()
@@ -38,7 +31,7 @@ class RemoteEventsMultipleAppsTest {
     @BeforeAll
     fun setUp() {
 
-        val servers = TestUtils.createServers()
+        servers = TestUtils.createServers()
 
         eventService0 = TestUtils.createApp("app0", servers, emptyMap())
         eventService1 = TestUtils.createApp(
@@ -52,7 +45,7 @@ class RemoteEventsMultipleAppsTest {
 
     @AfterAll
     fun tearDown() {
-        zkServer?.stop()
+        servers.close()
     }
 
     @Test

@@ -2,12 +2,14 @@ package ru.citeck.ecos.events2.rabbitmq.utils
 
 import com.github.fridujo.rabbitmq.mock.MockConnectionFactory
 import com.rabbitmq.client.ConnectionFactory
+import ecos.curator.org.apache.zookeeper.ZooKeeper
 import ecos.org.apache.curator.RetryPolicy
 import ecos.org.apache.curator.framework.CuratorFrameworkFactory
 import ecos.org.apache.curator.retry.RetryForever
 import ecos.org.apache.curator.test.TestingServer
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.events2.EventService
+import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.rabbitmq.RabbitMqEvents
 import ru.citeck.ecos.events2.remote.RemoteEvents
@@ -45,15 +47,15 @@ class TestUtils {
 
             rabbitMqConn.waitUntilReady(5_000)
 
-            return MockServers(ecosZooKeeper, rabbitMqConn)
+            return MockServers(zkServer, ecosZooKeeper, rabbitMqConn)
         }
 
         fun createApp(
             name: String,
             servers: MockServers,
             records: Map<String, Any>
-        ): EventService {
-            return createAppServices(name, servers, records).eventService
+        ): EventsService {
+            return createAppServices(name, servers, records).eventsService
         }
 
         fun createAppServices(
@@ -123,7 +125,13 @@ class TestUtils {
     }
 
     class MockServers(
+        val zkServer: TestingServer,
         val zookeeper: EcosZooKeeper,
         val rabbitmq: RabbitMqConn
-    )
+    ) {
+        fun close() {
+            zkServer.stop()
+            rabbitmq.close()
+        }
+    }
 }

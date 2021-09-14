@@ -9,7 +9,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import ru.citeck.ecos.events2.EventService
+import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
@@ -27,15 +27,15 @@ class RemoteEventsPerfomanceTest {
 
     private val faker = Faker()
 
-    private var zkServer: TestingServer? = null
+    private lateinit var servers: TestUtils.MockServers
 
-    private lateinit var eventServiceEmitterApp0: EventService
-    private lateinit var eventServiceEmitterApp1: EventService
-    private lateinit var eventServiceEmitterApp2: EventService
+    private lateinit var eventServiceEmitterApp0: EventsService
+    private lateinit var eventServiceEmitterApp1: EventsService
+    private lateinit var eventServiceEmitterApp2: EventsService
 
-    private lateinit var eventServiceReceiverApp0: EventService
-    private lateinit var eventServiceReceiverApp1: EventService
-    private lateinit var eventServiceReceiverApp2: EventService
+    private lateinit var eventServiceReceiverApp0: EventsService
+    private lateinit var eventServiceReceiverApp1: EventsService
+    private lateinit var eventServiceReceiverApp2: EventsService
 
     private val personIvanRecordRef = RecordRef.create(
         TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
@@ -46,7 +46,7 @@ class RemoteEventsPerfomanceTest {
     @BeforeEach
     fun setUp() {
 
-        val servers = TestUtils.createServers()
+        servers = TestUtils.createServers()
 
         eventServiceEmitterApp0 = TestUtils.createApp(
             "appEmit0", servers, mapOf(
@@ -312,7 +312,7 @@ class RemoteEventsPerfomanceTest {
 
     @AfterEach
     fun tearDown() {
-        zkServer?.stop()
+        servers.close()
     }
 
     private fun generateRandomNodeData(size: Int): List<NodeData> {

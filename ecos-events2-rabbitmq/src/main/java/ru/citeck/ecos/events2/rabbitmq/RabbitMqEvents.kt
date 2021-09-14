@@ -131,6 +131,6 @@ class RabbitMqEvents(
     }
 
     fun onEventReceived(event: EcosEvent) {
-        factory.eventService.emitRemoteEvent(event)
+        factory.eventsService.emitEventFromRemote(event)
     }
 }

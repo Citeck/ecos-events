@@ -18,11 +18,11 @@ class EventsTest {
         val factory = EventsServiceFactory()
         factory.recordsServices = records
 
-        val eventService = factory.eventService
+        val eventsService = factory.eventsService
 
         val data = ArrayList<DataClass>()
 
-        eventService.addListener(ListenerConfig.create<DataClass> {
+        eventsService.addListener(ListenerConfig.create<DataClass> {
             eventType = "test-type"
             dataClass = DataClass::class.java
             setAction { evData ->
@@ -30,7 +30,7 @@ class EventsTest {
             }
         })
 
-        val emitter = eventService.getEmitter<DataClass>(EmitterConfig.create {
+        val emitter = eventsService.getEmitter<DataClass>(EmitterConfig.create {
             eventType = "test-type"
             eventClass = DataClass::class.java
         })
@@ -52,14 +52,14 @@ class EventsTest {
         val factory = EventsServiceFactory()
         factory.recordsServices = records
 
-        val eventService = factory.eventService
+        val eventsService = factory.eventsService
 
         val emitData = DataClass("aa", "bb")
         var receiveData: DataClassWithEventInfo? = null
 
         val userIvan = "ivan.petrov"
 
-        eventService.addListener(ListenerConfig.create<DataClassWithEventInfo> {
+        eventsService.addListener(ListenerConfig.create<DataClassWithEventInfo> {
             eventType = "test-type"
             dataClass = DataClassWithEventInfo::class.java
             setAction { evData ->
@@ -67,7 +67,7 @@ class EventsTest {
             }
         })
 
-        val emitter = eventService.getEmitter<DataClass>(EmitterConfig.create {
+        val emitter = eventsService.getEmitter<DataClass>(EmitterConfig.create {
             eventType = "test-type"
             eventClass = DataClass::class.java
         })

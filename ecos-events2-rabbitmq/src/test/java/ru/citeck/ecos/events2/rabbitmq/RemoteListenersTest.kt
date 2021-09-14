@@ -1,24 +1,16 @@
 package ru.citeck.ecos.events2.rabbitmq
 
-import com.github.fridujo.rabbitmq.mock.MockConnectionFactory
-import com.rabbitmq.client.ConnectionFactory
-import ecos.org.apache.curator.RetryPolicy
-import ecos.org.apache.curator.framework.CuratorFramework
-import ecos.org.apache.curator.framework.CuratorFrameworkFactory
-import ecos.org.apache.curator.retry.RetryForever
 import ecos.org.apache.curator.test.TestingServer
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
-import ru.citeck.ecos.events2.EventService
+import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
 import ru.citeck.ecos.events2.remote.RemoteListener
-import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
@@ -28,11 +20,9 @@ class RemoteListenersTest {
         const val NODE_TYPE: String = "type"
     }
 
-    private var zkServer: TestingServer? = null
-
     private lateinit var servers: TestUtils.MockServers
-    private lateinit var eventServiceEmitterApp0: EventService
-    private lateinit var eventServiceReceiverApp1: EventService
+    private lateinit var eventServiceEmitterApp0: EventsService
+    private lateinit var eventServiceReceiverApp1: EventsService
 
     private val personIvanRecordRef = RecordRef.create(TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
         "ivan").toString()
@@ -246,7 +236,7 @@ class RemoteListenersTest {
 
     @AfterEach
     fun tearDown() {
-        zkServer?.stop()
+        servers.close()
     }
 
     private data class NodeData(

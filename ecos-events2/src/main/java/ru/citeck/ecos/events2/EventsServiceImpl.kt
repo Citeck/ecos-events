@@ -55,7 +55,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventService, Ev
         return emitter as EventsEmitter<T>
     }
 
-    override fun emitRemoteEvent(event: EcosEvent) {
+    override fun emitEventFromRemote(event: EcosEvent) {
         val typeListeners = getListenersForType(event.type) ?: return
         emitExactEvent(event, typeListeners, false)
     }

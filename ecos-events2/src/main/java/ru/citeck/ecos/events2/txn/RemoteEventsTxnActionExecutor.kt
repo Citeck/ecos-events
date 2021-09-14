@@ -14,7 +14,7 @@ class RemoteEventsTxnActionExecutor(services: EventsServiceFactory) : TxnActionE
     }
 
     private val remoteEvents = services.remoteEvents
-    private val eventService = services.eventService
+    private val eventsService = services.eventsService
 
     private val appName: String
     private val appInstanceTarget: String
@@ -27,7 +27,7 @@ class RemoteEventsTxnActionExecutor(services: EventsServiceFactory) : TxnActionE
 
     override fun execute(action: RemoteEventsTxnAction) {
         if (action.target == appName || action.target == appInstanceTarget) {
-            eventService.emitRemoteEvent(action.event)
+            eventsService.emitEventFromRemote(action.event)
         } else {
             val context = RequestContext.getCurrent()
             if (context == null) {

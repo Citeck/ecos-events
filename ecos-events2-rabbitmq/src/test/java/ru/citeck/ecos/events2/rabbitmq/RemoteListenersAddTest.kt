@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import ru.citeck.ecos.events2.EventService
+import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
@@ -28,14 +29,10 @@ class RemoteListenersAddTest {
         const val NODE_TYPE: String = "type"
     }
 
-    private var zkServer: TestingServer? = null
+    private lateinit var servers: TestUtils.MockServers
+    private lateinit var eventServiceEmitterApp0: EventsService
 
-    private lateinit var zkClient: CuratorFramework
-    private lateinit var ecosZooKeeper: EcosZooKeeper
-
-    private lateinit var eventServiceEmitterApp0: EventService
-
-    private lateinit var eventServiceReceiverApp0: EventService
+    private lateinit var eventServiceReceiverApp0: EventsService
 
     private val personIvanRecordRef = RecordRef.create(TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
         "ivan").toString()
@@ -44,7 +41,7 @@ class RemoteListenersAddTest {
     @BeforeEach
     fun setUp() {
 
-        val servers = TestUtils.createServers()
+        servers = TestUtils.createServers()
 
         eventServiceEmitterApp0 = TestUtils.createApp("app0", servers, mapOf(
             Pair(personIvanRecordRef, personIvanRecord)
@@ -149,7 +146,7 @@ class RemoteListenersAddTest {
 
     @AfterEach
     fun tearDown() {
-        zkServer?.stop()
+        servers.close()
     }
 
     private data class NodeData(
