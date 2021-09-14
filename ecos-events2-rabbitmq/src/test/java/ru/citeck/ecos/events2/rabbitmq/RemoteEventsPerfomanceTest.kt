@@ -150,9 +150,6 @@ class RemoteEventsPerfomanceTest {
         val dataToEmit0 = generateRandomNodeData(dataCount)
         val dataToEmit1 = generateRandomNodeData(dataCount)
 
-        val watch = StopWatch()
-        watch.start()
-
         val receivedDataFromListener0 = mutableListOf<NodeData>()
         val receivedDataFromListener1 = mutableListOf<NodeData>()
         val receivedDataFromListener2 = mutableListOf<NodeData>()
@@ -188,6 +185,9 @@ class RemoteEventsPerfomanceTest {
 
         Thread.sleep(1000)
 
+        val watch = StopWatch()
+        watch.start()
+
         dataToEmit0.forEach {
             emitter.emit(it)
         }
@@ -202,7 +202,7 @@ class RemoteEventsPerfomanceTest {
         val receiveTime = watch.time
 
         log.info {
-            "twoEmitterPerfomanceTest receiveTime: $receiveTime"
+            "twoEmitterPerformanceTest receiveTime: $receiveTime"
         }
 
         assertThat(receiveTime).isLessThan(maxTime)

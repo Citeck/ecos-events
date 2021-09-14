@@ -36,9 +36,11 @@ class RemoteEventsTxnActionExecutor(services: EventsServiceFactory) : TxnActionE
                 val events = context.getList<RemoteEventsTxnAction>(AFTER_COMMIT_EVENTS_KEY)
                 if (events.isEmpty()) {
                     context.doAfterCommit {
+                        val eventsToSend = ArrayList(events)
+                        events.clear()
                         var idx = 0
-                        while (idx < events.size) {
-                            sendRemoteEvent(events[idx++])
+                        while (idx < eventsToSend.size) {
+                            sendRemoteEvent(eventsToSend[idx++])
                         }
                     }
                 }

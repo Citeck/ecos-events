@@ -2,6 +2,7 @@ package ru.citeck.ecos.events2.rabbitmq
 
 import com.rabbitmq.client.BuiltinExchangeType
 import mu.KotlinLogging
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EcosEvent
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.remote.RemoteEvents
@@ -131,6 +132,17 @@ class RabbitMqEvents(
     }
 
     fun onEventReceived(event: EcosEvent) {
-        factory.eventsService.emitEventFromRemote(event)
+        AuthContext.runAsSystem {
+            // without this try/catch first exception lead to consumer death
+            try {
+                factory.eventsService.emitEventFromRemote(event)
+            } catch (e: Exception) {
+                log.error(e) {
+                    // todo: add dead letter queue?
+                    "Exception while event processing. " +
+                            "Event id: ${event.id} source: ${event.source} type: ${event.type}"
+                }
+            }
+        }
     }
 }

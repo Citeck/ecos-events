@@ -119,7 +119,7 @@ data class ListenerConfig<T : Any>(
             return this
         }
 
-        fun withAction(action: UncheckedConsumer<T>?): Builder<T> {
+        fun withActionJ(action: UncheckedConsumer<T>?): Builder<T> {
             this.action = action
             return this
         }
