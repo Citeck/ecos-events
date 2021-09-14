@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
-import ru.citeck.ecos.records2.rest.RemoteRecordsUtils
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import java.time.Instant
@@ -16,7 +15,7 @@ class EventsTest {
     fun receiveEventTest() {
 
         val records = RecordsServiceFactory()
-        val factory = EventServiceFactory()
+        val factory = EventsServiceFactory()
         factory.recordsServices = records
 
         val eventService = factory.eventService
@@ -50,7 +49,7 @@ class EventsTest {
     fun receiveEventWithEventInfoTest() {
 
         val records = RecordsServiceFactory()
-        val factory = EventServiceFactory()
+        val factory = EventsServiceFactory()
         factory.recordsServices = records
 
         val eventService = factory.eventService

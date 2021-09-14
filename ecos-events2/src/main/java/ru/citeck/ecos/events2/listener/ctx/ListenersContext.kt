@@ -5,19 +5,19 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events2.EcosEvent
-import ru.citeck.ecos.events2.EventConstants
-import ru.citeck.ecos.events2.EventServiceFactory
+import ru.citeck.ecos.events2.EventsConstants
+import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.events2.remote.RemoteListener
-import ru.citeck.ecos.events2.txn.RemoteEventTxnAction
-import ru.citeck.ecos.events2.txn.RemoteEventTxnActionExecutor
+import ru.citeck.ecos.events2.txn.RemoteEventsTxnAction
+import ru.citeck.ecos.events2.txn.RemoteEventsTxnActionExecutor
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records3.record.request.RequestContext
 import java.util.concurrent.ConcurrentHashMap
 
-class ListenersContext(serviceFactory: EventServiceFactory) {
+class ListenersContext(serviceFactory: EventsServiceFactory) {
 
     companion object {
         val log = KotlinLogging.logger {}
@@ -27,7 +27,7 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
     private val attSchemaWriter = serviceFactory.recordsServices.attSchemaWriter
     private val txnActionManager = serviceFactory.recordsServices.txnActionManager
 
-    private var listeners: Map<String, EventTypeListeners> = emptyMap()
+    private var listeners: Map<String, EventsTypeListeners> = emptyMap()
 
     private val remoteAttsByType: MutableMap<String, Set<String>> = ConcurrentHashMap()
     private var rawListeners: Set<ListenerConfig<*>> = emptySet()
@@ -43,7 +43,7 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
         }
     }
 
-    fun getListeners(type: String) : EventTypeListeners? {
+    fun getListeners(type: String) : EventsTypeListeners? {
         return listeners[type]
     }
 
@@ -60,7 +60,7 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
 
     private fun initListeners() {
 
-        val newListeners = HashMap<String, EventTypeListeners>()
+        val newListeners = HashMap<String, EventsTypeListeners>()
 
         val listenersByType = HashMap<String, MutableList<ListenerConfig<*>>>()
         rawListeners.forEach { listener ->
@@ -76,8 +76,8 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
                     eventType = listener.eventType
                     withAction { event ->
                         txnActionManager.execute(
-                            RemoteEventTxnActionExecutor.ID,
-                            RemoteEventTxnAction(listener.appName, event),
+                            RemoteEventsTxnActionExecutor.ID,
+                            RemoteEventsTxnAction(listener.appName, event),
                             RequestContext.getCurrent()
                         )
                     }
@@ -102,7 +102,7 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
                 val attributes = HashMap(getAttributesFromClass(config.dataClass))
                 attributes.putAll(config.attributes)
                 PredicateUtils.getAllPredicateAttributes(config.filter).forEach { att ->
-                    attributes[EventConstants.FILTER_ATT_PREFIX + att] = att
+                    attributes[EventsConstants.FILTER_ATT_PREFIX + att] = att
                 }
 
                 attributes.values.forEach {
@@ -120,7 +120,7 @@ class ListenersContext(serviceFactory: EventServiceFactory) {
             if (remoteAtts.isNotEmpty()) {
                 this.remoteAttsByType[type] = remoteAtts
             }
-            newListeners[type] = EventTypeListeners(recordAtts, listenersInfo)
+            newListeners[type] = EventsTypeListeners(recordAtts, listenersInfo)
         }
 
         this.listeners = newListeners

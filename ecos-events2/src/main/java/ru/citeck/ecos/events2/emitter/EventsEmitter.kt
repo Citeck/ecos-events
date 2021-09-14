@@ -2,7 +2,7 @@ package ru.citeck.ecos.events2.emitter
 
 import java.util.*
 
-class EventEmitter<T : Any>(
+class EventsEmitter<T : Any>(
     val config: EmitterConfig<T>,
     private val emitImpl: (Any) -> UUID
 ) {

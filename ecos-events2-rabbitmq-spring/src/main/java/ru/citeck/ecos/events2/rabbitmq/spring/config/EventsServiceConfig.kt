@@ -6,9 +6,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import ru.citeck.ecos.events2.EventProperties
+import ru.citeck.ecos.events2.EventsProperties
 import ru.citeck.ecos.events2.EventService
-import ru.citeck.ecos.events2.EventServiceFactory
+import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.rabbitmq.RabbitMqEvents
 import ru.citeck.ecos.events2.remote.RemoteEvents
 import ru.citeck.ecos.rabbitmq.RabbitMqConnProvider
@@ -18,10 +18,10 @@ import javax.annotation.PostConstruct
 
 @Configuration
 @Profile("!test")
-open class EventServiceConfig(
+open class EventsServiceConfig(
     private val ecosZookeeper: EcosZooKeeper,
     private val rabbitMqConnProvider: RabbitMqConnProvider
-) : EventServiceFactory() {
+) : EventsServiceFactory() {
 
     companion object {
         private val log = KotlinLogging.logger {}
@@ -41,9 +41,9 @@ open class EventServiceConfig(
         return super.createEventService()
     }
 
-    override fun createProperties(): EventProperties {
+    override fun createProperties(): EventsProperties {
 
-        val prop = EventProperties(
+        val prop = EventsProperties(
             concurrentEventConsumers = concurrentEventConsumers
         )
 

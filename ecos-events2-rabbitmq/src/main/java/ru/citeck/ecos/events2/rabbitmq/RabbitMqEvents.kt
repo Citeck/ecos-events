@@ -3,7 +3,7 @@ package ru.citeck.ecos.events2.rabbitmq
 import com.rabbitmq.client.BuiltinExchangeType
 import mu.KotlinLogging
 import ru.citeck.ecos.events2.EcosEvent
-import ru.citeck.ecos.events2.EventServiceFactory
+import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.remote.RemoteEvents
 import ru.citeck.ecos.events2.remote.RemoteListener
 import ru.citeck.ecos.rabbitmq.RabbitMqChannel
@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class RabbitMqEvents(
     rabbitMqConnection: RabbitMqConn,
-    private val factory: EventServiceFactory,
+    private val factory: EventsServiceFactory,
     private val ecosZooKeeper: EcosZooKeeper
 ) : RemoteEvents {
 

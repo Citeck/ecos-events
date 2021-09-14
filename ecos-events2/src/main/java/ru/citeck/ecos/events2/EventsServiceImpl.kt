@@ -5,10 +5,10 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.emitter.EmitterConfig
-import ru.citeck.ecos.events2.emitter.EventEmitter
+import ru.citeck.ecos.events2.emitter.EventsEmitter
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.listener.ListenerHandle
-import ru.citeck.ecos.events2.listener.ctx.EventTypeListeners
+import ru.citeck.ecos.events2.listener.ctx.EventsTypeListeners
 import ru.citeck.ecos.events2.listener.ctx.ListenerInfo
 import ru.citeck.ecos.events2.listener.ctx.ListenersContext
 import ru.citeck.ecos.records2.RecordRef
@@ -20,7 +20,7 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
+class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventService, EventsService {
 
     companion object {
         const val EVENT_ATTR = "event"
@@ -30,7 +30,7 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
 
     private val remoteEvents = serviceFactory.remoteEvents
 
-    private val emitters: MutableMap<EmitterConfig<*>, EventEmitter<*>> = ConcurrentHashMap()
+    private val emitters: MutableMap<EmitterConfig<*>, EventsEmitter<*>> = ConcurrentHashMap()
 
     private val predicateService = serviceFactory.recordsServices.predicateService
     private val recordsService = serviceFactory.recordsServices.recordsServiceV1
@@ -46,13 +46,13 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
         appInstanceId = props.appInstanceId
     }
 
-    override fun <T : Any> getEmitter(config: EmitterConfig<T>): EventEmitter<T> {
+    override fun <T : Any> getEmitter(config: EmitterConfig<T>): EventsEmitter<T> {
         val emitter = emitters.computeIfAbsent(config) {
             remoteEvents?.addProducedEventType(config.eventType)
-            EventEmitter(config) { event -> emitRecordEvent(event, config) }
+            EventsEmitter(config) { event -> emitRecordEvent(event, config) }
         }
         @Suppress("UNCHECKED_CAST")
-        return emitter as EventEmitter<T>
+        return emitter as EventsEmitter<T>
     }
 
     override fun emitRemoteEvent(event: EcosEvent) {
@@ -62,7 +62,7 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
 
     private fun emitExactEvent(
         event: EcosEvent,
-        listeners: EventTypeListeners,
+        listeners: EventsTypeListeners,
         isLocalEvent: Boolean
     ) {
 
@@ -79,13 +79,13 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
         val time = Instant.now()
         val user = AuthContext.getCurrentUser()
         val typeListeners = getListenersForType(config.eventType) ?: return eventId
-        val eventSource = EventSource(config.source, appName, appInstanceId)
+        val eventsSource = EventsSource(config.source, appName, appInstanceId)
 
         val eventInfo = EcosEventInfo(
             id = eventId,
             time = time,
             user = user,
-            source = eventSource
+            source = eventsSource
         )
 
         val fullDataAtts = RequestContext.doWithAtts(
@@ -103,7 +103,7 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
             time,
             config.eventType,
             user,
-            eventSource,
+            eventsSource,
             fullDataAtts
         )
 
@@ -111,7 +111,7 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
         return eventId
     }
 
-    private fun getListenersForType(eventType: String): EventTypeListeners? {
+    private fun getListenersForType(eventType: String): EventsTypeListeners? {
 
         val typeListeners = this.listenersContext.getListeners(eventType)
 
@@ -128,8 +128,8 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
             val filterAtts = ObjectData.create()
 
             event.attributes.forEach { key, dataValue ->
-                if (key.startsWith(EventConstants.FILTER_ATT_PREFIX)) {
-                    filterAtts.set(key.replaceFirst(EventConstants.FILTER_ATT_PREFIX, ""), dataValue)
+                if (key.startsWith(EventsConstants.FILTER_ATT_PREFIX)) {
+                    filterAtts.set(key.replaceFirst(EventsConstants.FILTER_ATT_PREFIX, ""), dataValue)
                 }
             }
             val element = RecordAttsElement.create(RecordAtts(RecordRef.EMPTY, filterAtts))

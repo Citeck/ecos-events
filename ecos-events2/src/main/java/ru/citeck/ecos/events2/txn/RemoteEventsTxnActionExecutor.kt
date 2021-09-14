@@ -1,11 +1,11 @@
 package ru.citeck.ecos.events2.txn
 
-import ru.citeck.ecos.events2.EventConstants
-import ru.citeck.ecos.events2.EventServiceFactory
+import ru.citeck.ecos.events2.EventsConstants
+import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.txn.ext.TxnActionExecutor
 
-class RemoteEventTxnActionExecutor(services: EventServiceFactory) : TxnActionExecutor<RemoteEventTxnAction> {
+class RemoteEventsTxnActionExecutor(services: EventsServiceFactory) : TxnActionExecutor<RemoteEventsTxnAction> {
 
     companion object {
         const val ID = "event"
@@ -22,10 +22,10 @@ class RemoteEventTxnActionExecutor(services: EventServiceFactory) : TxnActionExe
     init {
         val props = services.recordsServices.properties
         appName = props.appName
-        appInstanceTarget = EventConstants.REMOTE_TARGET_INSTANCE_PREFIX + props.appInstanceId
+        appInstanceTarget = EventsConstants.REMOTE_TARGET_INSTANCE_PREFIX + props.appInstanceId
     }
 
-    override fun execute(action: RemoteEventTxnAction) {
+    override fun execute(action: RemoteEventsTxnAction) {
         if (action.target == appName || action.target == appInstanceTarget) {
             eventService.emitRemoteEvent(action.event)
         } else {
@@ -33,7 +33,7 @@ class RemoteEventTxnActionExecutor(services: EventServiceFactory) : TxnActionExe
             if (context == null) {
                 sendRemoteEvent(action)
             } else {
-                val events = context.getList<RemoteEventTxnAction>(AFTER_COMMIT_EVENTS_KEY)
+                val events = context.getList<RemoteEventsTxnAction>(AFTER_COMMIT_EVENTS_KEY)
                 if (events.isEmpty()) {
                     context.doAfterCommit {
                         var idx = 0
@@ -47,7 +47,7 @@ class RemoteEventTxnActionExecutor(services: EventServiceFactory) : TxnActionExe
         }
     }
 
-    private fun sendRemoteEvent(action: RemoteEventTxnAction) {
+    private fun sendRemoteEvent(action: RemoteEventsTxnAction) {
         remoteEvents?.emitEvent(action.target, action.event)
     }
 

@@ -7,5 +7,5 @@ data class EcosEventInfo(
     val id: UUID,
     val time: Instant,
     val user: String,
-    val source: EventSource
+    val source: EventsSource
 )

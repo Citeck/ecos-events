@@ -43,12 +43,12 @@ data class ListenerConfig<T : Any>(
      * Should we keep events in storage if current listener is offline to allow processing later?
      */
     val consistent: Boolean,
-    /**
+/**
      * Should every instance of the same application receive separate event
      * (exclusive = false) or each event processed by single application (exclusive = true).
      * Not exclusive listeners can't be consistent
      */
-    var exclusive: Boolean
+    //var exclusive: Boolean
 ) {
 
     companion object {
@@ -85,7 +85,7 @@ data class ListenerConfig<T : Any>(
         var filter: Predicate = VoidPredicate.INSTANCE
         var local: Boolean = false
         var consistent: Boolean = true
-        var exclusive: Boolean = true
+        //var exclusive: Boolean = true
 
         constructor(base: ListenerConfig<T>) : this() {
             this.id = base.id
@@ -96,7 +96,7 @@ data class ListenerConfig<T : Any>(
             this.filter = base.filter
             this.local = base.local
             this.consistent = base.consistent
-            this.exclusive = base.exclusive
+            //this.exclusive = base.exclusive
         }
 
         fun withId(id: String?): Builder<T> {
@@ -152,10 +152,10 @@ data class ListenerConfig<T : Any>(
             return this
         }
 
-        fun withExclusive(exclusive: Boolean?): Builder<T> {
+       /* fun withExclusive(exclusive: Boolean?): Builder<T> {
             this.exclusive = exclusive ?: EMPTY.exclusive
             return this
-        }
+        }*/
 
         fun addAttribute(key: String, value: String) {
             attributes[key] = value
@@ -183,7 +183,7 @@ data class ListenerConfig<T : Any>(
                 action!!,
                 filter,
                 consistent,
-                exclusive
+                //exclusive
             )
         }
     }

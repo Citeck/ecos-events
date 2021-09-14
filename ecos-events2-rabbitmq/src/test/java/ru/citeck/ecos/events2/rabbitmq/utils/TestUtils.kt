@@ -8,7 +8,7 @@ import ecos.org.apache.curator.retry.RetryForever
 import ecos.org.apache.curator.test.TestingServer
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.events2.EventService
-import ru.citeck.ecos.events2.EventServiceFactory
+import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.rabbitmq.RabbitMqEvents
 import ru.citeck.ecos.events2.remote.RemoteEvents
 import ru.citeck.ecos.rabbitmq.RabbitMqConn
@@ -60,7 +60,7 @@ class TestUtils {
             name: String,
             servers: MockServers,
             records: Map<String, Any>
-        ): EventServiceFactory {
+        ): EventsServiceFactory {
 
             val recordsServiceFactory = createRecordsServices(name)
 
@@ -70,7 +70,7 @@ class TestUtils {
                     .build()
             )
 
-            val serviceFactory = object : EventServiceFactory() {
+            val serviceFactory = object : EventsServiceFactory() {
                 override fun createRemoteEvents(): RemoteEvents {
                     return RabbitMqEvents(servers.rabbitmq, this, servers.zookeeper)
                 }

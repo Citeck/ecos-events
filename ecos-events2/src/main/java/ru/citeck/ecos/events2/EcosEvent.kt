@@ -9,6 +9,6 @@ data class EcosEvent(
     val time: Instant,
     val type: String,
     val user: String,
-    val source: EventSource,
+    val source: EventsSource,
     val attributes: RecordAtts
 )
