@@ -1,12 +1,6 @@
 package ru.citeck.ecos.events2.rabbitmq
 
-import com.github.fridujo.rabbitmq.mock.MockConnectionFactory
 import com.github.javafaker.Faker
-import com.rabbitmq.client.ConnectionFactory
-import ecos.org.apache.curator.RetryPolicy
-import ecos.org.apache.curator.framework.CuratorFramework
-import ecos.org.apache.curator.framework.CuratorFrameworkFactory
-import ecos.org.apache.curator.retry.RetryForever
 import ecos.org.apache.curator.test.TestingServer
 import mu.KotlinLogging
 import org.apache.commons.lang3.time.StopWatch
@@ -19,10 +13,8 @@ import ru.citeck.ecos.events2.EventService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
-import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
@@ -36,9 +28,6 @@ class RemoteEventsPerfomanceTest {
     private val faker = Faker()
 
     private var zkServer: TestingServer? = null
-
-    private lateinit var zkClient: CuratorFramework
-    private lateinit var ecosZooKeeper: EcosZooKeeper
 
     private lateinit var eventServiceEmitterApp0: EventService
     private lateinit var eventServiceEmitterApp1: EventService
@@ -56,39 +45,28 @@ class RemoteEventsPerfomanceTest {
 
     @BeforeEach
     fun setUp() {
-        zkServer = TestingServer()
 
-        val retryPolicy: RetryPolicy = RetryForever(7_000)
-
-        zkClient = CuratorFrameworkFactory
-            .newClient(zkServer!!.connectString, retryPolicy)
-        zkClient.start()
-        ecosZooKeeper = EcosZooKeeper(zkClient).withNamespace("ecos")
-
-        val factory: ConnectionFactory = MockConnectionFactory()
-        val connection = RabbitMqConn(factory)
-
-        connection.waitUntilReady(5_000)
+        val servers = TestUtils.createServers()
 
         eventServiceEmitterApp0 = TestUtils.createApp(
-            "appEmit0", connection, ecosZooKeeper, mapOf(
+            "appEmit0", servers, mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )
         )
         eventServiceEmitterApp1 = TestUtils.createApp(
-            "appEmit1", connection, ecosZooKeeper, mapOf(
+            "appEmit1", servers, mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )
         )
         eventServiceEmitterApp2 = TestUtils.createApp(
-            "appEmit2", connection, ecosZooKeeper, mapOf(
+            "appEmit2", servers, mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )
         )
 
-        eventServiceReceiverApp0 = TestUtils.createApp("appRec0", connection, ecosZooKeeper, emptyMap())
-        eventServiceReceiverApp1 = TestUtils.createApp("appRec1", connection, ecosZooKeeper, emptyMap())
-        eventServiceReceiverApp2 = TestUtils.createApp("appRec2", connection, ecosZooKeeper, emptyMap())
+        eventServiceReceiverApp0 = TestUtils.createApp("appRec0", servers, emptyMap())
+        eventServiceReceiverApp1 = TestUtils.createApp("appRec1", servers, emptyMap())
+        eventServiceReceiverApp2 = TestUtils.createApp("appRec2", servers, emptyMap())
     }
 
     @Test

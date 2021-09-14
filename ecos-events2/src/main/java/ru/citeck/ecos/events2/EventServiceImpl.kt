@@ -3,7 +3,7 @@ package ru.citeck.ecos.events2
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.events2.EventConstants.CONTEXT_CURRENT_USER_ATT
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.emitter.EventEmitter
 import ru.citeck.ecos.events2.listener.ListenerConfig
@@ -11,11 +11,10 @@ import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.events2.listener.ctx.EventTypeListeners
 import ru.citeck.ecos.events2.listener.ctx.ListenerInfo
 import ru.citeck.ecos.events2.listener.ctx.ListenersContext
-import ru.citeck.ecos.records2.RecordMeta
 import ru.citeck.ecos.records2.RecordRef
-import ru.citeck.ecos.records2.predicate.RecordElement
+import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
-import ru.citeck.ecos.records2.rest.RemoteRecordsUtils
+import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.request.RequestContext
 import java.time.Instant
 import java.util.*
@@ -33,10 +32,19 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
 
     private val emitters: MutableMap<EmitterConfig<*>, EventEmitter<*>> = ConcurrentHashMap()
 
-    private val predicateService = serviceFactory.recordsServiceFactory!!.predicateService
-    private val recordsService = serviceFactory.recordsServiceFactory!!.recordsServiceV1
+    private val predicateService = serviceFactory.recordsServices.predicateService
+    private val recordsService = serviceFactory.recordsServices.recordsServiceV1
 
     private val listenersContext: ListenersContext = serviceFactory.listenersContext
+
+    private val appName: String
+    private val appInstanceId: String
+
+    init {
+        val props = serviceFactory.recordsServices.properties
+        appName = props.appName
+        appInstanceId = props.appInstanceId
+    }
 
     override fun <T : Any> getEmitter(config: EmitterConfig<T>): EventEmitter<T> {
         val emitter = emitters.computeIfAbsent(config) {
@@ -69,9 +77,9 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
 
         val eventId = UUID.randomUUID()
         val time = Instant.now()
-        val user = resolveCurrentUser()
+        val user = AuthContext.getCurrentUser()
         val typeListeners = getListenersForType(config.eventType) ?: return eventId
-        val eventSource = EventSource(config.source, emptySet(), "", "")
+        val eventSource = EventSource(config.source, appName, appInstanceId)
 
         val eventInfo = EcosEventInfo(
             id = eventId,
@@ -84,9 +92,8 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
             mapOf(
                 EVENT_ATTR to eventInfo
             )
-        )
-        { _ ->
-            RemoteRecordsUtils.runAsSystem {
+        ) { _ ->
+            AuthContext.runAsSystem {
                 recordsService.getAtts(event, typeListeners.attributes)
             }
         }
@@ -102,11 +109,6 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
 
         emitExactEvent(ecosEvent, typeListeners, true)
         return eventId
-    }
-
-    private fun resolveCurrentUser(): String {
-        return recordsService.getAtts(mapOf<String, Any>(), listOf(CONTEXT_CURRENT_USER_ATT))
-            .getAtt(CONTEXT_CURRENT_USER_ATT).asText()
     }
 
     private fun getListenersForType(eventType: String): EventTypeListeners? {
@@ -130,8 +132,7 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
                     filterAtts.set(key.replaceFirst(EventConstants.FILTER_ATT_PREFIX, ""), dataValue)
                 }
             }
-
-            val element = RecordElement(RecordMeta(RecordRef.EMPTY, filterAtts))
+            val element = RecordAttsElement.create(RecordAtts(RecordRef.EMPTY, filterAtts))
             if (!predicateService.isMatch(element, listener.config.filter)) {
                 return
             }
@@ -175,5 +176,4 @@ class EventServiceImpl(serviceFactory: EventServiceFactory) : EventService {
     override fun removeListener(id: String) {
         return listenersContext.removeListener(id)
     }
-
 }

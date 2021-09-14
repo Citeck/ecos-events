@@ -17,23 +17,27 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
 
-        <junit.version>5.7.2</junit.version>
         <slf4j.version>1.7.28</slf4j.version>
-        <kotlin.version>1.5.21</kotlin.version>
+        <kotlin.version>1.5.30</kotlin.version>
         <kotlin.logging.version>1.12.5</kotlin.logging.version>
         <amqp-client.version>5.4.3</amqp-client.version>
+        <commons.beanutils.version>1.9.3</commons.beanutils.version>
+        <commons.lang3.version>3.8.1</commons.lang3.version>
 
         <ecos.jackson.version>2.10.4.3</ecos.jackson.version>
-        <ecos.snakeyaml.version>2.2.0</ecos.snakeyaml.version>
-        <ecos.commons.version>2.5.0</ecos.commons.version>
-        <ecos.records.version>3.32.0</ecos.records.version>
+        <ecos.commons.version>2.5.4</ecos.commons.version>
+        <ecos.records.version>3.36.3</ecos.records.version>
+        <ecos.context-lib.version>1.1.3</ecos.context-lib.version>
 
         <ecos.zookeeper.version>1.2.2</ecos.zookeeper.version>
         <ecos.curator.version>5.2.0</ecos.curator.version>
         <ecos.rabbitmq.version>2.2.0</ecos.rabbitmq.version>
-        <rabbitmq-mock.version>1.1.1</rabbitmq-mock.version>
 
-        <groovy.version>2.5.9</groovy.version>
+        <junit.version>5.7.2</junit.version>
+        <junit-platform-launcher.version>1.7.2</junit-platform-launcher.version>
+        <assertj-core.version>3.20.2</assertj-core.version>
+        <rabbitmq-mock.version>1.1.1</rabbitmq-mock.version>
+        <javafaker.version>1.0.2</javafaker.version>
 
     </properties>
 
@@ -54,9 +58,9 @@
         </dependency>
 
         <dependency>
-            <groupId>ru.citeck.ecos</groupId>
-            <artifactId>ecos-snakeyaml</artifactId>
-            <version>${ecos.snakeyaml.version}</version>
+            <groupId>ru.citeck.ecos.context</groupId>
+            <artifactId>ecos-context-lib</artifactId>
+            <version>${ecos.context-lib.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -75,23 +79,16 @@
         </dependency>
 
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.6</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.8.1</version>
+            <version>${commons.lang3.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
-            <version>1.9.3</version>
+            <version>${commons.beanutils.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -117,51 +114,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <version>${groovy.version}</version>
-            <type>pom</type>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.junit.platform</groupId>
-                    <artifactId>junit-platform-launcher</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.testng</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>${slf4j.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test-junit5</artifactId>
-            <version>${kotlin.version}</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.junit.jupiter</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -175,7 +130,7 @@
         <dependency>
             <groupId>com.github.javafaker</groupId>
             <artifactId>javafaker</artifactId>
-            <version>1.0.2</version>
+            <version>${javafaker.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -187,16 +142,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test</artifactId>
-            <version>${kotlin.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
-            <version>1.7.2</version>
+            <version>${junit-platform-launcher.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -208,16 +156,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.20.2</version>
+            <version>${assertj-core.version}</version>
             <scope>test</scope>
         </dependency>
 

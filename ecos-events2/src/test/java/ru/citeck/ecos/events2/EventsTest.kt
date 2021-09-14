@@ -1,16 +1,13 @@
 package ru.citeck.ecos.events2
 
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import ru.citeck.ecos.events2.EventConstants.CURRENT_USER_ATT
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.records3.record.request.RequestContext
 import java.time.Instant
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class EventsTest {
 
@@ -18,7 +15,8 @@ class EventsTest {
     fun receiveEventTest() {
 
         val records = RecordsServiceFactory()
-        val factory = EventServiceFactory(records)
+        val factory = EventServiceFactory()
+        factory.recordsServices = records
 
         val eventService = factory.eventService
 
@@ -51,7 +49,9 @@ class EventsTest {
     fun receiveEventWithEventInfoTest() {
 
         val records = RecordsServiceFactory()
-        val factory = EventServiceFactory(records)
+        val factory = EventServiceFactory()
+        factory.recordsServices = records
+
         val eventService = factory.eventService
 
         val emitData = DataClass("aa", "bb")
@@ -72,9 +72,7 @@ class EventsTest {
             eventClass = DataClass::class.java
         })
 
-        RequestContext.doWithAtts(
-            mapOf(CURRENT_USER_ATT to userIvan)
-        ) { _ ->
+        AuthContext.runAs(userIvan) {
             emitter.emit(emitData)
         }
 

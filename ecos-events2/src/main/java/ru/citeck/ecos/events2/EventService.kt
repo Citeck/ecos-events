@@ -16,5 +16,4 @@ interface EventService {
     fun removeListener(listener: ListenerConfig<*>)
 
     fun removeListener(id: String)
-
 }
