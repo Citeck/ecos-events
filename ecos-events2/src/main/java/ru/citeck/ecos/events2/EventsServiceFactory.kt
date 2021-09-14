@@ -31,7 +31,7 @@ open class EventsServiceFactory {
         return null
     }
 
-    open fun createEventsService() : EventService {
+    open fun createEventsService() : EventsService {
         return EventsServiceImpl(this)
     }
 }
