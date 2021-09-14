@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Profile
 import ru.citeck.ecos.events2.EventsProperties
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.EventsServiceFactory
@@ -17,7 +16,6 @@ import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import javax.annotation.PostConstruct
 
 @Configuration
-@Profile("!test")
 open class EventsServiceConfig(
     private val ecosZookeeper: EcosZooKeeper,
     private val rabbitMqConnProvider: RabbitMqConnProvider
