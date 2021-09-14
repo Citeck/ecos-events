@@ -5,7 +5,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>ru.citeck.ecos.events2</groupId>
+    <groupId>ru.citeck.ecos.events</groupId>
     <artifactId>ecos-events2-project</artifactId>
     <version>2.5.0</version>
     <packaging>pom</packaging>
