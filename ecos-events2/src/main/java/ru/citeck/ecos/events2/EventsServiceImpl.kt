@@ -2,7 +2,6 @@ package ru.citeck.ecos.events2
 
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.emitter.EventsEmitter
@@ -28,12 +27,14 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventService, Ev
         private val log = KotlinLogging.logger {}
     }
 
-    private val remoteEvents = serviceFactory.remoteEvents
+    private val remoteEvents = serviceFactory.remoteEventsService
+    private val recordsTemplateService = serviceFactory.recordsServices.recordsTemplateService
 
     private val emitters: MutableMap<EmitterConfig<*>, EventsEmitter<*>> = ConcurrentHashMap()
 
     private val predicateService = serviceFactory.recordsServices.predicateService
     private val recordsService = serviceFactory.recordsServices.recordsServiceV1
+    private val dtoSchemaReader = serviceFactory.recordsServices.dtoSchemaReader
 
     private val listenersContext: ListenersContext = serviceFactory.listenersContext
 
@@ -46,6 +47,12 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventService, Ev
         appInstanceId = props.appInstanceId
     }
 
+    override fun <T : Any> getEmitter(config: EmitterConfig.Builder<T>.() -> Unit): EventsEmitter<T> {
+        val builder = EmitterConfig.create<T>()
+        config.invoke(builder)
+        return getEmitter(builder.build())
+    }
+
     override fun <T : Any> getEmitter(config: EmitterConfig<T>): EventsEmitter<T> {
         val emitter = emitters.computeIfAbsent(config) {
             remoteEvents?.addProducedEventType(config.eventType)
@@ -55,20 +62,24 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventService, Ev
         return emitter as EventsEmitter<T>
     }
 
-    override fun emitEventFromRemote(event: EcosEvent) {
+    override fun emitEventFromRemote(event: EcosEvent, exclusive: Boolean) {
         val typeListeners = getListenersForType(event.type) ?: return
-        emitExactEvent(event, typeListeners, false)
+        emitExactEvent(event, typeListeners, false, exclusive)
     }
 
     private fun emitExactEvent(
         event: EcosEvent,
         listeners: EventsTypeListeners,
-        isLocalEvent: Boolean
+        isLocalEvent: Boolean,
+        exclusive: Boolean = true
     ) {
-
         listeners.listeners.forEach { listener ->
-            if (isLocalEvent || !listener.config.local) {
+            if (isLocalEvent) {
                 triggerListener(listener, event)
+            } else {
+                if (!listener.config.local && listener.config.exclusive == exclusive) {
+                    triggerListener(listener, event)
+                }
             }
         }
     }
@@ -104,7 +115,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventService, Ev
             config.eventType,
             user,
             eventsSource,
-            fullDataAtts
+            fullDataAtts.getAtts()
         )
 
         emitExactEvent(ecosEvent, typeListeners, true)
@@ -115,8 +126,8 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventService, Ev
 
         val typeListeners = this.listenersContext.getListeners(eventType)
 
-        if (typeListeners == null) {
-            log.warn { "Listeners doesn't found for type $eventType" }
+        if (typeListeners == null || typeListeners.listeners.isEmpty()) {
+            log.debug { "Listeners doesn't found for type $eventType" }
             return null
         }
         return typeListeners
@@ -125,44 +136,49 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventService, Ev
     private fun triggerListener(listener: ListenerInfo, event: EcosEvent) {
 
         if (listener.config.filter !is VoidPredicate) {
-            val filterAtts = ObjectData.create()
 
-            event.attributes.forEach { key, dataValue ->
-                if (key.startsWith(EventsConstants.FILTER_ATT_PREFIX)) {
-                    filterAtts.set(key.replaceFirst(EventsConstants.FILTER_ATT_PREFIX, ""), dataValue)
-                }
-            }
-            val element = RecordAttsElement.create(RecordAtts(RecordRef.EMPTY, filterAtts))
-            if (!predicateService.isMatch(element, listener.config.filter)) {
+            val resolvedFilter = recordsTemplateService.resolve(
+                listener.config.filter,
+                RecordRef.create("meta", "")
+            ) ?: listener.config.filter
+
+            val element = RecordAttsElement.create(RecordAtts(RecordRef.EMPTY, event.attributes))
+            if (!predicateService.isMatch(element, resolvedFilter)) {
                 return
             }
         }
 
         val listenerAtts = ObjectData.create()
-
-        listener.attributes.forEach { (k, v) ->
-            listenerAtts.set(k, event.attributes.getAtt(v))
+        listener.attributes.forEach { (alias, attribute) ->
+            val value = event.attributes.get(attribute)
+            listenerAtts.set(alias, value)
         }
 
         val clazz = listener.config.dataClass
         val action = listener.config.action
 
         if (clazz == RecordRef::class.java) {
-            action.accept(event)
+            action.accept(RecordRef.valueOf(event.attributes.get("rec?id").asText()))
         } else if (clazz == ObjectData::class.java) {
             action.accept(listenerAtts)
         } else if (clazz == Unit::class.java) {
             action.accept(Unit)
         } else if (clazz == EcosEvent::class.java) {
-            action.accept(event)
+            action.accept(event.withAttributes(listenerAtts))
         } else {
-            val converted = Json.mapper.convert(listenerAtts, clazz)
+            val converted = dtoSchemaReader.instantiate(clazz, listenerAtts)
             if (converted != null) {
                 action.accept(converted)
             } else {
-                throw IllegalStateException("Event data can't be converted to $clazz. Data: $listenerAtts");
+                error("Event data can't be converted to $clazz. Data: $listenerAtts")
             }
         }
+    }
+
+    override fun <T : Any> addListener(listener: ListenerConfig.Builder<T>.() -> Unit): ListenerHandle {
+        val builder = ListenerConfig.create<T>()
+        listener.invoke(builder)
+        return addListener(builder.build())
     }
 
     override fun addListener(listener: ListenerConfig<*>): ListenerHandle {

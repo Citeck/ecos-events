@@ -9,9 +9,13 @@ interface EventsService {
 
     fun <T : Any> getEmitter(config: EmitterConfig<T>): EventsEmitter<T>
 
-    fun emitEventFromRemote(event: EcosEvent)
+    fun <T : Any> getEmitter(config: EmitterConfig.Builder<T>.() -> Unit): EventsEmitter<T>
+
+    fun emitEventFromRemote(event: EcosEvent, exclusive: Boolean)
 
     fun addListener(listener: ListenerConfig<*>): ListenerHandle
+
+    fun <T : Any> addListener(listener: ListenerConfig.Builder<T>.() -> Unit): ListenerHandle
 
     fun removeListener(listener: ListenerConfig<*>)
 

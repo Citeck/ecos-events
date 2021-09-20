@@ -5,17 +5,23 @@ import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events2.EcosEvent
-import ru.citeck.ecos.events2.EventsConstants
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.listener.ListenerHandle
-import ru.citeck.ecos.events2.remote.RemoteListener
-import ru.citeck.ecos.events2.txn.RemoteEventsTxnAction
-import ru.citeck.ecos.events2.txn.RemoteEventsTxnActionExecutor
+import ru.citeck.ecos.events2.remote.RemoteAppEventListener
+import ru.citeck.ecos.events2.remote.RemoteEventListenerData
+import ru.citeck.ecos.events2.remote.RemoteEventListenerKey
+import ru.citeck.ecos.events2.txn.RemoteEventTxnAction
+import ru.citeck.ecos.events2.txn.RemoteEventsTxnActionComponent
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateUtils
+import ru.citeck.ecos.records2.predicate.model.OrPredicate
+import ru.citeck.ecos.records2.predicate.model.Predicate
+import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.record.request.RequestContext
-import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.collections.HashSet
 
 class ListenersContext(serviceFactory: EventsServiceFactory) {
 
@@ -29,15 +35,18 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
 
     private var listeners: Map<String, EventsTypeListeners> = emptyMap()
 
-    private val remoteAttsByType: MutableMap<String, Set<String>> = ConcurrentHashMap()
+    private val remoteEvents = serviceFactory.remoteEventsService
+
     private var rawListeners: Set<ListenerConfig<*>> = emptySet()
 
-    private val remoteEvents = serviceFactory.remoteEvents
-    private var remoteListeners: Map<String, List<RemoteListener>> = emptyMap()
+    private var listenersToRemote: Map<RemoteEventListenerKey, RemoteEventListenerData> = emptyMap()
+    private var listenersFromRemote: Map<String, List<RemoteAppEventListener>> = emptyMap()
 
     init {
         if (remoteEvents != null) {
-            remoteEvents.doWithListeners { type, listeners -> setRemoteListeners(type, listeners) }
+            remoteEvents.listenListenersChange { type, listeners ->
+                setRemoteListeners(type, listeners)
+            }
         } else {
             log.warn { "Remote events is null" }
         }
@@ -49,16 +58,17 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
 
     @Synchronized
     private fun update() {
-        val currentRemoteAttsByType = HashMap(remoteAttsByType)
-        initListeners()
+        val newListenersToRemote = hashMapOf<RemoteEventListenerKey, RemoteEventListenerData>()
+        initListeners(newListenersToRemote)
         if (remoteEvents != null) {
-            if (currentRemoteAttsByType != HashMap(remoteAttsByType)) {
-                remoteEvents.listenEvents(remoteAttsByType)
+            if (newListenersToRemote != HashMap(listenersToRemote)) {
+                this.listenersToRemote = newListenersToRemote
+                remoteEvents.listenEventsFromRemote(newListenersToRemote)
             }
         }
     }
 
-    private fun initListeners() {
+    private fun initListeners(listenersToRemote: MutableMap<RemoteEventListenerKey, RemoteEventListenerData>) {
 
         val newListeners = HashMap<String, EventsTypeListeners>()
 
@@ -68,32 +78,39 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
         }
 
         if (remoteEvents != null) {
-            remoteListeners.values.flatten().map { listener ->
-                ListenerConfig.create<EcosEvent> {
+            listenersFromRemote.forEach { (eventType, listeners) ->
+                for (listener in listeners) {
+
                     val atts = HashMap<String, String>()
                     listener.attributes.forEach { atts[it] = it }
-                    attributes = atts
-                    eventType = listener.eventType
-                    withAction { event ->
-                        txnActionManager.execute(
-                            RemoteEventsTxnActionExecutor.ID,
-                            RemoteEventsTxnAction(listener.appName, event),
-                            RequestContext.getCurrent()
-                        )
+
+                    val listenerConfig = ListenerConfig.create<EcosEvent> {
+                        withAttributes(atts)
+                        withEventType(eventType)
+                        withAction { event ->
+                            txnActionManager.execute(
+                                RemoteEventsTxnActionComponent.ID,
+                                RemoteEventTxnAction(listener.targetAppKey, event),
+                                RequestContext.getCurrent()
+                            )
+                        }
+                        withFilter(listener.filter)
+                        withDataClass(EcosEvent::class.java)
+                        withLocal(true)
                     }
-                    consistent = false
-                    dataClass = EcosEvent::class.java
-                    local = true
+                    listenersByType.computeIfAbsent(listenerConfig.eventType) { ArrayList() }.add(listenerConfig)
                 }
-            }.forEach { listener ->
-                listenersByType.computeIfAbsent(listener.eventType) { ArrayList() }.add(listener)
             }
         }
 
         listenersByType.forEach { (type, listeners) ->
 
             val recordAtts = HashSet<String>()
-            val remoteAtts = HashSet<String>()
+
+            val exclusiveRemoteAtts = HashSet<String>()
+            val exclusiveFilter = mutableListOf<Predicate>()
+            val inclusiveRemoteAtts = HashSet<String>()
+            val inclusiveFilter = mutableListOf<Predicate>()
 
             val listenersInfo = ArrayList<ListenerInfo>()
 
@@ -101,29 +118,47 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
 
                 val attributes = HashMap(getAttributesFromClass(config.dataClass))
                 attributes.putAll(config.attributes)
-                PredicateUtils.getAllPredicateAttributes(config.filter).forEach { att ->
-                    attributes[EventsConstants.FILTER_ATT_PREFIX + att] = att
-                }
 
-                attributes.values.forEach {
-                    recordAtts.add(it);
-                }
+                val attsToLoad = HashSet<String>(attributes.values)
+                attsToLoad.addAll(PredicateUtils.getAllPredicateAttributes(config.filter))
+
+                recordAtts.addAll(attsToLoad)
 
                 if (!config.local) {
-                    remoteAtts.addAll(attributes.values)
+                    if (config.exclusive) {
+                        exclusiveRemoteAtts.addAll(attsToLoad)
+                        exclusiveFilter.add(config.filter)
+                    } else {
+                        inclusiveRemoteAtts.addAll(attsToLoad)
+                        inclusiveFilter.add(config.filter)
+                    }
                 }
 
                 @Suppress("UNCHECKED_CAST")
                 listenersInfo.add(ListenerInfo(attributes, config as ListenerConfig<Any>))
             }
-
-            if (remoteAtts.isNotEmpty()) {
-                this.remoteAttsByType[type] = remoteAtts
+            if (exclusiveRemoteAtts.isNotEmpty()) {
+                listenersToRemote[RemoteEventListenerKey(type, true)] = RemoteEventListenerData(
+                    exclusiveRemoteAtts,
+                    createRemoteFilter(exclusiveFilter)
+                )
+            }
+            if (inclusiveRemoteAtts.isNotEmpty()) {
+                listenersToRemote[RemoteEventListenerKey(type, false)] = RemoteEventListenerData(
+                    inclusiveRemoteAtts,
+                    createRemoteFilter(inclusiveFilter)
+                )
             }
             newListeners[type] = EventsTypeListeners(recordAtts, listenersInfo)
         }
-
         this.listeners = newListeners
+    }
+
+    private fun createRemoteFilter(filters: List<Predicate>): Predicate {
+        if (filters.isEmpty() || filters.any { it is VoidPredicate }) {
+            return VoidPredicate.INSTANCE
+        }
+        return OrPredicate.of(filters)
     }
 
     private fun getAttributesFromClass(clazz: Class<*>) : Map<String, String> {
@@ -132,8 +167,11 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
             return emptyMap()
         }
 
+        if (clazz == RecordRef::class.java) {
+            return mapOf("rec?id" to "rec?id")
+        }
+
         if (clazz != Unit::class.java
-                && clazz != RecordRef::class.java
                 && clazz != EcosEvent::class.java
                 && clazz != MLText::class.java
                 && clazz != ObjectData::class.java
@@ -179,10 +217,10 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
     }
 
     @Synchronized
-    private fun setRemoteListeners(type: String, listeners: List<RemoteListener>) {
-        val newValue = HashMap(remoteListeners)
+    private fun setRemoteListeners(type: String, listeners: List<RemoteAppEventListener>) {
+        val newValue = HashMap(listenersFromRemote)
         newValue[type] = listeners
-        remoteListeners = newValue
+        listenersFromRemote = newValue
         update()
     }
 }

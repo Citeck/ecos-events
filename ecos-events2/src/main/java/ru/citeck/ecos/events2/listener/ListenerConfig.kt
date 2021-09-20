@@ -1,13 +1,12 @@
 package ru.citeck.ecos.events2.listener
 
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import ru.citeck.ecos.commons.utils.MandatoryParam
 import ru.citeck.ecos.commons.utils.func.UncheckedConsumer
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import java.util.*
 import kotlin.collections.HashMap
 
-@JsonDeserialize(builder = ListenerConfig.Builder::class)
 data class ListenerConfig<T : Any>(
     /**
      * Listener identifier.
@@ -40,15 +39,11 @@ data class ListenerConfig<T : Any>(
      */
     val filter: Predicate,
     /**
-     * Should we keep events in storage if current listener is offline to allow processing later?
-     */
-    val consistent: Boolean,
-/**
      * Should every instance of the same application receive separate event
      * (exclusive = false) or each event processed by single application (exclusive = true).
      * Not exclusive listeners can't be consistent
      */
-    //var exclusive: Boolean
+    var exclusive: Boolean
 ) {
 
     companion object {
@@ -84,19 +79,17 @@ data class ListenerConfig<T : Any>(
         var action: UncheckedConsumer<T>? = null
         var filter: Predicate = VoidPredicate.INSTANCE
         var local: Boolean = false
-        var consistent: Boolean = true
-        //var exclusive: Boolean = true
+        var exclusive: Boolean = true
 
         constructor(base: ListenerConfig<T>) : this() {
-            this.id = base.id
+            this.id = ""
             this.eventType = base.eventType
             this.dataClass = base.dataClass
             this.attributes = HashMap(base.attributes)
             this.action = base.action
             this.filter = base.filter
             this.local = base.local
-            this.consistent = base.consistent
-            //this.exclusive = base.exclusive
+            this.exclusive = base.exclusive
         }
 
         fun withId(id: String?): Builder<T> {
@@ -147,15 +140,10 @@ data class ListenerConfig<T : Any>(
             return this
         }
 
-        fun withConsistent(consistent: Boolean?): Builder<T> {
-            this.consistent = consistent ?: EMPTY.consistent
-            return this
-        }
-
-       /* fun withExclusive(exclusive: Boolean?): Builder<T> {
+        fun withExclusive(exclusive: Boolean?): Builder<T> {
             this.exclusive = exclusive ?: EMPTY.exclusive
             return this
-        }*/
+        }
 
         fun addAttribute(key: String, value: String) {
             attributes[key] = value
@@ -174,6 +162,10 @@ data class ListenerConfig<T : Any>(
         }
 
         fun build(): ListenerConfig<T> {
+
+            MandatoryParam.check("dataClass", dataClass)
+            MandatoryParam.check("action", action)
+
             return ListenerConfig(
                 id.ifBlank { UUID.randomUUID().toString() },
                 eventType,
@@ -182,8 +174,7 @@ data class ListenerConfig<T : Any>(
                 local,
                 action!!,
                 filter,
-                consistent,
-                //exclusive
+                exclusive
             )
         }
     }

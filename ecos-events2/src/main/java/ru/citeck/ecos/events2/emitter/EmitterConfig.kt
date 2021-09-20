@@ -28,6 +28,12 @@ class EmitterConfig<T : Any>(
         return Builder(this)
     }
 
+    fun copy(block: Builder<T>.() -> Unit): EmitterConfig<T> {
+        val builder = Builder(this)
+        block.invoke(builder)
+        return builder.build()
+    }
+
     class Builder<T : Any>() {
 
         var source: String = ""

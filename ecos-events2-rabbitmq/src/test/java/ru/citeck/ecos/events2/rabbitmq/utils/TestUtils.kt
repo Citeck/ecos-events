@@ -2,17 +2,15 @@ package ru.citeck.ecos.events2.rabbitmq.utils
 
 import com.github.fridujo.rabbitmq.mock.MockConnectionFactory
 import com.rabbitmq.client.ConnectionFactory
-import ecos.curator.org.apache.zookeeper.ZooKeeper
 import ecos.org.apache.curator.RetryPolicy
 import ecos.org.apache.curator.framework.CuratorFrameworkFactory
 import ecos.org.apache.curator.retry.RetryForever
 import ecos.org.apache.curator.test.TestingServer
 import ru.citeck.ecos.commons.json.Json
-import ru.citeck.ecos.events2.EventService
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.EventsServiceFactory
-import ru.citeck.ecos.events2.rabbitmq.RabbitMqEvents
-import ru.citeck.ecos.events2.remote.RemoteEvents
+import ru.citeck.ecos.events2.rabbitmq.RabbitMqEventsService
+import ru.citeck.ecos.events2.remote.RemoteEventsService
 import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
@@ -73,8 +71,8 @@ class TestUtils {
             )
 
             val serviceFactory = object : EventsServiceFactory() {
-                override fun createRemoteEvents(): RemoteEvents {
-                    return RabbitMqEvents(servers.rabbitmq, this, servers.zookeeper)
+                override fun createRemoteEvents(): RemoteEventsService {
+                    return RabbitMqEventsService(servers.rabbitmq, this, servers.zookeeper)
                 }
             }
             serviceFactory.recordsServices = recordsServiceFactory

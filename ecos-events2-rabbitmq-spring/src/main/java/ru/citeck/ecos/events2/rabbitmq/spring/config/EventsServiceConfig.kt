@@ -2,14 +2,13 @@ package ru.citeck.ecos.events2.rabbitmq.spring.config
 
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ru.citeck.ecos.events2.EventsProperties
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.EventsServiceFactory
-import ru.citeck.ecos.events2.rabbitmq.RabbitMqEvents
-import ru.citeck.ecos.events2.remote.RemoteEvents
+import ru.citeck.ecos.events2.rabbitmq.RabbitMqEventsService
+import ru.citeck.ecos.events2.remote.RemoteEventsService
 import ru.citeck.ecos.rabbitmq.RabbitMqConnProvider
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
@@ -25,9 +24,6 @@ open class EventsServiceConfig(
         private val log = KotlinLogging.logger {}
     }
 
-    @Value("\${ecos.event.concurrent-event-consumers:10}")
-    private var concurrentEventConsumers: Int = 10
-
     @PostConstruct
     override fun init() {
         super.init()
@@ -40,19 +36,14 @@ open class EventsServiceConfig(
     }
 
     override fun createProperties(): EventsProperties {
-
-        val prop = EventsProperties(
-            concurrentEventConsumers = concurrentEventConsumers
-        )
-
+        val prop = EventsProperties()
         log.info("Event properties init: $prop")
-
         return prop
     }
 
-    override fun createRemoteEvents(): RemoteEvents? {
+    override fun createRemoteEvents(): RemoteEventsService? {
         val conn = rabbitMqConnProvider.getConnection()
-        return RabbitMqEvents(conn!!, this, ecosZookeeper)
+        return RabbitMqEventsService(conn!!, this, ecosZookeeper)
     }
 
     @Autowired

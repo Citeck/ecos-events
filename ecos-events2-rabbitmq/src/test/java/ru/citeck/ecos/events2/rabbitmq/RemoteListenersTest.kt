@@ -1,6 +1,5 @@
 package ru.citeck.ecos.events2.rabbitmq
 
-import ecos.org.apache.curator.test.TestingServer
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -8,7 +7,6 @@ import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
-import ru.citeck.ecos.events2.remote.RemoteListener
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import java.util.*
@@ -160,7 +158,7 @@ class RemoteListenersTest {
 
         Thread.sleep(500)
         val listenerWithCreatorMeta = servers.zookeeper.getValue("/events/${NODE_TYPE}/app1",
-            RemoteListener::class.java)
+            ZkAppEventListener::class.java)
         assertEquals(6, listenerWithCreatorMeta!!.attributes.size)
 
         emitter.emit(emitData1)
@@ -215,7 +213,7 @@ class RemoteListenersTest {
 
 
         val listenerWithCreatorMeta = servers.zookeeper.getValue("/events/${NODE_TYPE}/app1",
-            RemoteListener::class.java)
+            ZkAppEventListener::class.java)
 
         assertEquals(5, listenerWithCreatorMeta!!.attributes.size)
 

@@ -1,6 +1,6 @@
 package ru.citeck.ecos.events2
 
-import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
+import ru.citeck.ecos.commons.data.ObjectData
 import java.time.Instant
 import java.util.*
 
@@ -10,5 +10,17 @@ data class EcosEvent(
     val type: String,
     val user: String,
     val source: EventsSource,
-    val attributes: RecordAtts
-)
+    val attributes: ObjectData
+) {
+
+    fun withAttributes(attributes: ObjectData): EcosEvent {
+        return EcosEvent(
+            id,
+            time,
+            type,
+            user,
+            source,
+            attributes
+        )
+    }
+}
