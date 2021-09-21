@@ -36,7 +36,7 @@ timestamps {
           userRemoteConfigs: [[credentialsId: 'awx.integrations',url: "git@bitbucket.org:citeck/ecos-events.git"]]
         ])
       }
-      def project_version = readMavenPom().getVersion()
+      def project_version = readMavenPom().getProperties().getProperty("revision")
       project_id = readMavenPom().getArtifactId()
       mattermostSend endpoint: 'https://mm.citeck.ru/hooks/9ytch3uox3retkfypuq7xi3yyr', channel: "build_notifications", color: 'good', message: " :arrow_forward: **Build project ${project_id}:**\n**Branch:** ${env.BRANCH_NAME}\n**Version:** ${project_version}\n**Build id:** ${env.BUILD_NUMBER}\n**Build url:** ${env.BUILD_URL}\n**Changes:**\n" + getChangeString()
       if ((env.BRANCH_NAME != "master") && (!project_version.contains('SNAPSHOT')))  {
