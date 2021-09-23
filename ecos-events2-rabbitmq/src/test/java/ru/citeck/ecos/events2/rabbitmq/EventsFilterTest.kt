@@ -24,9 +24,13 @@ class EventsFilterTest {
     }
 
     @Test
-    fun test() {
-        testImpl(true)
+    fun eventsFilterNotExclusiveTest() {
         testImpl(false)
+    }
+
+    @Test
+    fun eventsFilterExclusiveTest() {
+        testImpl(true)
     }
 
     private fun testImpl(exclusive: Boolean) {
