@@ -28,9 +28,13 @@ class InclusiveListenersTest {
     }
 
     @Test
-    fun test() {
-        testImpl(true)
+    fun notExclusiveListenersTest() {
         testImpl(false)
+    }
+
+    @Test
+    fun exclusiveListenersTest() {
+        testImpl(true)
     }
 
     private fun testImpl(exclusive: Boolean) {

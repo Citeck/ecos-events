@@ -7,7 +7,7 @@ import ru.citeck.ecos.events2.remote.AppKeyUtils
 class AppKeyUtilsTest {
 
     @Test
-    fun test() {
+    fun keyUtilsTest() {
 
         val appName = "appName"
         val appInstanceId = "appInstanceId"
