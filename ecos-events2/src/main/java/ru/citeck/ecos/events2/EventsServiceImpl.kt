@@ -19,7 +19,7 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventService, EventsService {
+class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
 
     companion object {
         const val EVENT_ATTR = "event"
