@@ -29,7 +29,7 @@ open class EventsServiceConfig(
         super.init()
     }
 
-    @Bean
+    @Bean("eventsService")
     override fun createEventsService(): EventsService {
         log.info { "Event Service init" }
         return super.createEventsService()
