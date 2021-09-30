@@ -3,7 +3,7 @@ package ru.citeck.ecos.events2
 import ru.citeck.ecos.events2.listener.ctx.ListenersContext
 import ru.citeck.ecos.events2.remote.RemoteEventsService
 import ru.citeck.ecos.events2.txn.RemoteEventsTxnActionComponent
-import ru.citeck.ecos.events2.txn.controller.RecordMutatedController
+import ru.citeck.ecos.events2.txn.controller.RecordChangedController
 import ru.citeck.ecos.events2.txn.controller.RemoteEventController
 import ru.citeck.ecos.records3.RecordsServiceFactory
 
@@ -24,7 +24,7 @@ open class EventsServiceFactory {
 
     open fun createRemoteEventControllers(): List<RemoteEventController> {
         return listOf(
-            RecordMutatedController()
+            RecordChangedController()
         )
     }
 

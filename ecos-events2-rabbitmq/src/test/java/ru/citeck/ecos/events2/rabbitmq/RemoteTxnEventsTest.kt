@@ -9,7 +9,9 @@ import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
-import ru.citeck.ecos.events2.type.RecordMutatedEvent
+import ru.citeck.ecos.events2.type.RecordChangedEvent
+import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
+import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateDao
@@ -41,24 +43,22 @@ class RemoteTxnEventsTest {
         val app1ListenedEvents = mutableListOf<EcosEvent>()
         app1Events.addListener(ListenerConfig.create<EcosEvent> {
             withDataClass(EcosEvent::class.java)
-            withEventType(RecordMutatedEvent.TYPE)
+            withEventType(RecordChangedEvent.TYPE)
             withAction {
                 app1ListenedEvents.add(it)
             }
             withAttributes(
                 mapOf(
-                    "beforeId" to "before?id",
-                    "afterId" to "after?id",
+                    "recId" to "record?id",
                     "fieldBefore" to "before.field",
-                    "fieldAfter" to "after.field",
-                    "isNewRecord" to "newRecord?bool"
+                    "fieldAfter" to "after.field"
                 )
             )
         })
 
-        val app0recordMutatedEmitter = app0Events.getEmitter(EmitterConfig.create<RecordMutatedEvent> {
-            withEventClass(RecordMutatedEvent::class.java)
-            withEventType(RecordMutatedEvent.TYPE)
+        val app0recordMutatedEmitter = app0Events.getEmitter(EmitterConfig.create<RecordChangedEvent> {
+            withEventClass(RecordChangedEvent::class.java)
+            withEventType(RecordChangedEvent.TYPE)
         })
 
         Thread.sleep(200)
@@ -71,47 +71,53 @@ class RemoteTxnEventsTest {
             }
         }
 
+        val createChangedEvent = { rec: RecordData, before: String, after: String ->
+            RecordChangedEvent(
+                rec,
+                listOf(AttributeDef.create()
+                    .withId("field")
+                    .withType(AttributeType.TEXT)
+                    .build()),
+                mapOf("field" to before),
+                mapOf("field" to after)
+            )
+        }
+
         doWithApp0Txn {
-            val before = RecordData("", "")
-            val after = RecordData("12345", "123")
-            app0recordMutatedEmitter.emit(RecordMutatedEvent(before, after, true))
-            val after2 = RecordData("12345", "123456")
-            app0recordMutatedEmitter.emit(RecordMutatedEvent(after, after2, false))
-            val after3 = RecordData("12345", "123456789")
-            app0recordMutatedEmitter.emit(RecordMutatedEvent(after2, after3, false))
+            val rec0 = RecordData("12345", "123")
+            app0recordMutatedEmitter.emit(createChangedEvent(rec0, "", "123"))
+            val rec1 = RecordData("12345", "123456")
+            app0recordMutatedEmitter.emit(createChangedEvent(rec1, "123", "123456"))
+            val rec2 = RecordData("12345", "123456789")
+            app0recordMutatedEmitter.emit(createChangedEvent(rec2, "123456", "123456789"))
         }
 
         Thread.sleep(200)
 
         assertThat(app1ListenedEvents).hasSize(1)
 
-        assertThat(app1ListenedEvents[0].attributes.get("beforeId").asText()).isEqualTo("")
-        assertThat(app1ListenedEvents[0].attributes.get("afterId").asText()).isEqualTo("app0/@12345")
+        assertThat(app1ListenedEvents[0].attributes.get("recId").asText()).isEqualTo("app0/@12345")
         assertThat(app1ListenedEvents[0].attributes.get("fieldBefore").asText()).isEqualTo("")
         assertThat(app1ListenedEvents[0].attributes.get("fieldAfter").asText()).isEqualTo("123456789")
-        assertThat(app1ListenedEvents[0].attributes.get("isNewRecord").asBoolean()).isEqualTo(true)
 
         app1ListenedEvents.clear()
 
         doWithApp0Txn {
-            val before = RecordData("12345", "abc")
-            val after = RecordData("12345", "def")
-            app0recordMutatedEmitter.emit(RecordMutatedEvent(before, after, false))
-            val after2 = RecordData("12345", "ghi")
-            app0recordMutatedEmitter.emit(RecordMutatedEvent(after, after2, false))
-            val after3 = RecordData("12345", "jkl")
-            app0recordMutatedEmitter.emit(RecordMutatedEvent(after2, after3, false))
+            val rec0 = RecordData("12345", "def")
+            app0recordMutatedEmitter.emit(createChangedEvent(rec0, "abc", "def"))
+            val rec1 = RecordData("12345", "ghi")
+            app0recordMutatedEmitter.emit(createChangedEvent(rec1, "def", "ghi"))
+            val rec2 = RecordData("12345", "jkl")
+            app0recordMutatedEmitter.emit(createChangedEvent(rec2, "ghi", "jkl"))
         }
 
         Thread.sleep(200)
 
         assertThat(app1ListenedEvents).hasSize(1)
 
-        assertThat(app1ListenedEvents[0].attributes.get("beforeId").asText()).isEqualTo("app0/@12345")
-        assertThat(app1ListenedEvents[0].attributes.get("afterId").asText()).isEqualTo("app0/@12345")
+        assertThat(app1ListenedEvents[0].attributes.get("recId").asText()).isEqualTo("app0/@12345")
         assertThat(app1ListenedEvents[0].attributes.get("fieldBefore").asText()).isEqualTo("abc")
         assertThat(app1ListenedEvents[0].attributes.get("fieldAfter").asText()).isEqualTo("jkl")
-        assertThat(app1ListenedEvents[0].attributes.get("isNewRecord").asBoolean()).isEqualTo(false)
     }
 
     @Test
