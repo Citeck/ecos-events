@@ -2,10 +2,12 @@ package ru.citeck.ecos.events2.type
 
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.status.dto.StatusDef
+import ru.citeck.ecos.model.lib.type.dto.TypeInfo
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 
 class RecordChangedEvent(
     val record: Any,
+    val type: TypeInfo,
     val attsDef: List<AttributeDef>,
     val before: Map<String, Any?>,
     val after: Map<String, Any?>
@@ -66,6 +68,7 @@ class RecordDeletedEvent(val record: Any) {
 
 class RecordStatusChangedEvent(
     val record: Any,
+    val type: TypeInfo,
     val before: StatusDef,
     val after: StatusDef
 ) {
@@ -74,7 +77,10 @@ class RecordStatusChangedEvent(
     }
 }
 
-class RecordCreatedEvent(val record: Any) {
+class RecordCreatedEvent(
+    val record: Any,
+    val type: TypeInfo
+) {
     companion object {
         const val TYPE = "record-created"
     }
