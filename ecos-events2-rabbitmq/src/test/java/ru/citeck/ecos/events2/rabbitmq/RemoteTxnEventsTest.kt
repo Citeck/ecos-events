@@ -12,6 +12,8 @@ import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
 import ru.citeck.ecos.events2.type.RecordChangedEvent
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
+import ru.citeck.ecos.model.lib.type.dto.TypeInfo
+import ru.citeck.ecos.model.lib.type.dto.TypeModelDef
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.dto.LocalRecordAtts
 import ru.citeck.ecos.records3.record.dao.mutate.RecordsMutateDao
@@ -74,10 +76,16 @@ class RemoteTxnEventsTest {
         val createChangedEvent = { rec: RecordData, before: String, after: String ->
             RecordChangedEvent(
                 rec,
-                listOf(AttributeDef.create()
-                    .withId("field")
-                    .withType(AttributeType.TEXT)
-                    .build()),
+                TypeInfo.create {
+                    withModel(TypeModelDef.create {
+                        withAttributes(
+                            listOf(AttributeDef.create()
+                                .withId("field")
+                                .withType(AttributeType.TEXT)
+                                .build())
+                        )
+                    })
+                },
                 mapOf("field" to before),
                 mapOf("field" to after)
             )

@@ -7,8 +7,7 @@ import ru.citeck.ecos.records3.record.atts.value.AttValue
 
 class RecordChangedEvent(
     val record: Any,
-    val type: TypeInfo,
-    val attsDef: List<AttributeDef>,
+    val typeDef: TypeInfo,
     val before: Map<String, Any?>,
     val after: Map<String, Any?>
 ) {
@@ -18,8 +17,9 @@ class RecordChangedEvent(
     }
 
     init {
-        if (attsDef.size != before.size || attsDef.size != after.size) {
-            error("Incorrect atts size. Def: ${attsDef.size} before: ${before.size} after: ${after.size}")
+        val atts = typeDef.model.attributes
+        if (atts.size != before.size || atts.size != after.size) {
+            error("Incorrect atts size. Def: ${atts.size} before: ${before.size} after: ${after.size}")
         }
     }
 
@@ -36,6 +36,7 @@ class RecordChangedEvent(
         override fun getAtt(name: String): Any? {
             when (name) {
                 "list" -> {
+                    val attsDef = typeDef.model.attributes
                     val attsById = attsDef.associateBy { it.id }
                     val res = mutableListOf<DiffValue>()
                     for ((attId, afterValue) in after) {
@@ -60,7 +61,10 @@ class RecordChangedEvent(
     )
 }
 
-class RecordDeletedEvent(val record: Any) {
+class RecordDeletedEvent(
+    val record: Any,
+    val typeDef: TypeInfo
+) {
     companion object {
         const val TYPE = "record-deleted"
     }
@@ -68,7 +72,7 @@ class RecordDeletedEvent(val record: Any) {
 
 class RecordStatusChangedEvent(
     val record: Any,
-    val type: TypeInfo,
+    val typeDef: TypeInfo,
     val before: StatusDef,
     val after: StatusDef
 ) {
@@ -79,7 +83,7 @@ class RecordStatusChangedEvent(
 
 class RecordCreatedEvent(
     val record: Any,
-    val type: TypeInfo
+    val typeDef: TypeInfo
 ) {
     companion object {
         const val TYPE = "record-created"
