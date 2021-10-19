@@ -81,6 +81,17 @@ class RecordStatusChangedEvent(
     }
 }
 
+class RecordDraftStatusChangedEvent(
+    val record: Any,
+    val typeDef: TypeInfo,
+    val before: Boolean,
+    val after: Boolean
+) {
+    companion object {
+        const val TYPE = "record-draft-status-changed"
+    }
+}
+
 class RecordCreatedEvent(
     val record: Any,
     val typeDef: TypeInfo
