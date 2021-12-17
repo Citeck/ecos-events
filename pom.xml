@@ -28,13 +28,13 @@
 
         <ecos.jackson.version>2.10.4.3</ecos.jackson.version>
         <ecos.commons.version>2.5.4</ecos.commons.version>
-        <ecos.records.version>3.38.2</ecos.records.version>
+        <ecos.records.version>3.39.0</ecos.records.version>
         <ecos.context-lib.version>1.1.4</ecos.context-lib.version>
-        <ecos.model-lib.version>2.9.2</ecos.model-lib.version>
+        <ecos.model-lib.version>2.9.3</ecos.model-lib.version>
 
         <ecos.zookeeper.version>1.2.2</ecos.zookeeper.version>
         <ecos.curator.version>5.2.0</ecos.curator.version>
-        <ecos.rabbitmq.version>2.2.0</ecos.rabbitmq.version>
+        <ecos.rabbitmq.version>2.3.0</ecos.rabbitmq.version>
 
         <junit.version>5.7.2</junit.version>
         <junit-platform-launcher.version>1.7.2</junit-platform-launcher.version>

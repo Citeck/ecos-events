@@ -68,15 +68,15 @@ class RabbitMqEventsService(
                 channel.declareQueue(exclusiveTargetAppKey, true)
                 channel.queueBind(exclusiveTargetAppKey, EVENTS_EXCHANGE, exclusiveTargetAppKey)
 
-                channel.addConsumer(exclusiveTargetAppKey, EcosEvent::class.java) { event, _ ->
-                    onEventReceived(event, true)
+                channel.addAckedConsumer(exclusiveTargetAppKey, EcosEvent::class.java) { event, _ ->
+                    onEventReceived(event.getContent(), true)
                 }
 
                 channel.declareQueue(inclusiveTargetAppKey, false)
                 channel.queueBind(inclusiveTargetAppKey, EVENTS_EXCHANGE, inclusiveTargetAppKey)
 
-                channel.addConsumer(inclusiveTargetAppKey, EcosEvent::class.java) { event, _ ->
-                    onEventReceived(event, false)
+                channel.addAckedConsumer(inclusiveTargetAppKey, EcosEvent::class.java) { event, _ ->
+                    onEventReceived(event.getContent(), false)
                 }
             }
         }
@@ -167,13 +167,22 @@ class RabbitMqEventsService(
     }
 
     private fun onEventReceived(event: EcosEvent, exclusive: Boolean) {
+        if (event.user.isNotBlank()) {
+            AuthContext.runAsFull(event.user) {
+                onEventReceivedImpl(event, exclusive)
+            }
+        } else {
+            onEventReceivedImpl(event, exclusive)
+        }
+    }
+
+    private fun onEventReceivedImpl(event: EcosEvent, exclusive: Boolean) {
         AuthContext.runAsSystem {
             // without this try/catch first exception lead to consumer death
             try {
                 factory.eventsService.emitEventFromRemote(event, exclusive)
             } catch (e: Exception) {
                 log.error(e) {
-                    // todo: add dead letter queue?
                     "Exception while event processing. " +
                             "Event id: ${event.id} source: ${event.source} type: ${event.type}"
                 }

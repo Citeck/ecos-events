@@ -1,11 +1,13 @@
 package ru.citeck.ecos.events2.type
 
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
+import ru.citeck.ecos.model.lib.status.dto.StatusDef
+import ru.citeck.ecos.model.lib.type.dto.TypeInfo
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 
 class RecordChangedEvent(
     val record: Any,
-    val attsDef: List<AttributeDef>,
+    val typeDef: TypeInfo,
     val before: Map<String, Any?>,
     val after: Map<String, Any?>
 ) {
@@ -15,8 +17,9 @@ class RecordChangedEvent(
     }
 
     init {
-        if (attsDef.size != before.size || attsDef.size != after.size) {
-            error("Incorrect atts size. Def: ${attsDef.size} before: ${before.size} after: ${after.size}")
+        val atts = typeDef.model.attributes
+        if (atts.size != before.size || atts.size != after.size) {
+            error("Incorrect atts size. Def: ${atts.size} before: ${before.size} after: ${after.size}")
         }
     }
 
@@ -33,6 +36,7 @@ class RecordChangedEvent(
         override fun getAtt(name: String): Any? {
             when (name) {
                 "list" -> {
+                    val attsDef = typeDef.model.attributes
                     val attsById = attsDef.associateBy { it.id }
                     val res = mutableListOf<DiffValue>()
                     for ((attId, afterValue) in after) {
@@ -57,7 +61,10 @@ class RecordChangedEvent(
     )
 }
 
-class RecordDeletedEvent(val record: Any) {
+class RecordDeletedEvent(
+    val record: Any,
+    val typeDef: TypeInfo
+) {
     companion object {
         const val TYPE = "record-deleted"
     }
@@ -65,15 +72,30 @@ class RecordDeletedEvent(val record: Any) {
 
 class RecordStatusChangedEvent(
     val record: Any,
-    val before: Any,
-    val after: Any
+    val typeDef: TypeInfo,
+    val before: StatusDef,
+    val after: StatusDef
 ) {
     companion object {
         const val TYPE = "record-status-changed"
     }
 }
 
-class RecordCreatedEvent(val record: Any) {
+class RecordDraftStatusChangedEvent(
+    val record: Any,
+    val typeDef: TypeInfo,
+    val before: Boolean,
+    val after: Boolean
+) {
+    companion object {
+        const val TYPE = "record-draft-status-changed"
+    }
+}
+
+class RecordCreatedEvent(
+    val record: Any,
+    val typeDef: TypeInfo
+) {
     companion object {
         const val TYPE = "record-created"
     }
