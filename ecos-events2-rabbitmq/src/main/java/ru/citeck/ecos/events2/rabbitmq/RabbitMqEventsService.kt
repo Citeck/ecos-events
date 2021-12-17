@@ -68,15 +68,15 @@ class RabbitMqEventsService(
                 channel.declareQueue(exclusiveTargetAppKey, true)
                 channel.queueBind(exclusiveTargetAppKey, EVENTS_EXCHANGE, exclusiveTargetAppKey)
 
-                channel.addConsumer(exclusiveTargetAppKey, EcosEvent::class.java) { event, _ ->
-                    onEventReceived(event, true)
+                channel.addAckedConsumer(exclusiveTargetAppKey, EcosEvent::class.java) { event, _ ->
+                    onEventReceived(event.getContent(), true)
                 }
 
                 channel.declareQueue(inclusiveTargetAppKey, false)
                 channel.queueBind(inclusiveTargetAppKey, EVENTS_EXCHANGE, inclusiveTargetAppKey)
 
-                channel.addConsumer(inclusiveTargetAppKey, EcosEvent::class.java) { event, _ ->
-                    onEventReceived(event, false)
+                channel.addAckedConsumer(inclusiveTargetAppKey, EcosEvent::class.java) { event, _ ->
+                    onEventReceived(event.getContent(), false)
                 }
             }
         }
