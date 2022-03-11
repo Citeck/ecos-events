@@ -3,6 +3,7 @@ package ru.citeck.ecos.events2.type
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.emitter.EventsEmitter
+import ru.citeck.ecos.model.lib.type.dto.TypeInfo
 import ru.citeck.ecos.model.lib.type.repo.TypesRepo
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
 import ru.citeck.ecos.records2.RecordConstants
@@ -50,14 +51,14 @@ class RecordEventsService(services: EventsServiceFactory) {
         })
     }
 
-    fun emitRecChanged(before: Any?, after: Any?) {
+    fun emitRecChanged(before: Any?, after: Any) {
 
-        val typeId = records.getAtt(after, RecordConstants.ATT_TYPE + "?localId").asText()
+        val typeInfo = getTypeInfoFromRecord(after) ?: return
 
-        if (typeId.isBlank()) {
+        if (before == null) {
+            emitRecCreated(RecordCreatedEvent(after, typeInfo))
             return
         }
-        val typeInfo = typesRepo.getTypeInfo(TypeUtils.getTypeRef(typeId)) ?: return
 
         val attsToRequest = mutableMapOf<String, String>()
         for (att in typeInfo.model.attributes) {
@@ -70,7 +71,7 @@ class RecordEventsService(services: EventsServiceFactory) {
             return
         }
 
-        emitRecChanged(RecordChangedEvent(after ?: "", typeInfo, beforeAtts, afterAtts))
+        emitRecChanged(RecordChangedEvent(after, typeInfo, beforeAtts, afterAtts))
     }
 
     private fun getAtts(record: Any?, atts: Map<String, String>): Map<String, Any?> {
@@ -85,11 +86,21 @@ class RecordEventsService(services: EventsServiceFactory) {
         return result
     }
 
+    fun emitRecChanged(record: Any, before: Map<String, Any?>, after: Map<String, Any?>) {
+        val typeInfo = getTypeInfoFromRecord(record) ?: return
+        emitRecChanged(RecordChangedEvent(record, typeInfo, before, after))
+    }
+
     fun emitRecChanged(event: RecordChangedEvent) {
         recChangedEmitter.emit(event)
     }
 
-    fun emitRecCreatedEvent(event: RecordCreatedEvent) {
+    fun emitRecCreated(record: Any) {
+        val typeInfo = getTypeInfoFromRecord(record) ?: return
+        emitRecCreated(RecordCreatedEvent(record, typeInfo))
+    }
+
+    fun emitRecCreated(event: RecordCreatedEvent) {
         recCreatedEmitter.emit(event)
     }
 
@@ -103,5 +114,13 @@ class RecordEventsService(services: EventsServiceFactory) {
 
     fun emitRecDraftStatusChanged(event: RecordDraftStatusChangedEvent) {
         recDraftStatusChangedEmitter.emit(event)
+    }
+
+    private fun getTypeInfoFromRecord(record: Any): TypeInfo? {
+        val typeId = records.getAtt(record, RecordConstants.ATT_TYPE + "?localId").asText()
+        if (typeId.isBlank()) {
+            return null
+        }
+        return typesRepo.getTypeInfo(TypeUtils.getTypeRef(typeId))
     }
 }

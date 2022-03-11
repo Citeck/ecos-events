@@ -1,5 +1,6 @@
 package ru.citeck.ecos.events2.type
 
+import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.status.dto.StatusDef
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
@@ -41,7 +42,7 @@ class RecordChangedEvent(
                     val res = mutableListOf<DiffValue>()
                     for ((attId, afterValue) in after) {
                         val beforeValue = before[attId]
-                        if (afterValue != beforeValue) {
+                        if (!isEqual(afterValue, beforeValue)) {
                             val attDef = attsById[attId] ?: continue
                             res.add(DiffValue(attId, attDef, beforeValue, afterValue))
                         }
@@ -50,6 +51,28 @@ class RecordChangedEvent(
                 }
             }
             return null
+        }
+
+        private fun isEqual(value0: Any?, value1: Any?): Boolean {
+            if (isEmpty(value0)) {
+                return isEmpty(value1)
+            }
+            if (value0 == value1) {
+                return true
+            }
+            if (value0 is Number && value1 is Number) {
+                return value0.toDouble() == value1.toDouble()
+            }
+            return false
+        }
+
+        private fun isEmpty(value: Any?): Boolean {
+            return value == null
+                    || value is String && value.isEmpty()
+                    || value is DataValue && (
+                        value.isTextual() && value.asText().isEmpty()
+                        || (value.isArray() || value.isObject()) && value.size() == 0
+                    )
         }
     }
 

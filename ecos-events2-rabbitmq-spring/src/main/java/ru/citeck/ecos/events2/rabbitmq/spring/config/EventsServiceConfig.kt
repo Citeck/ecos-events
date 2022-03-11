@@ -9,6 +9,7 @@ import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.rabbitmq.RabbitMqEventsService
 import ru.citeck.ecos.events2.remote.RemoteEventsService
+import ru.citeck.ecos.events2.type.RecordEventsService
 import ru.citeck.ecos.model.lib.ModelServiceFactory
 import ru.citeck.ecos.rabbitmq.RabbitMqConnProvider
 import ru.citeck.ecos.records3.RecordsServiceFactory
@@ -45,6 +46,11 @@ open class EventsServiceConfig(
     override fun createRemoteEvents(): RemoteEventsService? {
         val conn = rabbitMqConnProvider.getConnection()
         return RabbitMqEventsService(conn!!, this, ecosZookeeper)
+    }
+
+    @Bean
+    override fun createRecordEventsService(): RecordEventsService {
+        return super.createRecordEventsService()
     }
 
     @Autowired
