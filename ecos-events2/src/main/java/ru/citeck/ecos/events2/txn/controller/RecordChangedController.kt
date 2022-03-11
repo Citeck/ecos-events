@@ -1,6 +1,5 @@
 package ru.citeck.ecos.events2.txn.controller
 
-import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.events2.EcosEvent
 import ru.citeck.ecos.events2.type.RecordChangedEvent
 
@@ -11,7 +10,21 @@ class RecordChangedController : RemoteEventController {
         val id0 = getRecordId(event0)
         val id1 = getRecordId(event1)
 
-        return id0.isNotEmpty() && id0 == id1 && event0.user == event1.user
+        if (id0.isEmpty()
+                || id0 != id1
+                || event0.user != event1.user
+                || event0.attributes.size() != event1.attributes.size()) {
+            return false
+        }
+
+        val names = event0.attributes.fieldNames()
+        while (names.hasNext()) {
+            val name = names.next()
+            if (name.startsWith("diff") || !event1.attributes.has(name)) {
+                return false
+            }
+        }
+        return true
     }
 
     override fun merge(event0: EcosEvent, event1: EcosEvent): EcosEvent {
@@ -22,14 +35,7 @@ class RecordChangedController : RemoteEventController {
             if (!newAttributes.has(k)) {
                 newAttributes.set(k, v)
             } else if (!k.startsWith("before")) {
-                if (k.startsWith("diff._has")) {
-                    val old = newAttributes.get(k)
-                    newAttributes.set(k, old.asBoolean() || v.asBoolean())
-                } else if (k.startsWith("diff.list[")) {
-                    newAttributes.set(k, mergeDiffList(newAttributes.get(k), v))
-                } else {
-                    newAttributes.set(k, v)
-                }
+                newAttributes.set(k, v)
             }
         }
 
@@ -41,33 +47,6 @@ class RecordChangedController : RemoteEventController {
             event1.source,
             newAttributes
         )
-    }
-
-    private fun mergeDiffList(before: DataValue, after: DataValue): DataValue {
-        if (!before.isArray()) {
-            return after
-        }
-        if (!after.isArray()) {
-            return before
-        }
-        val attById = linkedMapOf<String, DataValue>()
-        before.forEach { attById[it.get("id").asText()] = it }
-        after.forEach { newAtt ->
-            val id = newAtt.get("id").asText()
-            val oldAtt = attById[id]
-            if (oldAtt == null) {
-                attById[id] = newAtt
-            } else {
-                val copy = oldAtt.copy()
-                newAtt.forEach { k, v ->
-                    if (k.startsWith("after")) {
-                        copy.set(k, v)
-                    }
-                }
-                attById[id] = copy
-            }
-        }
-        return DataValue.create(attById.values.toList())
     }
 
     private fun getRecordId(event: EcosEvent): String {

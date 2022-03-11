@@ -4,10 +4,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events2.EcosEvent
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
+import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
 import ru.citeck.ecos.events2.type.RecordChangedEvent
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
@@ -42,21 +45,34 @@ class RemoteTxnEventsTest {
         val app0Events = app0.eventsService
         val app1Events = app1.eventsService
 
+        val field0 = "FIELD_0"
+        val field1 = "FIELD_1"
+
         val app1ListenedEvents = mutableListOf<EcosEvent>()
-        app1Events.addListener(ListenerConfig.create<EcosEvent> {
-            withDataClass(EcosEvent::class.java)
-            withEventType(RecordChangedEvent.TYPE)
-            withAction {
-                app1ListenedEvents.add(it)
-            }
-            withAttributes(
-                mapOf(
-                    "recId" to "record?id",
-                    "fieldBefore" to "before.field",
-                    "fieldAfter" to "after.field"
-                )
+
+        var currentListener: ListenerHandle? = null
+        val registerListener = { atts: Map<String, String> ->
+            currentListener?.remove()
+            currentListener = app1Events.addListener(ListenerConfig.create<EcosEvent> {
+                withDataClass(EcosEvent::class.java)
+                withEventType(RecordChangedEvent.TYPE)
+                withAction {
+                    app1ListenedEvents.add(it)
+                }
+                withAttributes(atts)
+            })
+            Thread.sleep(100)
+        }
+
+        registerListener(
+            mapOf(
+                "recId" to "record?id",
+                "field0Before" to "before.$field0",
+                "field0After" to "after.$field0",
+                "field1Before" to "before.$field1",
+                "field1After" to "after.$field1"
             )
-        })
+        )
 
         val app0recordMutatedEmitter = app0Events.getEmitter(EmitterConfig.create<RecordChangedEvent> {
             withEventClass(RecordChangedEvent::class.java)
@@ -73,31 +89,50 @@ class RemoteTxnEventsTest {
             }
         }
 
-        val createChangedEvent = { rec: RecordData, before: String, after: String ->
+        val fieldValues = mutableMapOf<String, String?>(
+            field0 to null,
+            field1 to null
+        )
+        val clearValues = {
+            fieldValues[field0] = null
+            fieldValues[field1] = null
+            app1ListenedEvents.clear()
+        }
+
+        val createChangedEvent = { field: String,
+                                   newValue: String ->
+
+            val before = HashMap(fieldValues)
+            fieldValues[field] = newValue
+            val after = HashMap(fieldValues)
+
             RecordChangedEvent(
-                rec,
+                RecordData("12345", fieldValues[field0], fieldValues[field1]),
                 TypeInfo.create {
                     withModel(TypeModelDef.create {
                         withAttributes(
-                            listOf(AttributeDef.create()
-                                .withId("field")
-                                .withType(AttributeType.TEXT)
-                                .build())
+                            listOf(
+                                AttributeDef.create()
+                                    .withId(field0)
+                                    .withType(AttributeType.TEXT)
+                                    .build(),
+                                AttributeDef.create()
+                                    .withId(field1)
+                                    .withType(AttributeType.TEXT)
+                                    .build()
+                            )
                         )
                     })
                 },
-                mapOf("field" to before),
-                mapOf("field" to after)
+                before,
+                after
             )
         }
 
         doWithApp0Txn {
-            val rec0 = RecordData("12345", "123")
-            app0recordMutatedEmitter.emit(createChangedEvent(rec0, "", "123"))
-            val rec1 = RecordData("12345", "123456")
-            app0recordMutatedEmitter.emit(createChangedEvent(rec1, "123", "123456"))
-            val rec2 = RecordData("12345", "123456789")
-            app0recordMutatedEmitter.emit(createChangedEvent(rec2, "123456", "123456789"))
+            app0recordMutatedEmitter.emit(createChangedEvent(field0, "123"))
+            app0recordMutatedEmitter.emit(createChangedEvent(field0, "123456"))
+            app0recordMutatedEmitter.emit(createChangedEvent(field0, "123456789"))
         }
 
         Thread.sleep(200)
@@ -105,18 +140,15 @@ class RemoteTxnEventsTest {
         assertThat(app1ListenedEvents).hasSize(1)
 
         assertThat(app1ListenedEvents[0].attributes.get("recId").asText()).isEqualTo("app0/@12345")
-        assertThat(app1ListenedEvents[0].attributes.get("fieldBefore").asText()).isEqualTo("")
-        assertThat(app1ListenedEvents[0].attributes.get("fieldAfter").asText()).isEqualTo("123456789")
+        assertThat(app1ListenedEvents[0].attributes.get("field0Before").asText()).isEqualTo("")
+        assertThat(app1ListenedEvents[0].attributes.get("field0After").asText()).isEqualTo("123456789")
 
-        app1ListenedEvents.clear()
+        clearValues()
 
         doWithApp0Txn {
-            val rec0 = RecordData("12345", "def")
-            app0recordMutatedEmitter.emit(createChangedEvent(rec0, "abc", "def"))
-            val rec1 = RecordData("12345", "ghi")
-            app0recordMutatedEmitter.emit(createChangedEvent(rec1, "def", "ghi"))
-            val rec2 = RecordData("12345", "jkl")
-            app0recordMutatedEmitter.emit(createChangedEvent(rec2, "ghi", "jkl"))
+            app0recordMutatedEmitter.emit(createChangedEvent(field0, "def"))
+            app0recordMutatedEmitter.emit(createChangedEvent(field0, "ghi"))
+            app0recordMutatedEmitter.emit(createChangedEvent(field0, "jkl"))
         }
 
         Thread.sleep(200)
@@ -124,8 +156,57 @@ class RemoteTxnEventsTest {
         assertThat(app1ListenedEvents).hasSize(1)
 
         assertThat(app1ListenedEvents[0].attributes.get("recId").asText()).isEqualTo("app0/@12345")
-        assertThat(app1ListenedEvents[0].attributes.get("fieldBefore").asText()).isEqualTo("abc")
-        assertThat(app1ListenedEvents[0].attributes.get("fieldAfter").asText()).isEqualTo("jkl")
+        assertThat(app1ListenedEvents[0].attributes.get("field0Before").asText()).isEqualTo("")
+        assertThat(app1ListenedEvents[0].attributes.get("field0After").asText()).isEqualTo("jkl")
+
+        clearValues()
+
+        registerListener(
+            mapOf(
+                "recId" to "record?id",
+                "${field0}Before" to "before.$field0",
+                "${field0}After" to "after.$field0",
+                "${field1}Before" to "before.$field1",
+                "${field1}After" to "after.$field1",
+                "diff" to "diff.list[]{before[],after[],attId:def.id,attName:def.name?json,attType:def.type?str}"
+            )
+        )
+
+        fieldValues[field0] = "before0"
+        fieldValues[field1] = "before1"
+
+        doWithApp0Txn {
+            app0recordMutatedEmitter.emit(createChangedEvent(field0, "abc"))
+            app0recordMutatedEmitter.emit(createChangedEvent(field1, "123"))
+            app0recordMutatedEmitter.emit(createChangedEvent(field0, "def"))
+            app0recordMutatedEmitter.emit(createChangedEvent(field1, "456"))
+        }
+        Thread.sleep(200)
+
+        assertThat(app1ListenedEvents).hasSize(4)
+
+        val assertTransition = { atts: ObjectData, att: String, before: String, after: String ->
+            assertThat(atts.get("${att}Before").asText()).isEqualTo(before)
+            assertThat(atts.get("${att}After").asText()).isEqualTo(after)
+
+            val diff = atts.get("diff")
+            assertThat(diff.size()).isEqualTo(1)
+            assertThat(diff.get(0).get("attId").asText()).isEqualTo(att)
+            assertThat(diff.get(0).get("attType").asText()).isEqualTo("TEXT")
+            assertThat(diff.get(0).get("before")).isEqualTo(DataValue.create("""["$before"]"""))
+            assertThat(diff.get(0).get("after")).isEqualTo(DataValue.create("""["$after"]"""))
+        }
+
+        app1ListenedEvents.forEachIndexed { idx, event ->
+            val atts = event.attributes
+            assertThat(atts.get("recId").asText()).isEqualTo("app0/@12345")
+            when (idx) {
+                0 -> assertTransition(atts, field0, "before0", "abc")
+                1 -> assertTransition(atts, field1, "before1", "123")
+                2 -> assertTransition(atts, field0, "abc", "def")
+                3 -> assertTransition(atts, field1, "123", "456")
+            }
+        }
     }
 
     @Test
@@ -240,6 +321,7 @@ class RemoteTxnEventsTest {
 
     data class RecordData(
         val id: String,
-        val field: String
+        val field0: String?,
+        val field1: String?
     )
 }
