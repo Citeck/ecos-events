@@ -1,6 +1,7 @@
 package ru.citeck.ecos.events2.type
 
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.status.dto.StatusDef
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
@@ -44,7 +45,11 @@ class RecordChangedEvent(
                         val beforeValue = before[attId]
                         if (!isEqual(afterValue, beforeValue)) {
                             val attDef = attsById[attId] ?: continue
-                            res.add(DiffValue(attId, attDef, beforeValue, afterValue))
+                            res.add(DiffValue(attId,
+                                attDef,
+                                DataValue.create(beforeValue),
+                                DataValue.create(afterValue))
+                            )
                         }
                     }
                     return res
@@ -79,9 +84,13 @@ class RecordChangedEvent(
     class DiffValue(
         val id: String,
         val def: AttributeDef,
-        val before: Any?,
-        val after: Any?
-    )
+        val before: DataValue,
+        val after: DataValue
+    ) {
+        override fun toString(): String {
+            return Json.mapper.toString(this) ?: "{}"
+        }
+    }
 }
 
 class RecordDeletedEvent(
