@@ -68,7 +68,7 @@ class RemoteEventsTxnActionComponent(services: EventsServiceFactory) : TxnAction
                 }
             } else {
                 val context = RequestContext.getCurrent()
-                if (context == null) {
+                if (context == null || context.ctxData.txnId == null) {
                     sendRemoteEvents(targetAppKey, mergeEvents(events))
                 } else {
                     val eventsByTargetApp = context.getMap<String, MutableList<EcosEvent>>(AFTER_COMMIT_EVENTS_KEY)

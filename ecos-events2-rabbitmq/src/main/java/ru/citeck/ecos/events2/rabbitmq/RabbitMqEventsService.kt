@@ -9,6 +9,7 @@ import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.remote.*
 import ru.citeck.ecos.rabbitmq.RabbitMqChannel
 import ru.citeck.ecos.rabbitmq.RabbitMqConn
+import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -109,11 +110,13 @@ class RabbitMqEventsService(
                     ZkAppEventListener::class.java
                 )
                 if (appListener != null) {
-                    listeners.add(RemoteAppEventListener(
-                        targetAppKey,
-                        appListener.attributes,
-                        appListener.filter
-                    ))
+                    listeners.add(
+                        RemoteAppEventListener(
+                            targetAppKey,
+                            appListener.attributes,
+                            appListener.filter
+                        )
+                    )
                 }
             }
         }
@@ -180,7 +183,9 @@ class RabbitMqEventsService(
         AuthContext.runAsSystem {
             // without this try/catch first exception lead to consumer death
             try {
-                factory.eventsService.emitEventFromRemote(event, exclusive)
+                RequestContext.doWithTxn {
+                    factory.eventsService.emitEventFromRemote(event, exclusive)
+                }
             } catch (e: Exception) {
                 log.error(e) {
                     "Exception while event processing. " +
