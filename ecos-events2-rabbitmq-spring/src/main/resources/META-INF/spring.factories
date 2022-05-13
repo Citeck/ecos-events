@@ -1,1 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=ru.citeck.ecos.events2.rabbitmq.spring.config.EcosRemoteEventsRabbitMqAutoConfiguration

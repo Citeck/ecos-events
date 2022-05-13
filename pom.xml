@@ -12,7 +12,7 @@
 
     <properties>
 
-        <revision>2.10.0</revision>
+        <revision>2.10.1</revision>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -305,7 +305,6 @@
     <modules>
         <module>ecos-events2</module>
         <module>ecos-events2-rabbitmq</module>
-        <module>ecos-events2-rabbitmq-spring</module>
     </modules>
 
     <repositories>
