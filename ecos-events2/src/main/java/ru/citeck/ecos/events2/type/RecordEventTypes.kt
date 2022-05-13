@@ -78,9 +78,9 @@ class RecordChangedEvent(
             return value == null ||
                 value is String && value.isEmpty() ||
                 value is DataValue && (
-                    value.isTextual() && value.asText().isEmpty() ||
-                        (value.isArray() || value.isObject()) && value.size() == 0
-                    )
+                value.isTextual() && value.asText().isEmpty() ||
+                    (value.isArray() || value.isObject()) && value.size() == 0
+                )
         }
     }
 
