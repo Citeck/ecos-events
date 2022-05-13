@@ -36,19 +36,19 @@ open class EventsServiceFactory {
         )
     }
 
-    open fun createProperties() : EventsProperties {
+    open fun createProperties(): EventsProperties {
         return EventsProperties()
     }
 
-    open fun createListenersContext() : ListenersContext {
+    open fun createListenersContext(): ListenersContext {
         return ListenersContext(this)
     }
 
-    open fun createRemoteEvents() : RemoteEventsService? {
+    open fun createRemoteEvents(): RemoteEventsService? {
         return null
     }
 
-    open fun createEventsService() : EventsService {
+    open fun createEventsService(): EventsService {
         return EventsServiceImpl(this)
     }
 }

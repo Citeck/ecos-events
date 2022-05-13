@@ -1,6 +1,5 @@
 package ru.citeck.ecos.events2.rabbitmq
 
-import ecos.org.apache.curator.test.TestingServer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
@@ -35,7 +34,8 @@ class RemoteEventsMultipleAppsTest {
 
         eventService0 = TestUtils.createApp("app0", servers, emptyMap())
         eventService1 = TestUtils.createApp(
-            "app1", servers, mapOf(
+            "app1", servers,
+            mapOf(
                 Pair(testRecordRecordRef, testRecord)
             )
         )
@@ -58,47 +58,59 @@ class RemoteEventsMultipleAppsTest {
 
         val testEventType = "test-event-type"
 
-        eventService0.addListener(ListenerConfig.create<DataClass> {
-            eventType = testEventType
-            dataClass = DataClass::class.java
-            withAction { evData ->
-                data0.add(evData)
+        eventService0.addListener(
+            ListenerConfig.create<DataClass> {
+                eventType = testEventType
+                dataClass = DataClass::class.java
+                withAction { evData ->
+                    data0.add(evData)
+                }
             }
-        })
+        )
 
-        eventService1.addListener(ListenerConfig.create<DataClass> {
-            eventType = testEventType
-            dataClass = DataClass::class.java
-            withAction { evData ->
-                data1.add(evData)
+        eventService1.addListener(
+            ListenerConfig.create<DataClass> {
+                eventType = testEventType
+                dataClass = DataClass::class.java
+                withAction { evData ->
+                    data1.add(evData)
+                }
             }
-        })
+        )
 
-        eventService2.addListener(ListenerConfig.create<TestRecordMetaWithEventData> {
-            eventType = testEventType
-            dataClass = TestRecordMetaWithEventData::class.java
-            withAction { evData ->
-                data2.add(evData)
+        eventService2.addListener(
+            ListenerConfig.create<TestRecordMetaWithEventData> {
+                eventType = testEventType
+                dataClass = TestRecordMetaWithEventData::class.java
+                withAction { evData ->
+                    data2.add(evData)
+                }
             }
-        })
+        )
 
-        eventService3.addListener(ListenerConfig.create<DataClassWithRecordRef> {
-            eventType = testEventType
-            dataClass = DataClassWithRecordRef::class.java
-            withAction { evData ->
-                dataWithRecordRef.add(evData)
+        eventService3.addListener(
+            ListenerConfig.create<DataClassWithRecordRef> {
+                eventType = testEventType
+                dataClass = DataClassWithRecordRef::class.java
+                withAction { evData ->
+                    dataWithRecordRef.add(evData)
+                }
             }
-        })
+        )
 
-        val emitter = eventService1.getEmitter<DataClass>(EmitterConfig.create {
-            eventType = testEventType
-            eventClass = DataClass::class.java
-        })
+        val emitter = eventService1.getEmitter<DataClass>(
+            EmitterConfig.create {
+                eventType = testEventType
+                eventClass = DataClass::class.java
+            }
+        )
 
-        val emitterWithRecordRef = eventService3.getEmitter<DataClassWithRecordRef>(EmitterConfig.create {
-            eventType = testEventType
-            eventClass = DataClassWithRecordRef::class.java
-        })
+        val emitterWithRecordRef = eventService3.getEmitter<DataClassWithRecordRef>(
+            EmitterConfig.create {
+                eventType = testEventType
+                eventClass = DataClassWithRecordRef::class.java
+            }
+        )
 
         val targetData = arrayListOf(
             DataClass("aa", "bb", testRecord),

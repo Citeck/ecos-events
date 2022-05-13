@@ -12,7 +12,7 @@
 
     <properties>
 
-        <revision>2.9.5</revision>
+        <revision>2.10.0</revision>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -20,21 +20,22 @@
         <maven.compiler.source>1.8</maven.compiler.source>
 
         <slf4j.version>1.7.28</slf4j.version>
-        <kotlin.version>1.5.30</kotlin.version>
+        <kotlin.version>1.6.21</kotlin.version>
         <kotlin.logging.version>1.12.5</kotlin.logging.version>
         <amqp-client.version>5.4.3</amqp-client.version>
-        <commons.beanutils.version>1.9.3</commons.beanutils.version>
+        <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.lang3.version>3.8.1</commons.lang3.version>
 
         <ecos.jackson.version>2.10.4.3</ecos.jackson.version>
-        <ecos.commons.version>2.5.9</ecos.commons.version>
-        <ecos.records.version>3.43.2</ecos.records.version>
-        <ecos.context-lib.version>1.1.4</ecos.context-lib.version>
-        <ecos.model-lib.version>2.10.0</ecos.model-lib.version>
+        <ecos.commons.version>2.6.7</ecos.commons.version>
+        <ecos.records.version>3.47.6</ecos.records.version>
+        <ecos.context-lib.version>1.2.1</ecos.context-lib.version>
+        <ecos.model-lib.version>2.12.0</ecos.model-lib.version>
+        <ecos.webapp-api.version>1.0.5</ecos.webapp-api.version>
 
-        <ecos.zookeeper.version>1.2.2</ecos.zookeeper.version>
-        <ecos.curator.version>5.2.0</ecos.curator.version>
-        <ecos.rabbitmq.version>2.3.0</ecos.rabbitmq.version>
+        <ecos.zookeeper.version>1.4.1</ecos.zookeeper.version>
+        <ecos.curator.version>5.2.0.1</ecos.curator.version>
+        <ecos.rabbitmq.version>2.4.1</ecos.rabbitmq.version>
 
         <junit.version>5.7.2</junit.version>
         <junit-platform-launcher.version>1.7.2</junit-platform-launcher.version>
@@ -54,6 +55,13 @@
         </dependency>
 
         <dependency>
+            <groupId>ru.citeck.ecos.webapp</groupId>
+            <artifactId>ecos-webapp-api</artifactId>
+            <version>${ecos.webapp-api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>ru.citeck.ecos.model</groupId>
             <artifactId>ecos-model-lib</artifactId>
             <version>${ecos.model-lib.version}</version>
@@ -65,6 +73,13 @@
             <artifactId>ecos-commons</artifactId>
             <version>${ecos.commons.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.citeck.ecos.commons</groupId>
+            <artifactId>ecos-commons-test</artifactId>
+            <version>${ecos.commons.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -177,6 +192,20 @@
     <build>
 
         <plugins>
+
+            <plugin>
+                <groupId>com.github.gantsign.maven</groupId>
+                <artifactId>ktlint-maven-plugin</artifactId>
+                <version>1.13.1</version>
+                <executions>
+                    <execution>
+                        <id>format</id>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

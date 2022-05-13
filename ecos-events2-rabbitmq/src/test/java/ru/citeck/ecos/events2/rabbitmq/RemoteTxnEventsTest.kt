@@ -53,14 +53,16 @@ class RemoteTxnEventsTest {
         var currentListener: ListenerHandle? = null
         val registerListener = { atts: Map<String, String> ->
             currentListener?.remove()
-            currentListener = app1Events.addListener(ListenerConfig.create<EcosEvent> {
-                withDataClass(EcosEvent::class.java)
-                withEventType(RecordChangedEvent.TYPE)
-                withAction {
-                    app1ListenedEvents.add(it)
+            currentListener = app1Events.addListener(
+                ListenerConfig.create<EcosEvent> {
+                    withDataClass(EcosEvent::class.java)
+                    withEventType(RecordChangedEvent.TYPE)
+                    withAction {
+                        app1ListenedEvents.add(it)
+                    }
+                    withAttributes(atts)
                 }
-                withAttributes(atts)
-            })
+            )
             Thread.sleep(100)
         }
 
@@ -74,10 +76,12 @@ class RemoteTxnEventsTest {
             )
         )
 
-        val app0recordMutatedEmitter = app0Events.getEmitter(EmitterConfig.create<RecordChangedEvent> {
-            withEventClass(RecordChangedEvent::class.java)
-            withEventType(RecordChangedEvent.TYPE)
-        })
+        val app0recordMutatedEmitter = app0Events.getEmitter(
+            EmitterConfig.create<RecordChangedEvent> {
+                withEventClass(RecordChangedEvent::class.java)
+                withEventType(RecordChangedEvent.TYPE)
+            }
+        )
 
         Thread.sleep(200)
 
@@ -100,7 +104,7 @@ class RemoteTxnEventsTest {
         }
 
         val createChangedEvent = { field: String,
-                                   newValue: String ->
+            newValue: String ->
 
             val before = HashMap(fieldValues)
             fieldValues[field] = newValue
@@ -109,20 +113,22 @@ class RemoteTxnEventsTest {
             RecordChangedEvent(
                 RecordData("12345", fieldValues[field0], fieldValues[field1]),
                 TypeInfo.create {
-                    withModel(TypeModelDef.create {
-                        withAttributes(
-                            listOf(
-                                AttributeDef.create()
-                                    .withId(field0)
-                                    .withType(AttributeType.TEXT)
-                                    .build(),
-                                AttributeDef.create()
-                                    .withId(field1)
-                                    .withType(AttributeType.TEXT)
-                                    .build()
+                    withModel(
+                        TypeModelDef.create {
+                            withAttributes(
+                                listOf(
+                                    AttributeDef.create()
+                                        .withId(field0)
+                                        .withType(AttributeType.TEXT)
+                                        .build(),
+                                    AttributeDef.create()
+                                        .withId(field1)
+                                        .withType(AttributeType.TEXT)
+                                        .build()
+                                )
                             )
-                        )
-                    })
+                        }
+                    )
                 },
                 before,
                 after
@@ -192,9 +198,9 @@ class RemoteTxnEventsTest {
             val diff = atts.get("diff")
             assertThat(diff.size()).isEqualTo(1)
             assertThat(diff.get(0).get("attId").asText()).isEqualTo(att)
-            assertThat(diff.get(0).get("attType").asText()).isEqualTo("TEXT")
-            assertThat(diff.get(0).get("before")).isEqualTo(DataValue.create("""["$before"]"""))
-            assertThat(diff.get(0).get("after")).isEqualTo(DataValue.create("""["$after"]"""))
+            assertThat(diff[0].get("attType").asText()).isEqualTo("TEXT")
+            assertThat(diff[0].get("before")).isEqualTo(DataValue.create("""["$before"]"""))
+            assertThat(diff[0].get("after")).isEqualTo(DataValue.create("""["$after"]"""))
         }
 
         app1ListenedEvents.forEachIndexed { idx, event ->
@@ -218,18 +224,22 @@ class RemoteTxnEventsTest {
 
         val eventType = "test-event-type"
 
-        val app0Emitter = app0Events.getEmitter(EmitterConfig.create<EventData> {
-            withSource("app-0-test")
-            withEventClass(EventData::class.java)
-            withEventType(eventType)
-        })
+        val app0Emitter = app0Events.getEmitter(
+            EmitterConfig.create<EventData> {
+                withSource("app-0-test")
+                withEventClass(EventData::class.java)
+                withEventType(eventType)
+            }
+        )
 
         val app1ListenedEvents = mutableListOf<EventData>()
-        app1Events.addListener(ListenerConfig.create<EventData> {
-            withDataClass(EventData::class.java)
-            withEventType(eventType)
-            withAction { app1ListenedEvents.add(it) }
-        })
+        app1Events.addListener(
+            ListenerConfig.create<EventData> {
+                withDataClass(EventData::class.java)
+                withEventType(eventType)
+                withAction { app1ListenedEvents.add(it) }
+            }
+        )
 
         Thread.sleep(200)
 
@@ -251,9 +261,11 @@ class RemoteTxnEventsTest {
         }
         Thread.sleep(100)
 
-        assertThat(app1ListenedEvents).containsExactlyElementsOf((0 until 5).map {
-            EventData("test-data-$it")
-        })
+        assertThat(app1ListenedEvents).containsExactlyElementsOf(
+            (0 until 5).map {
+                EventData("test-data-$it")
+            }
+        )
         app1ListenedEvents.clear()
 
         app0.recordsServices.recordsServiceV1.register(object : RecordsMutateDao {
@@ -265,21 +277,25 @@ class RemoteTxnEventsTest {
         })
 
         val app0ListenedEvents = mutableListOf<EventData>()
-        app0Events.addListener(ListenerConfig.create<EventData> {
-            withDataClass(EventData::class.java)
-            withEventType(eventType)
-            withAction { app0ListenedEvents.add(it) }
-        })
+        app0Events.addListener(
+            ListenerConfig.create<EventData> {
+                withDataClass(EventData::class.java)
+                withEventType(eventType)
+                withAction { app0ListenedEvents.add(it) }
+            }
+        )
         val app2ListenedEvents = mutableListOf<EventData>()
-        app2Events.addListener(ListenerConfig.create<EventData> {
-            withDataClass(EventData::class.java)
-            withEventType(eventType)
-            withAction { app2ListenedEvents.add(it) }
-        })
+        app2Events.addListener(
+            ListenerConfig.create<EventData> {
+                withDataClass(EventData::class.java)
+                withEventType(eventType)
+                withAction { app2ListenedEvents.add(it) }
+            }
+        )
         Thread.sleep(100)
 
         val testRef = RecordRef.create(
-            app0.recordsServices.properties.appName,
+            app0.recordsServices.webappProps.appName,
             "test",
             ""
         )

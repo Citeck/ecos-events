@@ -45,10 +45,13 @@ class RecordChangedEvent(
                         val beforeValue = before[attId]
                         if (!isEqual(afterValue, beforeValue)) {
                             val attDef = attsById[attId] ?: continue
-                            res.add(DiffValue(attId,
-                                attDef,
-                                DataValue.create(beforeValue),
-                                DataValue.create(afterValue))
+                            res.add(
+                                DiffValue(
+                                    attId,
+                                    attDef,
+                                    DataValue.create(beforeValue),
+                                    DataValue.create(afterValue)
+                                )
                             )
                         }
                     }
@@ -72,11 +75,11 @@ class RecordChangedEvent(
         }
 
         private fun isEmpty(value: Any?): Boolean {
-            return value == null
-                    || value is String && value.isEmpty()
-                    || value is DataValue && (
-                        value.isTextual() && value.asText().isEmpty()
-                        || (value.isArray() || value.isObject()) && value.size() == 0
+            return value == null ||
+                value is String && value.isEmpty() ||
+                value is DataValue && (
+                    value.isTextual() && value.asText().isEmpty() ||
+                        (value.isArray() || value.isObject()) && value.size() == 0
                     )
         }
     }

@@ -10,10 +10,11 @@ class RecordChangedController : RemoteEventController {
         val id0 = getRecordId(event0)
         val id1 = getRecordId(event1)
 
-        if (id0.isEmpty()
-                || id0 != id1
-                || event0.user != event1.user
-                || event0.attributes.size() != event1.attributes.size()) {
+        if (id0.isEmpty() ||
+            id0 != id1 ||
+            event0.user != event1.user ||
+            event0.attributes.size() != event1.attributes.size()
+        ) {
             return false
         }
 

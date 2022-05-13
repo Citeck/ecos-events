@@ -42,7 +42,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
     private val appInstanceId: String
 
     init {
-        val props = serviceFactory.recordsServices.properties
+        val props = serviceFactory.recordsServices.webappProps
         appName = props.appName
         appInstanceId = props.appInstanceId
     }

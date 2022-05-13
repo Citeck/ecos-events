@@ -43,7 +43,7 @@ class RabbitMqEventsService(
 
     init {
 
-        val recProps = factory.recordsServices.properties
+        val recProps = factory.recordsServices.webappProps
         appName = recProps.appName
         appInstanceId = recProps.appInstanceId
 
@@ -53,7 +53,6 @@ class RabbitMqEventsService(
         if (recProps.appName.isBlank()) {
 
             log.warn { "App name is blank. Remote events listeners won't be registered" }
-
         } else {
 
             // events should be consumed in the same order as it
@@ -106,7 +105,7 @@ class RabbitMqEventsService(
             if (!AppKeyUtils.isKeyForApp(appName, appInstanceId, targetAppKey)) {
 
                 val appListener = ecosZooKeeper.getValue(
-                    "/${getEventTypeKey(eventType)}/${targetAppKey}",
+                    "/${getEventTypeKey(eventType)}/$targetAppKey",
                     ZkAppEventListener::class.java
                 )
                 if (appListener != null) {
@@ -189,7 +188,7 @@ class RabbitMqEventsService(
             } catch (e: Exception) {
                 log.error(e) {
                     "Exception while event processing. " +
-                            "Event id: ${event.id} source: ${event.source} type: ${event.type}"
+                        "Event id: ${event.id} source: ${event.source} type: ${event.type}"
                 }
             }
         }

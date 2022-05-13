@@ -3,7 +3,6 @@ package ru.citeck.ecos.events2.rabbitmq
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import ru.citeck.ecos.commons.data.ObjectData
-import ru.citeck.ecos.events2.EcosEvent
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
@@ -40,35 +39,43 @@ class InclusiveListenersTest {
     private fun testImpl(exclusive: Boolean) {
 
         val app10EventsList = ArrayList<ObjectData>()
-        val listenerHandle0 = app10Events.addListener(ListenerConfig.create<ObjectData> {
-            withEventType("test-event")
-            withDataClass(ObjectData::class.java)
-            withAttributes(mapOf("att" to "att"))
-            withAction { app10EventsList.add(it) }
-            withExclusive(exclusive)
-        })
+        val listenerHandle0 = app10Events.addListener(
+            ListenerConfig.create<ObjectData> {
+                withEventType("test-event")
+                withDataClass(ObjectData::class.java)
+                withAttributes(mapOf("att" to "att"))
+                withAction { app10EventsList.add(it) }
+                withExclusive(exclusive)
+            }
+        )
 
         val app11EventsList = ArrayList<ObjectData>()
-        val listenerHandle1 = app11Events.addListener(ListenerConfig.create<ObjectData> {
-            withEventType("test-event")
-            withDataClass(ObjectData::class.java)
-            withAttributes(mapOf("att" to "att"))
-            withAction { app11EventsList.add(it) }
-            withExclusive(exclusive)
-        })
+        val listenerHandle1 = app11Events.addListener(
+            ListenerConfig.create<ObjectData> {
+                withEventType("test-event")
+                withDataClass(ObjectData::class.java)
+                withAttributes(mapOf("att" to "att"))
+                withAction { app11EventsList.add(it) }
+                withExclusive(exclusive)
+            }
+        )
 
-        val app0TestEventEmitter = app0Events.getEmitter(EmitterConfig.create<ObjectData> {
-            withEventType("test-event")
-            withEventClass(ObjectData::class.java)
-        })
+        val app0TestEventEmitter = app0Events.getEmitter(
+            EmitterConfig.create<ObjectData> {
+                withEventType("test-event")
+                withEventClass(ObjectData::class.java)
+            }
+        )
 
         Thread.sleep(200)
 
-        val expectedEventData = ObjectData.create("""
+        val expectedEventData = ObjectData.create(
+            """
             {
                 "att": "value"
             }
-        """.trimIndent())
+            """.trimIndent()
+        )
 
         app0TestEventEmitter.emit(expectedEventData)
 
@@ -94,10 +101,12 @@ class InclusiveListenersTest {
         app10EventsList.clear()
         app11EventsList.clear()
 
-        val app10TestEventEmitter = app10Events.getEmitter(EmitterConfig.create<ObjectData> {
-            withEventType("test-event")
-            withEventClass(ObjectData::class.java)
-        })
+        val app10TestEventEmitter = app10Events.getEmitter(
+            EmitterConfig.create<ObjectData> {
+                withEventType("test-event")
+                withEventClass(ObjectData::class.java)
+            }
+        )
 
         app10TestEventEmitter.emit(expectedEventData)
 

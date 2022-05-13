@@ -43,19 +43,21 @@ class RecEventsTest {
         val recEventsService = services.recordEventsService
 
         typesInfo[TEST_TYPE_ID] = TypeInfo.create {
-            withModel(TypeModelDef.create {
-                withAttributes(
-                    listOf(
-                        AttributeDef.create {
-                            withId("field0")
-                        },
-                        AttributeDef.create {
-                            withId("field1")
-                            withType(AttributeType.NUMBER)
-                        }
+            withModel(
+                TypeModelDef.create {
+                    withAttributes(
+                        listOf(
+                            AttributeDef.create {
+                                withId("field0")
+                            },
+                            AttributeDef.create {
+                                withId("field1")
+                                withType(AttributeType.NUMBER)
+                            }
+                        )
                     )
-                )
-            })
+                }
+            )
         }
 
         val events = mutableListOf<EventToListen>()
@@ -71,10 +73,12 @@ class RecEventsTest {
         recEventsService.emitRecChanged(before, after)
 
         assertThat(events).containsExactly(
-            EventToListen(listOf(
-                ChangedValue("field0", DataValue.create("abc"), DataValue.create("def")),
-                ChangedValue("field1", DataValue.create(0f), DataValue.create(10f))
-            ))
+            EventToListen(
+                listOf(
+                    ChangedValue("field0", DataValue.create("abc"), DataValue.create("def")),
+                    ChangedValue("field1", DataValue.create(0.0), DataValue.create(10.0))
+                )
+            )
         )
     }
 

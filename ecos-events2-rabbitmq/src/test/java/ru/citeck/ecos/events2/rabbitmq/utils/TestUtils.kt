@@ -2,25 +2,19 @@ package ru.citeck.ecos.events2.rabbitmq.utils
 
 import com.github.fridujo.rabbitmq.mock.MockConnectionFactory
 import com.rabbitmq.client.ConnectionFactory
-import ecos.org.apache.curator.RetryPolicy
-import ecos.org.apache.curator.framework.CuratorFrameworkFactory
-import ecos.org.apache.curator.retry.RetryForever
 import ecos.org.apache.curator.test.TestingServer
-import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.test.EcosWebAppContextMock
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.rabbitmq.RabbitMqEventsService
 import ru.citeck.ecos.events2.remote.RemoteEventsService
 import ru.citeck.ecos.rabbitmq.RabbitMqConn
-import ru.citeck.ecos.records2.rest.RemoteRecordsRestApi
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
-import ru.citeck.ecos.records3.RecordsProperties
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
+import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.concurrent.thread
 
 class TestUtils {
 
@@ -32,13 +26,8 @@ class TestUtils {
         fun createServers(): MockServers {
 
             val zkServer = TestingServer()
-
-            val retryPolicy: RetryPolicy = RetryForever(7_000)
-
-            val client = CuratorFrameworkFactory
-                .newClient(zkServer.connectString, retryPolicy)
-            client.start()
-            val ecosZooKeeper = EcosZooKeeper(client).withNamespace("ecos")
+            zkServer.start()
+            val ecosZooKeeper = EcosZooKeeper(zkServer.connectString).withNamespace("ecos")
 
             val factory: ConnectionFactory = MockConnectionFactory()
             val rabbitMqConn = RabbitMqConn(factory)
@@ -84,37 +73,20 @@ class TestUtils {
         private fun createRecordsServices(appName: String): RecordsServiceFactory {
 
             val services = object : RecordsServiceFactory() {
-                override fun createProperties(): RecordsProperties {
-                    val props = RecordsProperties()
-                    props.appName = appName
-                    props.appInstanceId = appName + ":" + UUID.randomUUID()
-                    return props
-                }
-                override fun createRemoteRecordsResolver(): RemoteRecordsResolver {
-                    return RemoteRecordsResolver(
-                        this,
-                        object : RemoteRecordsRestApi {
-                            override fun <T : Any> jsonPost(url: String, request: Any, respType: Class<T>): T {
-                                val remoteAppName = url.substring(1).substringBefore('/')
-                                val services = recordsServices[remoteAppName]!!
-                                val restHandler = services.restHandlerAdapter
-                                val urlPrefix = "/$remoteAppName"
-                                val result = AtomicReference<Any>()
-                                thread(start = true) {
-                                    result.set(
-                                        when (url) {
-                                            urlPrefix + RemoteRecordsResolver.QUERY_URL -> restHandler.queryRecords(request)
-                                            urlPrefix + RemoteRecordsResolver.MUTATE_URL -> restHandler.mutateRecords(request)
-                                            urlPrefix + RemoteRecordsResolver.DELETE_URL -> restHandler.deleteRecords(request)
-                                            urlPrefix + RemoteRecordsResolver.TXN_URL -> restHandler.txnAction(request)
-                                            else -> error("Unknown url: '$url'")
-                                        }
-                                    )
-                                }.join()
-                                return Json.mapper.convert(result.get(), respType)!!
-                            }
+                override fun getEcosWebAppContext(): EcosWebAppContext {
+                    val ctx = EcosWebAppContextMock(appName, appName + ":" + UUID.randomUUID())
+                    ctx.webClientExecuteImpl = { appName, path, body ->
+                        val services = recordsServices[appName]!!
+                        val restHandler = services.restHandlerAdapter
+                        when (path) {
+                            RemoteRecordsResolver.QUERY_PATH -> restHandler.queryRecords(body)
+                            RemoteRecordsResolver.MUTATE_PATH -> restHandler.mutateRecords(body)
+                            RemoteRecordsResolver.DELETE_PATH -> restHandler.deleteRecords(body)
+                            RemoteRecordsResolver.TXN_PATH -> restHandler.txnAction(body)
+                            else -> error("Unknown path: '$path'")
                         }
-                    )
+                    }
+                    return ctx
                 }
             }
             recordsServices[appName] = services

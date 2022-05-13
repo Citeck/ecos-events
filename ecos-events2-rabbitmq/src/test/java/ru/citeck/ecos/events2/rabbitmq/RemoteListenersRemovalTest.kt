@@ -29,20 +29,28 @@ class RemoteListenersRemovalTest {
     private lateinit var eventServiceReceiverApp1: EventsService
     private lateinit var eventServiceReceiverApp2: EventsService
 
-    private val personIvanRecordRef = RecordRef.create(TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
-        "ivan").toString()
+    private val personIvanRecordRef = RecordRef.create(
+        TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
+        "ivan"
+    ).toString()
     private val personIvanRecord = PersonRecord("Ivan", "Petrov")
 
     @BeforeEach
     fun setUp() {
         servers = TestUtils.createServers()
 
-        eventServiceEmitterApp0 = TestUtils.createApp("app0", servers, mapOf(
-            Pair(personIvanRecordRef, personIvanRecord)
-        ))
-        eventServiceEmitterApp1 = TestUtils.createApp("app1", servers, mapOf(
-            Pair(personIvanRecordRef, personIvanRecord)
-        ))
+        eventServiceEmitterApp0 = TestUtils.createApp(
+            "app0", servers,
+            mapOf(
+                Pair(personIvanRecordRef, personIvanRecord)
+            )
+        )
+        eventServiceEmitterApp1 = TestUtils.createApp(
+            "app1", servers,
+            mapOf(
+                Pair(personIvanRecordRef, personIvanRecord)
+            )
+        )
 
         eventServiceReceiverApp0 = TestUtils.createApp("app_rec_0", servers, emptyMap())
         eventServiceReceiverApp1 = TestUtils.createApp("app_rec_1", servers, emptyMap())
@@ -55,32 +63,38 @@ class RemoteListenersRemovalTest {
         var receiveData0: NodeData? = null
         val emitData0 = NodeData("13-ab-kk-0", "some data 0", personIvanRecord)
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData0 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData0 = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData0)
         Thread.sleep(500)
         assertEquals(emitData0, receiveData0)
 
-        eventServiceReceiverApp0.removeListener(ListenerConfig.create<NodeData> {
-            id = "config0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData0 = evData
+        eventServiceReceiverApp0.removeListener(
+            ListenerConfig.create<NodeData> {
+                id = "config0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData0 = evData
+                }
             }
-        })
+        )
         receiveData0 = null
 
         Thread.sleep(500)
@@ -98,19 +112,23 @@ class RemoteListenersRemovalTest {
         var receiveData0: NodeData? = null
         val emitData0 = NodeData("13-ab-kk-0", "some data 0", personIvanRecord)
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData0 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData0 = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData0)
         Thread.sleep(500)
@@ -137,37 +155,45 @@ class RemoteListenersRemovalTest {
 
         val emitData0 = NodeData("13-ab-kk-0", "some data 0", personIvanRecord)
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData0 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData0 = evData
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config1"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            withAction { evData ->
-                receiveData1 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config1"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                withAction { evData ->
+                    receiveData1 = evData
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config2"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            withAction { evData ->
-                receiveData2 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config2"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                withAction { evData ->
+                    receiveData2 = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData0)
         Thread.sleep(500)
@@ -200,37 +226,45 @@ class RemoteListenersRemovalTest {
 
         val emitData0 = NodeData("13-ab-kk-0", "some data 0", personIvanRecord)
 
-        val listenerHandle0 = eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData0 = evData
+        val listenerHandle0 = eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData0 = evData
+                }
             }
-        })
+        )
 
-        val listenerHandle1 = eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config1"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData1 = evData
+        val listenerHandle1 = eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config1"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData1 = evData
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config2"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData2 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config2"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData2 = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData0)
         Thread.sleep(500)
@@ -266,51 +300,63 @@ class RemoteListenersRemovalTest {
         val emitData0 = NodeData("13-ab-kk-0", "some data 0", personIvanRecord)
         val emitData1 = NodeData("13-ab-kk-1", "some data 1", personIvanRecord)
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config_0_0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData00.add(evData)
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_0_0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData00.add(evData)
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config_0_1"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData01.add(evData)
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_0_1"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData01.add(evData)
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            id = "config_1_0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData10.add(evData)
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_1_0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData10.add(evData)
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            id = "config_1_1"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData11.add(evData)
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_1_1"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData11.add(evData)
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
-        val emitter1 = eventServiceEmitterApp1.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter1 = eventServiceEmitterApp1.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData0)
         emitter1.emit(emitData1)
@@ -351,46 +397,56 @@ class RemoteListenersRemovalTest {
 
         val emitData0 = NodeData("13-ab-kk-0", "some data 0", personIvanRecord)
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config_0_0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData00 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_0_0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData00 = evData
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config_0_1"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData01 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_0_1"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData01 = evData
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            id = "config_1_0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData10 = evData
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_1_0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData10 = evData
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            id = "config_1_1"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData11 = evData
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_1_1"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData11 = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData0)
         Thread.sleep(500)
@@ -427,46 +483,56 @@ class RemoteListenersRemovalTest {
 
         val emitData0 = NodeData("13-ab-kk-0", "some data 0", personIvanRecord)
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config_0_0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData00 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_0_0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData00 = evData
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config_0_1"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData01 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_0_1"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData01 = evData
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            id = "config_1_0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData10 = evData
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_1_0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData10 = evData
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            id = "config_1_1"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData11 = evData
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config_1_1"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData11 = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData0)
         Thread.sleep(500)
@@ -501,32 +567,38 @@ class RemoteListenersRemovalTest {
         var receiveData0: NodeData? = null
         val emitData0 = NodeData("13-ab-kk-0", "some data 0", personIvanRecord)
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData0 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData0 = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData0)
         Thread.sleep(500)
         assertEquals(emitData0, receiveData0)
 
-        eventServiceReceiverApp0.removeListener(ListenerConfig.create<NodeData> {
-            id = "config1"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData0 = evData
+        eventServiceReceiverApp0.removeListener(
+            ListenerConfig.create<NodeData> {
+                id = "config1"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData0 = evData
+                }
             }
-        })
+        )
         receiveData0 = null
 
         Thread.sleep(500)
@@ -544,19 +616,23 @@ class RemoteListenersRemovalTest {
         var receiveData0: NodeData? = null
         val emitData0 = NodeData("13-ab-kk-0", "some data 0", personIvanRecord)
 
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            id = "config0"
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData0 = evData
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                id = "config0"
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData0 = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData0)
         Thread.sleep(500)

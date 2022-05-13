@@ -27,31 +27,41 @@ class RecordEventsService(services: EventsServiceFactory) {
     init {
         val eventsService = services.eventsService
 
-        recChangedEmitter = eventsService.getEmitter(EmitterConfig.create {
-            withEventType(RecordChangedEvent.TYPE)
-            withSource(RecordChangedEvent::class.java.simpleName)
-            withEventClass(RecordChangedEvent::class.java)
-        })
-        recCreatedEmitter = eventsService.getEmitter(EmitterConfig.create {
-            withEventType(RecordCreatedEvent.TYPE)
-            withSource(RecordCreatedEvent::class.java.simpleName)
-            withEventClass(RecordCreatedEvent::class.java)
-        })
-        recStatusChangedEmitter = eventsService.getEmitter(EmitterConfig.create {
-            withEventType(RecordStatusChangedEvent.TYPE)
-            withSource(RecordStatusChangedEvent::class.java.simpleName)
-            withEventClass(RecordStatusChangedEvent::class.java)
-        })
-        recDeletedEmitter = eventsService.getEmitter(EmitterConfig.create {
-            withEventType(RecordDeletedEvent.TYPE)
-            withSource(RecordDeletedEvent::class.java.simpleName)
-            withEventClass(RecordDeletedEvent::class.java)
-        })
-        recDraftStatusChangedEmitter = eventsService.getEmitter(EmitterConfig.create {
-            withEventType(RecordDraftStatusChangedEvent.TYPE)
-            withSource(RecordDraftStatusChangedEvent::class.java.simpleName)
-            withEventClass(RecordDraftStatusChangedEvent::class.java)
-        })
+        recChangedEmitter = eventsService.getEmitter(
+            EmitterConfig.create {
+                withEventType(RecordChangedEvent.TYPE)
+                withSource(RecordChangedEvent::class.java.simpleName)
+                withEventClass(RecordChangedEvent::class.java)
+            }
+        )
+        recCreatedEmitter = eventsService.getEmitter(
+            EmitterConfig.create {
+                withEventType(RecordCreatedEvent.TYPE)
+                withSource(RecordCreatedEvent::class.java.simpleName)
+                withEventClass(RecordCreatedEvent::class.java)
+            }
+        )
+        recStatusChangedEmitter = eventsService.getEmitter(
+            EmitterConfig.create {
+                withEventType(RecordStatusChangedEvent.TYPE)
+                withSource(RecordStatusChangedEvent::class.java.simpleName)
+                withEventClass(RecordStatusChangedEvent::class.java)
+            }
+        )
+        recDeletedEmitter = eventsService.getEmitter(
+            EmitterConfig.create {
+                withEventType(RecordDeletedEvent.TYPE)
+                withSource(RecordDeletedEvent::class.java.simpleName)
+                withEventClass(RecordDeletedEvent::class.java)
+            }
+        )
+        recDraftStatusChangedEmitter = eventsService.getEmitter(
+            EmitterConfig.create {
+                withEventType(RecordDraftStatusChangedEvent.TYPE)
+                withSource(RecordDraftStatusChangedEvent::class.java.simpleName)
+                withEventClass(RecordDraftStatusChangedEvent::class.java)
+            }
+        )
     }
 
     @JvmOverloads
