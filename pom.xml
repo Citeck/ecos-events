@@ -12,7 +12,7 @@
 
     <properties>
 
-        <revision>2.10.1</revision>
+        <revision>2.10.2</revision>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -27,13 +27,13 @@
         <commons.lang3.version>3.8.1</commons.lang3.version>
 
         <ecos.jackson.version>2.10.4.3</ecos.jackson.version>
-        <ecos.commons.version>2.6.7</ecos.commons.version>
-        <ecos.records.version>3.47.6</ecos.records.version>
-        <ecos.context-lib.version>1.2.1</ecos.context-lib.version>
-        <ecos.model-lib.version>2.12.0</ecos.model-lib.version>
-        <ecos.webapp-api.version>1.0.5</ecos.webapp-api.version>
+        <ecos.commons.version>2.6.9</ecos.commons.version>
+        <ecos.records.version>3.47.9</ecos.records.version>
+        <ecos.context-lib.version>1.2.2</ecos.context-lib.version>
+        <ecos.model-lib.version>2.12.2</ecos.model-lib.version>
+        <ecos.webapp-api.version>1.0.6</ecos.webapp-api.version>
 
-        <ecos.zookeeper.version>1.4.1</ecos.zookeeper.version>
+        <ecos.zookeeper.version>1.4.3</ecos.zookeeper.version>
         <ecos.curator.version>5.2.0.1</ecos.curator.version>
         <ecos.rabbitmq.version>2.4.1</ecos.rabbitmq.version>
 
