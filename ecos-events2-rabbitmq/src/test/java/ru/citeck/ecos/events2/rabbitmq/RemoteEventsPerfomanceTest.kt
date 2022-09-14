@@ -74,7 +74,7 @@ class RemoteEventsPerfomanceTest {
     @Test
     fun oneEmitterPerfomanceTest() {
 
-        val dataCount = 10_000
+        val dataCount = getDataCount(10_000)
         val maxTime = 10_000L
 
         val dataToEmit0 = generateRandomNodeData(dataCount)
@@ -94,7 +94,7 @@ class RemoteEventsPerfomanceTest {
         )
 
         eventServiceReceiverApp0.addListener(
-            ListenerConfig.create<NodeData> {
+            ListenerConfig.create {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
                 withAction { evData ->
@@ -104,7 +104,7 @@ class RemoteEventsPerfomanceTest {
         )
 
         eventServiceReceiverApp1.addListener(
-            ListenerConfig.create<NodeData> {
+            ListenerConfig.create {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
                 withAction { evData ->
@@ -114,7 +114,7 @@ class RemoteEventsPerfomanceTest {
         )
 
         eventServiceReceiverApp2.addListener(
-            ListenerConfig.create<NodeData> {
+            ListenerConfig.create {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
                 withAction { evData ->
@@ -153,7 +153,7 @@ class RemoteEventsPerfomanceTest {
     @Test
     fun twoEmitterPerfomanceTest() {
 
-        val dataCount = 10_000
+        val dataCount = getDataCount(10_000)
         val emitterCount = 2
         val maxTime = 15_000L
 
@@ -241,7 +241,7 @@ class RemoteEventsPerfomanceTest {
     @Test
     fun threeEmitterPerfomanceTest() {
 
-        val dataCount = 10_000
+        val dataCount = getDataCount(10_000)
         val emitterCount = 3
         val maxTime = 17_000L
 
@@ -277,7 +277,7 @@ class RemoteEventsPerfomanceTest {
             ListenerConfig.create<NodeData> {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receivedDataFromListener1.add(evData)
                 }
             }
@@ -287,7 +287,7 @@ class RemoteEventsPerfomanceTest {
             ListenerConfig.create<NodeData> {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receivedDataFromListener2.add(evData)
                 }
             }
@@ -359,6 +359,14 @@ class RemoteEventsPerfomanceTest {
         }
 
         return data
+    }
+
+    private fun getDataCount(libCount: Int): Int {
+        return if (System.getProperties().containsKey("ecos.env.webapp-tests")) {
+            (libCount / 10).coerceAtLeast(1)
+        } else {
+            libCount
+        }
     }
 
     private data class NodeData(
