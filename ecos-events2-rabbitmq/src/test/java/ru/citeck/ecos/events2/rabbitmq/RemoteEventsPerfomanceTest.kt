@@ -97,7 +97,7 @@ class RemoteEventsPerfomanceTest {
             ListenerConfig.create<NodeData> {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receivedDataFromListener0.add(evData)
                 }
             }
@@ -107,7 +107,7 @@ class RemoteEventsPerfomanceTest {
             ListenerConfig.create<NodeData> {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receivedDataFromListener1.add(evData)
                 }
             }
@@ -117,7 +117,7 @@ class RemoteEventsPerfomanceTest {
             ListenerConfig.create<NodeData> {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receivedDataFromListener2.add(evData)
                 }
             }
@@ -175,7 +175,7 @@ class RemoteEventsPerfomanceTest {
             ListenerConfig.create<NodeData> {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receivedDataFromListener0.add(evData)
                 }
             }
@@ -185,7 +185,7 @@ class RemoteEventsPerfomanceTest {
             ListenerConfig.create<NodeData> {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receivedDataFromListener1.add(evData)
                 }
             }
@@ -195,7 +195,7 @@ class RemoteEventsPerfomanceTest {
             ListenerConfig.create<NodeData> {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receivedDataFromListener2.add(evData)
                 }
             }
