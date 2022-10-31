@@ -49,8 +49,8 @@ class RecordChangedEvent(
                                 DiffValue(
                                     attId,
                                     attDef,
-                                    DataValue.create(beforeValue),
-                                    DataValue.create(afterValue)
+                                    beforeValue,
+                                    afterValue
                                 )
                             )
                         }
@@ -87,8 +87,8 @@ class RecordChangedEvent(
     class DiffValue(
         val id: String,
         val def: AttributeDef,
-        val before: DataValue,
-        val after: DataValue
+        val before: Any?,
+        val after: Any?
     ) {
         override fun toString(): String {
             return Json.mapper.toString(this) ?: "{}"
