@@ -22,18 +22,28 @@ class RemoteListenersTest {
     private lateinit var eventServiceEmitterApp0: EventsService
     private lateinit var eventServiceReceiverApp1: EventsService
 
-    private val personIvanRecordRef = RecordRef.create(TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
-        "ivan").toString()
-    private val personIvanRecord = PersonRecord("Ivan", "Petrov", listOf("89002003050",
-        "89001001003987"))
+    private val personIvanRecordRef = RecordRef.create(
+        TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
+        "ivan"
+    ).toString()
+    private val personIvanRecord = PersonRecord(
+        "Ivan", "Petrov",
+        listOf(
+            "89002003050",
+            "89001001003987"
+        )
+    )
 
     @BeforeEach
     fun setUp() {
         servers = TestUtils.createServers()
 
-        eventServiceEmitterApp0 = TestUtils.createApp("app0", servers, mapOf(
-            Pair(personIvanRecordRef, personIvanRecord)
-        ))
+        eventServiceEmitterApp0 = TestUtils.createApp(
+            "app0", servers,
+            mapOf(
+                Pair(personIvanRecordRef, personIvanRecord)
+            )
+        )
         eventServiceReceiverApp1 = TestUtils.createApp("app1", servers, emptyMap())
     }
 
@@ -43,18 +53,22 @@ class RemoteListenersTest {
         var receiveData: NodeData? = null
         val emitData = NodeData("13-ab-kk", "data")
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
-
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData = evData
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
             }
-        })
+        )
+
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeData> {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData = evData
+                }
+            }
+        )
 
         Thread.sleep(1000)
 
@@ -71,18 +85,22 @@ class RemoteListenersTest {
         var receiveData: NodeData? = null
         val emitData = NodeData("13-ab-kk-1", "some data")
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData = evData
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeData> {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData)
 
@@ -97,18 +115,22 @@ class RemoteListenersTest {
         var receiveData: NodeDataWithCreatorMeta? = null
         val emitData = NodeData("13-ab-kk-1", "some data", personIvanRecord)
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeDataWithCreatorMeta> {
-            eventType = NODE_TYPE
-            dataClass = NodeDataWithCreatorMeta::class.java
-            setAction { evData ->
-                receiveData = evData
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeDataWithCreatorMeta> {
+                eventType = NODE_TYPE
+                dataClass = NodeDataWithCreatorMeta::class.java
+                setAction { evData ->
+                    receiveData = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData)
 
@@ -131,34 +153,42 @@ class RemoteListenersTest {
         val emitData0 = NodeData("13-ab-kk-0", "some data 0", personIvanRecord)
         val emitData1 = NodeData("13-ab-kk-1", "some data 1", personIvanRecord)
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receiveData0 = evData
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeData> {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receiveData0 = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
+            }
+        )
 
         emitter.emit(emitData0)
         Thread.sleep(1000)
         assertEquals(emitData0, receiveData0)
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeDataWithCreatorMeta> {
-            eventType = NODE_TYPE
-            dataClass = NodeDataWithCreatorMeta::class.java
-            withAction { evData ->
-                receiveData1 = evData
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeDataWithCreatorMeta> {
+                eventType = NODE_TYPE
+                dataClass = NodeDataWithCreatorMeta::class.java
+                withAction { evData ->
+                    receiveData1 = evData
+                }
             }
-        })
+        )
 
         Thread.sleep(500)
-        val listenerWithCreatorMeta = servers.zookeeper.getValue("/events/${NODE_TYPE}/app1",
-            ZkAppEventListener::class.java)
+        val listenerWithCreatorMeta = servers.zookeeper.getValue(
+            "/events/$NODE_TYPE/app1",
+            ZkAppEventListener::class.java
+        )
         assertEquals(6, listenerWithCreatorMeta!!.attributes.size)
 
         emitter.emit(emitData1)
@@ -180,40 +210,49 @@ class RemoteListenersTest {
 
         val emitData = FullNodeData("13-ab-kk-0", "some data 0", 2, "Galina", Date())
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<MinimalNodeData> {
-            eventType = NODE_TYPE
-            dataClass = MinimalNodeData::class.java
-            setAction { evData ->
-                receiveDataMinimal = evData
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<MinimalNodeData> {
+                eventType = NODE_TYPE
+                dataClass = MinimalNodeData::class.java
+                setAction { evData ->
+                    receiveDataMinimal = evData
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<MediumNodeData> {
-            eventType = NODE_TYPE
-            dataClass = MediumNodeData::class.java
-            setAction { evData ->
-                receiveDataMedium = evData
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<MediumNodeData> {
+                eventType = NODE_TYPE
+                dataClass = MediumNodeData::class.java
+                setAction { evData ->
+                    receiveDataMedium = evData
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<OneNodeData> {
-            eventType = NODE_TYPE
-            dataClass = OneNodeData::class.java
-            setAction { evData ->
-                receiveDataOne = evData
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<OneNodeData> {
+                eventType = NODE_TYPE
+                dataClass = OneNodeData::class.java
+                setAction { evData ->
+                    receiveDataOne = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventServiceEmitterApp0.getEmitter<FullNodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = FullNodeData::class.java
-        })
+        val emitter = eventServiceEmitterApp0.getEmitter<FullNodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = FullNodeData::class.java
+            }
+        )
 
         Thread.sleep(1000)
 
-
-        val listenerWithCreatorMeta = servers.zookeeper.getValue("/events/${NODE_TYPE}/app1",
-            ZkAppEventListener::class.java)
+        val listenerWithCreatorMeta = servers.zookeeper.getValue(
+            "/events/$NODE_TYPE/app1",
+            ZkAppEventListener::class.java
+        )
 
         assertEquals(5, listenerWithCreatorMeta!!.attributes.size)
 

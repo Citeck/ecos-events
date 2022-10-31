@@ -22,18 +22,22 @@ class EventsTest {
 
         val data = ArrayList<DataClass>()
 
-        eventsService.addListener(ListenerConfig.create<DataClass> {
-            eventType = "test-type"
-            dataClass = DataClass::class.java
-            setAction { evData ->
-                data.add(evData)
+        eventsService.addListener(
+            ListenerConfig.create<DataClass> {
+                eventType = "test-type"
+                dataClass = DataClass::class.java
+                setAction { evData ->
+                    data.add(evData)
+                }
             }
-        })
+        )
 
-        val emitter = eventsService.getEmitter<DataClass>(EmitterConfig.create {
-            eventType = "test-type"
-            eventClass = DataClass::class.java
-        })
+        val emitter = eventsService.getEmitter<DataClass>(
+            EmitterConfig.create {
+                eventType = "test-type"
+                eventClass = DataClass::class.java
+            }
+        )
 
         val targetData = arrayListOf(
             DataClass("aa", "bb"),
@@ -59,18 +63,22 @@ class EventsTest {
 
         val userIvan = "ivan.petrov"
 
-        eventsService.addListener(ListenerConfig.create<DataClassWithEventInfo> {
-            eventType = "test-type"
-            dataClass = DataClassWithEventInfo::class.java
-            setAction { evData ->
-                receiveData = evData
+        eventsService.addListener(
+            ListenerConfig.create<DataClassWithEventInfo> {
+                eventType = "test-type"
+                dataClass = DataClassWithEventInfo::class.java
+                setAction { evData ->
+                    receiveData = evData
+                }
             }
-        })
+        )
 
-        val emitter = eventsService.getEmitter<DataClass>(EmitterConfig.create {
-            eventType = "test-type"
-            eventClass = DataClass::class.java
-        })
+        val emitter = eventsService.getEmitter<DataClass>(
+            EmitterConfig.create {
+                eventType = "test-type"
+                eventClass = DataClass::class.java
+            }
+        )
 
         AuthContext.runAs(userIvan) {
             emitter.emit(emitData)

@@ -1,7 +1,6 @@
 package ru.citeck.ecos.events2.rabbitmq
 
 import com.github.javafaker.Faker
-import ecos.org.apache.curator.test.TestingServer
 import mu.KotlinLogging
 import org.apache.commons.lang3.time.StopWatch
 import org.assertj.core.api.Assertions.assertThat
@@ -49,17 +48,20 @@ class RemoteEventsPerfomanceTest {
         servers = TestUtils.createServers()
 
         eventServiceEmitterApp0 = TestUtils.createApp(
-            "appEmit0", servers, mapOf(
+            "appEmit0", servers,
+            mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )
         )
         eventServiceEmitterApp1 = TestUtils.createApp(
-            "appEmit1", servers, mapOf(
+            "appEmit1", servers,
+            mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )
         )
         eventServiceEmitterApp2 = TestUtils.createApp(
-            "appEmit2", servers, mapOf(
+            "appEmit2", servers,
+            mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )
         )
@@ -72,7 +74,7 @@ class RemoteEventsPerfomanceTest {
     @Test
     fun oneEmitterPerfomanceTest() {
 
-        val dataCount = 10_000
+        val dataCount = getDataCount(10_000)
         val maxTime = 10_000L
 
         val dataToEmit0 = generateRandomNodeData(dataCount)
@@ -84,34 +86,42 @@ class RemoteEventsPerfomanceTest {
         val receivedDataFromListener1 = mutableListOf<NodeData>()
         val receivedDataFromListener2 = mutableListOf<NodeData>()
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
-
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receivedDataFromListener0.add(evData)
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
             }
-        })
+        )
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receivedDataFromListener1.add(evData)
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                withAction { evData ->
+                    receivedDataFromListener0.add(evData)
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp2.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receivedDataFromListener2.add(evData)
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                withAction { evData ->
+                    receivedDataFromListener1.add(evData)
+                }
             }
-        })
+        )
+
+        eventServiceReceiverApp2.addListener(
+            ListenerConfig.create {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                withAction { evData ->
+                    receivedDataFromListener2.add(evData)
+                }
+            }
+        )
 
         Thread.sleep(1000)
 
@@ -143,7 +153,7 @@ class RemoteEventsPerfomanceTest {
     @Test
     fun twoEmitterPerfomanceTest() {
 
-        val dataCount = 10_000
+        val dataCount = getDataCount(10_000)
         val emitterCount = 2
         val maxTime = 15_000L
 
@@ -154,34 +164,42 @@ class RemoteEventsPerfomanceTest {
         val receivedDataFromListener1 = mutableListOf<NodeData>()
         val receivedDataFromListener2 = mutableListOf<NodeData>()
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
-
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receivedDataFromListener0.add(evData)
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
             }
-        })
+        )
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receivedDataFromListener1.add(evData)
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                withAction { evData ->
+                    receivedDataFromListener0.add(evData)
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp2.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receivedDataFromListener2.add(evData)
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeData> {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                withAction { evData ->
+                    receivedDataFromListener1.add(evData)
+                }
             }
-        })
+        )
+
+        eventServiceReceiverApp2.addListener(
+            ListenerConfig.create<NodeData> {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                withAction { evData ->
+                    receivedDataFromListener2.add(evData)
+                }
+            }
+        )
 
         Thread.sleep(1000)
 
@@ -223,7 +241,7 @@ class RemoteEventsPerfomanceTest {
     @Test
     fun threeEmitterPerfomanceTest() {
 
-        val dataCount = 10_000
+        val dataCount = getDataCount(10_000)
         val emitterCount = 3
         val maxTime = 17_000L
 
@@ -238,34 +256,42 @@ class RemoteEventsPerfomanceTest {
         val receivedDataFromListener1 = mutableListOf<NodeData>()
         val receivedDataFromListener2 = mutableListOf<NodeData>()
 
-        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(EmitterConfig.create {
-            eventType = NODE_TYPE
-            eventClass = NodeData::class.java
-        })
-
-        eventServiceReceiverApp0.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receivedDataFromListener0.add(evData)
+        val emitter = eventServiceEmitterApp0.getEmitter<NodeData>(
+            EmitterConfig.create {
+                eventType = NODE_TYPE
+                eventClass = NodeData::class.java
             }
-        })
+        )
 
-        eventServiceReceiverApp1.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receivedDataFromListener1.add(evData)
+        eventServiceReceiverApp0.addListener(
+            ListenerConfig.create<NodeData> {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                setAction { evData ->
+                    receivedDataFromListener0.add(evData)
+                }
             }
-        })
+        )
 
-        eventServiceReceiverApp2.addListener(ListenerConfig.create<NodeData> {
-            eventType = NODE_TYPE
-            dataClass = NodeData::class.java
-            setAction { evData ->
-                receivedDataFromListener2.add(evData)
+        eventServiceReceiverApp1.addListener(
+            ListenerConfig.create<NodeData> {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                withAction { evData ->
+                    receivedDataFromListener1.add(evData)
+                }
             }
-        })
+        )
+
+        eventServiceReceiverApp2.addListener(
+            ListenerConfig.create<NodeData> {
+                eventType = NODE_TYPE
+                dataClass = NodeData::class.java
+                withAction { evData ->
+                    receivedDataFromListener2.add(evData)
+                }
+            }
+        )
 
         Thread.sleep(1000)
 
@@ -306,9 +332,7 @@ class RemoteEventsPerfomanceTest {
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit0)
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit1)
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit2)
-
     }
-
 
     @AfterEach
     fun tearDown() {
@@ -337,6 +361,14 @@ class RemoteEventsPerfomanceTest {
         return data
     }
 
+    private fun getDataCount(libCount: Int): Int {
+        return if (System.getProperties().containsKey("ecos.env.webapp-tests")) {
+            (libCount / 10).coerceAtLeast(1)
+        } else {
+            libCount
+        }
+    }
+
     private data class NodeData(
         val id: String,
         val data: String,
@@ -354,5 +386,4 @@ class RemoteEventsPerfomanceTest {
         val firstName: String,
         val lastName: String
     )
-
 }

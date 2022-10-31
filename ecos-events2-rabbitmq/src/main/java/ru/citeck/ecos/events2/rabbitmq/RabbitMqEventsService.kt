@@ -9,6 +9,7 @@ import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.remote.*
 import ru.citeck.ecos.rabbitmq.RabbitMqChannel
 import ru.citeck.ecos.rabbitmq.RabbitMqConn
+import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -42,7 +43,7 @@ class RabbitMqEventsService(
 
     init {
 
-        val recProps = factory.recordsServices.properties
+        val recProps = factory.recordsServices.webappProps
         appName = recProps.appName
         appInstanceId = recProps.appInstanceId
 
@@ -52,7 +53,6 @@ class RabbitMqEventsService(
         if (recProps.appName.isBlank()) {
 
             log.warn { "App name is blank. Remote events listeners won't be registered" }
-
         } else {
 
             // events should be consumed in the same order as it
@@ -105,15 +105,17 @@ class RabbitMqEventsService(
             if (!AppKeyUtils.isKeyForApp(appName, appInstanceId, targetAppKey)) {
 
                 val appListener = ecosZooKeeper.getValue(
-                    "/${getEventTypeKey(eventType)}/${targetAppKey}",
+                    "/${getEventTypeKey(eventType)}/$targetAppKey",
                     ZkAppEventListener::class.java
                 )
                 if (appListener != null) {
-                    listeners.add(RemoteAppEventListener(
-                        targetAppKey,
-                        appListener.attributes,
-                        appListener.filter
-                    ))
+                    listeners.add(
+                        RemoteAppEventListener(
+                            targetAppKey,
+                            appListener.attributes,
+                            appListener.filter
+                        )
+                    )
                 }
             }
         }
@@ -180,11 +182,13 @@ class RabbitMqEventsService(
         AuthContext.runAsSystem {
             // without this try/catch first exception lead to consumer death
             try {
-                factory.eventsService.emitEventFromRemote(event, exclusive)
+                RequestContext.doWithTxn {
+                    factory.eventsService.emitEventFromRemote(event, exclusive)
+                }
             } catch (e: Exception) {
                 log.error(e) {
                     "Exception while event processing. " +
-                            "Event id: ${event.id} source: ${event.source} type: ${event.type}"
+                        "Event id: ${event.id} source: ${event.source} type: ${event.type}"
                 }
             }
         }

@@ -23,7 +23,7 @@ class RemoteEventsTxnActionComponent(services: EventsServiceFactory) : TxnAction
     private val controllerByType = services.remoteEventControllers.associateBy { it.getType() }
 
     init {
-        val props = services.recordsServices.properties
+        val props = services.recordsServices.webappProps
         currentAppName = props.appName
         currentAppInstanceId = props.appInstanceId
     }
@@ -34,7 +34,6 @@ class RemoteEventsTxnActionComponent(services: EventsServiceFactory) : TxnAction
         if (events.size == 1 || events.isEmpty()) {
 
             return events
-
         } else if (events.isNotEmpty()) {
 
             var prevEvent = events[0]
@@ -68,7 +67,7 @@ class RemoteEventsTxnActionComponent(services: EventsServiceFactory) : TxnAction
                 }
             } else {
                 val context = RequestContext.getCurrent()
-                if (context == null) {
+                if (context == null || context.ctxData.txnId == null) {
                     sendRemoteEvents(targetAppKey, mergeEvents(events))
                 } else {
                     val eventsByTargetApp = context.getMap<String, MutableList<EcosEvent>>(AFTER_COMMIT_EVENTS_KEY)

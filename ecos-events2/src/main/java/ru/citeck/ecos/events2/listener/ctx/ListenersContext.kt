@@ -52,7 +52,7 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
         }
     }
 
-    fun getListeners(type: String) : EventsTypeListeners? {
+    fun getListeners(type: String): EventsTypeListeners? {
         return listeners[type]
     }
 
@@ -161,7 +161,7 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
         return OrPredicate.of(filters)
     }
 
-    private fun getAttributesFromClass(clazz: Class<*>) : Map<String, String> {
+    private fun getAttributesFromClass(clazz: Class<*>): Map<String, String> {
 
         if (clazz.isAssignableFrom(Map::class.java)) {
             return emptyMap()
@@ -171,11 +171,12 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
             return mapOf("rec?id" to "rec?id")
         }
 
-        if (clazz != Unit::class.java
-                && clazz != EcosEvent::class.java
-                && clazz != MLText::class.java
-                && clazz != ObjectData::class.java
-                && clazz != DataValue::class.java) {
+        if (clazz != Unit::class.java &&
+            clazz != EcosEvent::class.java &&
+            clazz != MLText::class.java &&
+            clazz != ObjectData::class.java &&
+            clazz != DataValue::class.java
+        ) {
 
             val attsSchema = dtoSchemaReader.read(clazz)
 
@@ -197,20 +198,20 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
     }
 
     @Synchronized
-    fun addListeners(listeners: List<ListenerConfig<*>>) : List<ListenerHandle> {
+    fun addListeners(listeners: List<ListenerConfig<*>>): List<ListenerHandle> {
         val newListeners = ArrayList(rawListeners)
         newListeners.addAll(listeners)
         return setListeners(newListeners)
     }
 
     @Synchronized
-    fun addListener(listener: ListenerConfig<*>) : ListenerHandle {
+    fun addListener(listener: ListenerConfig<*>): ListenerHandle {
         val newListeners = addListeners(listOf(listener))
         return newListeners.first { it.config.id == listener.id }
     }
 
     @Synchronized
-    fun setListeners(listeners: List<ListenerConfig<*>>) : List<ListenerHandle> {
+    fun setListeners(listeners: List<ListenerConfig<*>>): List<ListenerHandle> {
         rawListeners = ArrayList(listeners).toSet()
         update()
         return listeners.map { ListenerHandle(it, this) }

@@ -10,9 +10,9 @@ import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
 import ru.citeck.ecos.model.lib.type.dto.TypeModelDef
 import ru.citeck.ecos.model.lib.type.repo.TypesRepo
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RecEventsTest {
 
@@ -30,11 +30,11 @@ class RecEventsTest {
         services.modelServices = object : ModelServiceFactory() {
             override fun createTypesRepo(): TypesRepo {
                 return object : TypesRepo {
-                    override fun getChildren(typeRef: RecordRef): List<RecordRef> {
+                    override fun getChildren(typeRef: EntityRef): List<EntityRef> {
                         return emptyList()
                     }
-                    override fun getTypeInfo(typeRef: RecordRef): TypeInfo? {
-                        return typesInfo[typeRef.id]
+                    override fun getTypeInfo(typeRef: EntityRef): TypeInfo? {
+                        return typesInfo[typeRef.getLocalId()]
                     }
                 }
             }
@@ -43,19 +43,21 @@ class RecEventsTest {
         val recEventsService = services.recordEventsService
 
         typesInfo[TEST_TYPE_ID] = TypeInfo.create {
-            withModel(TypeModelDef.create {
-                withAttributes(
-                    listOf(
-                        AttributeDef.create {
-                            withId("field0")
-                        },
-                        AttributeDef.create {
-                            withId("field1")
-                            withType(AttributeType.NUMBER)
-                        }
+            withModel(
+                TypeModelDef.create {
+                    withAttributes(
+                        listOf(
+                            AttributeDef.create {
+                                withId("field0")
+                            },
+                            AttributeDef.create {
+                                withId("field1")
+                                withType(AttributeType.NUMBER)
+                            }
+                        )
                     )
-                )
-            })
+                }
+            )
         }
 
         val events = mutableListOf<EventToListen>()
@@ -71,10 +73,12 @@ class RecEventsTest {
         recEventsService.emitRecChanged(before, after)
 
         assertThat(events).containsExactly(
-            EventToListen(listOf(
-                ChangedValue("field0", DataValue.create("abc"), DataValue.create("def")),
-                ChangedValue("field1", DataValue.create(0f), DataValue.create(10f))
-            ))
+            EventToListen(
+                listOf(
+                    ChangedValue("field0", DataValue.create("abc"), DataValue.create("def")),
+                    ChangedValue("field1", DataValue.create(0.0), DataValue.create(10.0))
+                )
+            )
         )
     }
 

@@ -45,10 +45,13 @@ class RecordChangedEvent(
                         val beforeValue = before[attId]
                         if (!isEqual(afterValue, beforeValue)) {
                             val attDef = attsById[attId] ?: continue
-                            res.add(DiffValue(attId,
-                                attDef,
-                                DataValue.create(beforeValue),
-                                DataValue.create(afterValue))
+                            res.add(
+                                DiffValue(
+                                    attId,
+                                    attDef,
+                                    beforeValue,
+                                    afterValue
+                                )
                             )
                         }
                     }
@@ -72,20 +75,20 @@ class RecordChangedEvent(
         }
 
         private fun isEmpty(value: Any?): Boolean {
-            return value == null
-                    || value is String && value.isEmpty()
-                    || value is DataValue && (
-                        value.isTextual() && value.asText().isEmpty()
-                        || (value.isArray() || value.isObject()) && value.size() == 0
-                    )
+            return value == null ||
+                value is String && value.isEmpty() ||
+                value is DataValue && (
+                value.isTextual() && value.asText().isEmpty() ||
+                    (value.isArray() || value.isObject()) && value.size() == 0
+                )
         }
     }
 
     class DiffValue(
         val id: String,
         val def: AttributeDef,
-        val before: DataValue,
-        val after: DataValue
+        val before: Any?,
+        val after: Any?
     ) {
         override fun toString(): String {
             return Json.mapper.toString(this) ?: "{}"

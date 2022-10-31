@@ -43,49 +43,61 @@ class EventsFilterTest {
             withExclusive(exclusive)
         }
 
-        val event0 = ObjectData.create("""
+        val event0 = ObjectData.create(
+            """
             {
                 "name": "event0",
                 "att": "value",
                 "str": "strValue",
                 "num": 10
             }
-        """)
-        val event1 = ObjectData.create("""
+        """
+        )
+        val event1 = ObjectData.create(
+            """
             {
                 "name": "event1",
                 "att": "value",
                 "str": "strValue2",
                 "num": 20
             }
-        """)
-        val event2 = ObjectData.create("""
+        """
+        )
+        val event2 = ObjectData.create(
+            """
             {
                 "name": "event2",
                 "att": "value",
                 "str": "strValue3",
                 "num": 30
             }
-        """)
+        """
+        )
 
         val eventsNumGE20List = ArrayList<String>()
-        app1Events.addListener(baseListenerConfig.copy()
-            .withFilter(Predicates.ge("num", 20.0))
-            .withAction {
-                eventsNumGE20List.add(it.get("name").asText())
-            }
-            .build())
+        app1Events.addListener(
+            baseListenerConfig.copy()
+                .withFilter(Predicates.ge("num", 20.0))
+                .withAction {
+                    eventsNumGE20List.add(it.get("name").asText())
+                }
+                .build()
+        )
 
         val eventsStrEqStrValue2OrStrValue3 = ArrayList<String>()
-        app1Events.addListener(baseListenerConfig.copy()
-            .withFilter(Predicates.or(
-                Predicates.eq("str", "strValue2"),
-                Predicates.eq("str", "strValue3")
-            ))
-            .withAction {
-                eventsStrEqStrValue2OrStrValue3.add(it.get("name").asText())
-            }
-            .build())
+        app1Events.addListener(
+            baseListenerConfig.copy()
+                .withFilter(
+                    Predicates.or(
+                        Predicates.eq("str", "strValue2"),
+                        Predicates.eq("str", "strValue3")
+                    )
+                )
+                .withAction {
+                    eventsStrEqStrValue2OrStrValue3.add(it.get("name").asText())
+                }
+                .build()
+        )
 
         val emitterApp0 = app0Events.getEmitter<ObjectData> {
             withEventType("test-event")

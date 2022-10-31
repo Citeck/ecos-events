@@ -6,7 +6,7 @@ class EventsEmitter<T : Any>(
     val config: EmitterConfig<T>,
     private val emitImpl: (Any) -> UUID
 ) {
-    fun emit(eventData: T) : UUID {
+    fun emit(eventData: T): UUID {
         return emitImpl.invoke(eventData)
     }
 }

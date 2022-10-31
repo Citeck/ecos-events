@@ -155,7 +155,7 @@ data class ListenerConfig<T : Any>(
 
         @Deprecated(
             "use withAction builder method",
-            replaceWith = ReplaceWith("withAction")
+            replaceWith = ReplaceWith("withAction(action)")
         )
         fun setAction(action: (T) -> Unit) {
             withAction(action)

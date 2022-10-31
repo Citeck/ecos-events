@@ -12,12 +12,12 @@ class EmitterConfig<T : Any>(
     companion object {
 
         @JvmStatic
-        fun <T: Any> create(): Builder<T> {
+        fun <T : Any> create(): Builder<T> {
             return Builder()
         }
 
         @JvmStatic
-        fun <T : Any> create(block: Builder<T>.() -> Unit) : EmitterConfig<T> {
+        fun <T : Any> create(block: Builder<T>.() -> Unit): EmitterConfig<T> {
             val builder = Builder<T>()
             block.invoke(builder)
             return builder.build()
@@ -61,7 +61,7 @@ class EmitterConfig<T : Any>(
             return this
         }
 
-        fun build() : EmitterConfig<T> {
+        fun build(): EmitterConfig<T> {
             return EmitterConfig(
                 source,
                 eventType,
