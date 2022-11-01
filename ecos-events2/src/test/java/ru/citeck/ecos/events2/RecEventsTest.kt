@@ -1,12 +1,17 @@
 package ru.citeck.ecos.events2
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.citeck.ecos.commons.data.DataValue
+import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.events2.type.RecordChangedEvent
+import ru.citeck.ecos.events2.type.RecordEventsService
+import ru.citeck.ecos.events2.type.RecordStatusChangedEvent
 import ru.citeck.ecos.model.lib.ModelServiceFactory
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
+import ru.citeck.ecos.model.lib.status.dto.StatusDef
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
 import ru.citeck.ecos.model.lib.type.dto.TypeModelDef
 import ru.citeck.ecos.model.lib.type.repo.TypesRepo
@@ -20,12 +25,16 @@ class RecEventsTest {
         private const val TEST_TYPE_ID = "test-type"
     }
 
-    @Test
-    fun test() {
+    private val typesInfo = HashMap<String, TypeInfo>()
+    private lateinit var services: EventsServiceFactory
+    private lateinit var recEventsService: RecordEventsService
 
-        val typesInfo = HashMap<String, TypeInfo>()
+    @BeforeEach
+    fun beforeEach() {
 
-        val services = EventsServiceFactory()
+        typesInfo.clear()
+
+        services = EventsServiceFactory()
         services.recordsServices = RecordsServiceFactory()
         services.modelServices = object : ModelServiceFactory() {
             override fun createTypesRepo(): TypesRepo {
@@ -39,8 +48,11 @@ class RecEventsTest {
                 }
             }
         }
+        recEventsService = services.recordEventsService
+    }
 
-        val recEventsService = services.recordEventsService
+    @Test
+    fun test() {
 
         typesInfo[TEST_TYPE_ID] = TypeInfo.create {
             withModel(
@@ -61,7 +73,7 @@ class RecEventsTest {
         }
 
         val events = mutableListOf<EventToListen>()
-        services.eventsService.addListener<EventToListen> {
+        services.eventsService.addListener {
             withEventType(RecordChangedEvent.TYPE)
             withDataClass(EventToListen::class.java)
             withAction { events.add(it) }
@@ -80,6 +92,62 @@ class RecEventsTest {
                 )
             )
         )
+    }
+
+    @Test
+    fun statusChangedTest() {
+
+        val record = mapOf("abc" to "def")
+        val statusBefore = StatusDef.create()
+            .withId("draft")
+            .withName(MLText("Draft"))
+            .build()
+        val statusAfter = StatusDef.create()
+            .withId("confirm")
+            .withName(MLText("Confirm"))
+            .build()
+        val typeDef = TypeInfo.create()
+            .withId("test-type")
+            .withModel(TypeModelDef.create()
+                .withStatuses(listOf(statusBefore, statusAfter))
+                .build())
+            .build()
+
+
+        val events = mutableListOf<DataValue>()
+        services.eventsService.addListener {
+            withEventType(RecordStatusChangedEvent.TYPE)
+            withDataClass(DataValue::class.java)
+            withAttributes(mapOf(
+                "before" to "before",
+                "before.id" to "before.id",
+                "before.name" to "before.name",
+                "before?str" to "before?str",
+                "before?disp" to "before?disp",
+                "after" to "after",
+                "after.id" to "after.id",
+                "after.name" to "after.name",
+                "after?str" to "after?str",
+                "after?disp" to "after?disp"
+            ))
+            withAction {
+                events.add(it)
+            }
+        }
+
+        recEventsService.emitRecStatusChanged(RecordStatusChangedEvent(record, typeDef, statusBefore, statusAfter))
+
+        Thread.sleep(100)
+
+        println(events)
+
+        assertThat(events).hasSize(1)
+        assertThat(events[0]["before"].asText()).isEqualTo("draft")
+        assertThat(events[0]["before.id"].asText()).isEqualTo("draft")
+        assertThat(events[0]["before.name"].asText()).isEqualTo("Draft")
+        assertThat(events[0]["after"].asText()).isEqualTo("confirm")
+        assertThat(events[0]["after.id"].asText()).isEqualTo("confirm")
+        assertThat(events[0]["after.name"].asText()).isEqualTo("Confirm")
     }
 
     data class EventToListen(
