@@ -5,6 +5,7 @@ import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.status.dto.StatusDef
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
+import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 
 class RecordChangedEvent(
@@ -108,11 +109,35 @@ class RecordDeletedEvent(
 class RecordStatusChangedEvent(
     val record: Any,
     val typeDef: TypeInfo,
-    val before: StatusDef,
-    val after: StatusDef
+    before: StatusDef,
+    after: StatusDef
 ) {
     companion object {
         const val TYPE = "record-status-changed"
+    }
+
+    private val beforeValue = StatusValue(before)
+    private val afterValue = StatusValue(after)
+
+    fun getBefore(): StatusValue {
+        return beforeValue
+    }
+
+    fun getAfter(): StatusValue {
+        return afterValue
+    }
+
+    class StatusValue(@AttName("...") val def: StatusDef) {
+
+        @AttName("?str")
+        fun getAsStr(): String {
+            return def.id
+        }
+
+        @AttName("?disp")
+        fun getAsDisp(): String {
+            return getAsStr()
+        }
     }
 }
 
