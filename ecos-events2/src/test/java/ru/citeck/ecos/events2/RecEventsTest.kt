@@ -108,28 +108,31 @@ class RecEventsTest {
             .build()
         val typeDef = TypeInfo.create()
             .withId("test-type")
-            .withModel(TypeModelDef.create()
-                .withStatuses(listOf(statusBefore, statusAfter))
-                .build())
+            .withModel(
+                TypeModelDef.create()
+                    .withStatuses(listOf(statusBefore, statusAfter))
+                    .build()
+            )
             .build()
-
 
         val events = mutableListOf<DataValue>()
         services.eventsService.addListener {
             withEventType(RecordStatusChangedEvent.TYPE)
             withDataClass(DataValue::class.java)
-            withAttributes(mapOf(
-                "before" to "before",
-                "before.id" to "before.id",
-                "before.name" to "before.name",
-                "before?str" to "before?str",
-                "before?disp" to "before?disp",
-                "after" to "after",
-                "after.id" to "after.id",
-                "after.name" to "after.name",
-                "after?str" to "after?str",
-                "after?disp" to "after?disp"
-            ))
+            withAttributes(
+                mapOf(
+                    "before" to "before",
+                    "before.id" to "before.id",
+                    "before.name" to "before.name",
+                    "before?str" to "before?str",
+                    "before?disp" to "before?disp",
+                    "after" to "after",
+                    "after.id" to "after.id",
+                    "after.name" to "after.name",
+                    "after?str" to "after?str",
+                    "after?disp" to "after?disp"
+                )
+            )
             withAction {
                 events.add(it)
             }

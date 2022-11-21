@@ -4,6 +4,7 @@ import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.emitter.EventsEmitter
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.listener.ListenerHandle
+import ru.citeck.ecos.events2.listener.ctx.EventsTypeListeners
 
 interface EventsService {
 
@@ -20,4 +21,9 @@ interface EventsService {
     fun removeListener(listener: ListenerConfig<*>)
 
     fun removeListener(id: String)
+
+    /**
+     * Return listener only for reed-only operations
+     */
+    fun getListeners(): Map<String, EventsTypeListeners>
 }

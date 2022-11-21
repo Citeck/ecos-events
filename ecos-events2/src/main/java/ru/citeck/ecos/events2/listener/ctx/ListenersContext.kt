@@ -52,6 +52,10 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
         }
     }
 
+    fun getListeners(): Map<String, EventsTypeListeners> {
+        return listeners
+    }
+
     fun getListeners(type: String): EventsTypeListeners? {
         return listeners[type]
     }

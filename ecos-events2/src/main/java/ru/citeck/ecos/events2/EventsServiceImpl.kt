@@ -140,7 +140,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
             val resolvedFilter = recordsTemplateService.resolve(
                 listener.config.filter,
                 RecordRef.create("meta", "")
-            ) ?: listener.config.filter
+            )
 
             val element = RecordAttsElement.create(RecordAtts(RecordRef.EMPTY, event.attributes))
             if (!predicateService.isMatch(element, resolvedFilter)) {
@@ -191,5 +191,15 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
 
     override fun removeListener(id: String) {
         return listenersContext.removeListener(id)
+    }
+
+    override fun getListeners(): Map<String, EventsTypeListeners> {
+        val deepCopyOfListeners = mutableMapOf<String, EventsTypeListeners>()
+
+        listenersContext.getListeners().forEach { (key, value) ->
+            deepCopyOfListeners[key] = value.copy()
+        }
+
+        return deepCopyOfListeners
     }
 }
