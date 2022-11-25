@@ -95,6 +95,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
         val eventInfo = EcosEventInfo(
             id = eventId,
             time = time,
+            type = config.eventType,
             user = user,
             source = eventsSource
         )
@@ -150,15 +151,15 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
 
         val listenerAtts = ObjectData.create()
         listener.attributes.forEach { (alias, attribute) ->
-            val value = event.attributes.get(attribute)
-            listenerAtts.set(alias, value)
+            val value = event.attributes[attribute]
+            listenerAtts[alias] = value
         }
 
         val clazz = listener.config.dataClass
         val action = listener.config.action
 
         if (clazz == RecordRef::class.java) {
-            action.accept(RecordRef.valueOf(event.attributes.get("rec?id").asText()))
+            action.accept(RecordRef.valueOf(event.attributes["rec?id"].asText()))
         } else if (clazz == ObjectData::class.java) {
             action.accept(listenerAtts)
         } else if (clazz == Unit::class.java) {

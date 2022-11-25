@@ -26,7 +26,7 @@ class EventsTest {
             ListenerConfig.create<DataClass> {
                 eventType = "test-type"
                 dataClass = DataClass::class.java
-                setAction { evData ->
+                withAction { evData ->
                     data.add(evData)
                 }
             }
@@ -62,10 +62,11 @@ class EventsTest {
         var receiveData: DataClassWithEventInfo? = null
 
         val userIvan = "ivan.petrov"
+        val testType = "test-type"
 
         eventsService.addListener(
             ListenerConfig.create<DataClassWithEventInfo> {
-                eventType = "test-type"
+                eventType = testType
                 dataClass = DataClassWithEventInfo::class.java
                 setAction { evData ->
                     receiveData = evData
@@ -75,7 +76,7 @@ class EventsTest {
 
         val emitter = eventsService.getEmitter<DataClass>(
             EmitterConfig.create {
-                eventType = "test-type"
+                eventType = testType
                 eventClass = DataClass::class.java
             }
         )
@@ -91,6 +92,7 @@ class EventsTest {
         assertTrue(receiveData!!.eventId.isNotBlank())
         assertNotNull(receiveData!!.eventTime)
         assertEquals(userIvan, receiveData!!.eventUser)
+        assertEquals(testType, receiveData!!.eventType)
     }
 
     private data class DataClass(
@@ -109,6 +111,9 @@ class EventsTest {
         val eventTime: Instant,
 
         @AttName("\$event.user")
-        val eventUser: String
+        val eventUser: String,
+
+        @AttName("\$event.type")
+        val eventType: String
     )
 }
