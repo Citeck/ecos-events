@@ -6,6 +6,7 @@ import java.util.*
 data class EcosEventInfo(
     val id: UUID,
     val time: Instant,
+    val type: String,
     val user: String,
     val source: EventsSource
 )
