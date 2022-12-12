@@ -3,7 +3,7 @@ package ru.citeck.ecos.events2.rabbitmq.utils
 import com.github.fridujo.rabbitmq.mock.MockConnectionFactory
 import com.rabbitmq.client.ConnectionFactory
 import ecos.org.apache.curator.test.TestingServer
-import ru.citeck.ecos.commons.test.EcosWebAppContextMock
+import ru.citeck.ecos.commons.test.EcosWebAppApiMock
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.rabbitmq.RabbitMqEventsService
@@ -12,7 +12,7 @@ import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
-import ru.citeck.ecos.webapp.api.context.EcosWebAppContext
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
 
@@ -73,8 +73,8 @@ class TestUtils {
         private fun createRecordsServices(appName: String): RecordsServiceFactory {
 
             val services = object : RecordsServiceFactory() {
-                override fun getEcosWebAppContext(): EcosWebAppContext {
-                    val ctx = EcosWebAppContextMock(appName, appName + ":" + UUID.randomUUID())
+                override fun getEcosWebAppApi(): EcosWebAppApi {
+                    val ctx = EcosWebAppApiMock(appName, appName + ":" + UUID.randomUUID())
                     ctx.webClientExecuteImpl = { appName, path, body ->
                         val services = recordsServices[appName]!!
                         val restHandler = services.restHandlerAdapter
