@@ -11,14 +11,11 @@ import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.events2.remote.RemoteAppEventListener
 import ru.citeck.ecos.events2.remote.RemoteEventListenerData
 import ru.citeck.ecos.events2.remote.RemoteEventListenerKey
-import ru.citeck.ecos.events2.txn.RemoteEventTxnAction
-import ru.citeck.ecos.events2.txn.RemoteEventsTxnActionComponent
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.OrPredicate
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
-import ru.citeck.ecos.records3.record.request.RequestContext
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
@@ -31,7 +28,6 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
 
     private val dtoSchemaReader = serviceFactory.recordsServices.dtoSchemaReader
     private val attSchemaWriter = serviceFactory.recordsServices.attSchemaWriter
-    private val txnActionManager = serviceFactory.recordsServices.txnActionManager
 
     private var listeners: Map<String, EventsTypeListeners> = emptyMap()
 
@@ -91,12 +87,9 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
                     val listenerConfig = ListenerConfig.create<EcosEvent> {
                         withAttributes(atts)
                         withEventType(eventType)
+                        withTransactional(true)
                         withAction { event ->
-                            txnActionManager.execute(
-                                RemoteEventsTxnActionComponent.ID,
-                                RemoteEventTxnAction(listener.targetAppKey, event),
-                                RequestContext.getCurrent()
-                            )
+                            remoteEvents.emitEvent(listener.targetAppKey, event, listener.transactional)
                         }
                         withFilter(listener.filter)
                         withDataClass(EcosEvent::class.java)
@@ -116,6 +109,8 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
             val inclusiveRemoteAtts = HashSet<String>()
             val inclusiveFilter = mutableListOf<Predicate>()
 
+            var exclusiveTransactionalListener = false
+
             val listenersInfo = ArrayList<ListenerInfo>()
 
             listeners.forEach { config ->
@@ -132,6 +127,9 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
                     if (config.exclusive) {
                         exclusiveRemoteAtts.addAll(attsToLoad)
                         exclusiveFilter.add(config.filter)
+                        if (config.transactional) {
+                            exclusiveTransactionalListener = true
+                        }
                     } else {
                         inclusiveRemoteAtts.addAll(attsToLoad)
                         inclusiveFilter.add(config.filter)
@@ -144,7 +142,8 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
             if (exclusiveRemoteAtts.isNotEmpty()) {
                 listenersToRemote[RemoteEventListenerKey(type, true)] = RemoteEventListenerData(
                     exclusiveRemoteAtts,
-                    createRemoteFilter(exclusiveFilter)
+                    createRemoteFilter(exclusiveFilter),
+                    exclusiveTransactionalListener
                 )
             }
             if (inclusiveRemoteAtts.isNotEmpty()) {

@@ -33,7 +33,7 @@ class RecordChangedEvent(
     inner class Diff : AttValue {
 
         override fun has(name: String): Boolean {
-            return after[name] != before[name]
+            return !isEqual(after[name], before[name])
         }
 
         override fun getAtt(name: String): Any? {

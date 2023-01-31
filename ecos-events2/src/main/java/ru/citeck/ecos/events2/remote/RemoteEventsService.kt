@@ -8,7 +8,7 @@ interface RemoteEventsService {
 
     fun listenEventsFromRemote(listeners: Map<RemoteEventListenerKey, RemoteEventListenerData>)
 
-    fun emitEvent(targetAppKey: String, event: EcosEvent)
+    fun emitEvent(targetAppKey: String, event: EcosEvent, transactional: Boolean)
 
     fun addProducedEventType(eventType: String)
 }

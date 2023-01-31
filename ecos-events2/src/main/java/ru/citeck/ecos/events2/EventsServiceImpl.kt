@@ -15,6 +15,7 @@ import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.txn.lib.TxnContext
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -62,23 +63,24 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
         return emitter as EventsEmitter<T>
     }
 
-    override fun emitEventFromRemote(event: EcosEvent, exclusive: Boolean) {
+    override fun emitEventFromRemote(event: EcosEvent, exclusive: Boolean, calledInTxn: Boolean) {
         val typeListeners = getListenersForType(event.type) ?: return
-        emitExactEvent(event, typeListeners, false, exclusive)
+        emitExactEvent(event, typeListeners, false, exclusive, calledInTxn)
     }
 
     private fun emitExactEvent(
         event: EcosEvent,
         listeners: EventsTypeListeners,
         isLocalEvent: Boolean,
-        exclusive: Boolean = true
+        exclusive: Boolean = true,
+        calledInTxn: Boolean = true
     ) {
         listeners.listeners.forEach { listener ->
             if (isLocalEvent) {
-                triggerListener(listener, event)
+                triggerListener(listener, event, calledInTxn)
             } else {
                 if (!listener.config.local && listener.config.exclusive == exclusive) {
-                    triggerListener(listener, event)
+                    triggerListener(listener, event, calledInTxn)
                 }
             }
         }
@@ -134,7 +136,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
         return typeListeners
     }
 
-    private fun triggerListener(listener: ListenerInfo, event: EcosEvent) {
+    private fun triggerListener(listener: ListenerInfo, event: EcosEvent, calledInTxn: Boolean) {
 
         if (listener.config.filter !is VoidPredicate) {
 
@@ -155,23 +157,27 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
             listenerAtts[alias] = value
         }
 
-        val clazz = listener.config.dataClass
-        val action = listener.config.action
+        val convertedValue = when (val clazz = listener.config.dataClass) {
+            RecordRef::class.java -> RecordRef.valueOf(event.attributes["rec?id"].asText())
+            ObjectData::class.java -> listenerAtts
+            Unit::class.java -> Unit
+            EcosEvent::class.java -> event.withAttributes(listenerAtts)
+            else -> dtoSchemaReader.instantiate(clazz, listenerAtts)
+                ?: error("Event data can't be converted to $clazz. Data: $listenerAtts")
+        }
 
-        if (clazz == RecordRef::class.java) {
-            action.accept(RecordRef.valueOf(event.attributes["rec?id"].asText()))
-        } else if (clazz == ObjectData::class.java) {
-            action.accept(listenerAtts)
-        } else if (clazz == Unit::class.java) {
-            action.accept(Unit)
-        } else if (clazz == EcosEvent::class.java) {
-            action.accept(event.withAttributes(listenerAtts))
+        val action = listener.config.action
+        if (listener.config.transactional) {
+            if (calledInTxn) {
+                action.accept(convertedValue)
+            }
         } else {
-            val converted = dtoSchemaReader.instantiate(clazz, listenerAtts)
-            if (converted != null) {
-                action.accept(converted)
+            if (calledInTxn) {
+                TxnContext.doAfterCommit(0f, false) {
+                    action.accept(convertedValue)
+                }
             } else {
-                error("Event data can't be converted to $clazz. Data: $listenerAtts")
+                action.accept(convertedValue)
             }
         }
     }

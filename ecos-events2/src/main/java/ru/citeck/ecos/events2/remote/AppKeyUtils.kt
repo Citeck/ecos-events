@@ -6,6 +6,10 @@ object AppKeyUtils {
 
     private val TARGET_APP_NAME_PART_ESCAPER = NameUtils.getEscaperWithAllowedChars("-:")
 
+    fun getAppName(key: String): String {
+        return TARGET_APP_NAME_PART_ESCAPER.unescape(key.substringBefore("."))
+    }
+
     fun createKey(appName: String, appInstanceId: String, exclusive: Boolean): String {
         val exclusiveName = TARGET_APP_NAME_PART_ESCAPER.escape(appName)
         if (exclusive) {

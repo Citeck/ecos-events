@@ -61,7 +61,7 @@ class TestUtils {
 
             val serviceFactory = object : EventsServiceFactory() {
                 override fun createRemoteEvents(): RemoteEventsService {
-                    return RabbitMqEventsService(servers.rabbitmq, this, servers.zookeeper)
+                    return RabbitMqEventsService(servers.rabbitmq, this, servers.zookeeper, EcosWebAppApiMock())
                 }
             }
             serviceFactory.recordsServices = recordsServiceFactory

@@ -1,9 +1,9 @@
 package ru.citeck.ecos.events2.listener
 
 import ru.citeck.ecos.commons.utils.MandatoryParam
-import ru.citeck.ecos.commons.utils.func.UncheckedConsumer
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
+import ru.citeck.ecos.webapp.api.func.UncheckedConsumer
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -43,7 +43,12 @@ data class ListenerConfig<T : Any>(
      * (exclusive = false) or each event processed by single application (exclusive = true).
      * Not exclusive listeners can't be consistent
      */
-    var exclusive: Boolean
+    var exclusive: Boolean,
+    /**
+     * Is this listener should be triggered within
+     * transaction synchronously or not
+     */
+    var transactional: Boolean
 ) {
 
     companion object {
@@ -80,6 +85,7 @@ data class ListenerConfig<T : Any>(
         var filter: Predicate = VoidPredicate.INSTANCE
         var local: Boolean = false
         var exclusive: Boolean = true
+        var transactional: Boolean = false
 
         constructor(base: ListenerConfig<T>) : this() {
             this.id = ""
@@ -90,6 +96,7 @@ data class ListenerConfig<T : Any>(
             this.filter = base.filter
             this.local = base.local
             this.exclusive = base.exclusive
+            this.transactional = base.transactional
         }
 
         fun withId(id: String?): Builder<T> {
@@ -145,6 +152,11 @@ data class ListenerConfig<T : Any>(
             return this
         }
 
+        fun withTransactional(transactional: Boolean?): Builder<T> {
+            this.transactional = transactional ?: true
+            return this
+        }
+
         fun addAttribute(key: String, value: String) {
             attributes[key] = value
         }
@@ -166,6 +178,10 @@ data class ListenerConfig<T : Any>(
             MandatoryParam.check("dataClass", dataClass)
             MandatoryParam.check("action", action)
 
+            if (transactional && !exclusive) {
+                error("Listener should be exclusive when transactional flag enabled")
+            }
+
             return ListenerConfig(
                 id.ifBlank { UUID.randomUUID().toString() },
                 eventType,
@@ -174,7 +190,8 @@ data class ListenerConfig<T : Any>(
                 local,
                 action!!,
                 filter,
-                exclusive
+                exclusive,
+                transactional
             )
         }
     }

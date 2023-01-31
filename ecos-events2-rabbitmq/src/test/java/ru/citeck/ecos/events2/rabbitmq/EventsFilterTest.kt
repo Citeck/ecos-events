@@ -41,6 +41,7 @@ class EventsFilterTest {
             withAttributes(mapOf("name" to "name"))
             withAction {}
             withExclusive(exclusive)
+            withTransactional(false)
         }
 
         val event0 = ObjectData.create(

@@ -1,15 +1,19 @@
 package ru.citeck.ecos.events2.rabbitmq
 
 import com.rabbitmq.client.BuiltinExchangeType
+import ecos.curator.org.apache.zookeeper.Watcher
 import mu.KotlinLogging
 import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EcosEvent
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.remote.*
+import ru.citeck.ecos.events2.web.TxnEventsWebExecutor
 import ru.citeck.ecos.rabbitmq.RabbitMqChannel
 import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.txn.lib.TxnContext
+import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -17,7 +21,8 @@ import java.util.concurrent.ConcurrentHashMap
 class RabbitMqEventsService(
     rabbitMqConnection: RabbitMqConn,
     private val factory: EventsServiceFactory,
-    ecosZooKeeper: EcosZooKeeper
+    ecosZooKeeper: EcosZooKeeper,
+    webAppApi: EcosWebAppApi
 ) : RemoteEventsService {
 
     companion object {
@@ -40,6 +45,7 @@ class RabbitMqEventsService(
     private val appInstanceId: String
 
     private val ecosZooKeeper = ecosZooKeeper.withNamespace("ecos/events")
+    private val webClient = webAppApi.getWebClientApi()
 
     init {
 
@@ -90,7 +96,18 @@ class RabbitMqEventsService(
         if (producedEventTypes.add(eventType)) {
             updateRemoteListeners(eventType)
             ecosZooKeeper.watchChildrenRecursive("/${getEventTypeKey(eventType)}") {
-                updateRemoteListeners(eventType)
+                val type = it.type
+                if (type != null) {
+                    when (type) {
+                        Watcher.Event.EventType.NodeDataChanged,
+                        Watcher.Event.EventType.NodeCreated,
+                        Watcher.Event.EventType.NodeDeleted,
+                        Watcher.Event.EventType.NodeChildrenChanged -> {
+                            updateRemoteListeners(eventType)
+                        }
+                        else -> {}
+                    }
+                }
             }
         }
     }
@@ -113,7 +130,8 @@ class RabbitMqEventsService(
                         RemoteAppEventListener(
                             targetAppKey,
                             appListener.attributes,
-                            appListener.filter
+                            appListener.filter,
+                            appListener.transactional
                         )
                     )
                 }
@@ -137,8 +155,11 @@ class RabbitMqEventsService(
 
         newListeners.forEach { (listenerKey, listenerData) ->
             val targetAppKey = AppKeyUtils.createKey(appName, appInstanceId, listenerKey.exclusive)
-            val zkListener = ZkAppEventListener(listenerData.attributes, listenerData.filter)
-
+            val zkListener = ZkAppEventListener(
+                listenerData.attributes,
+                listenerData.filter,
+                listenerData.transactional
+            )
             val valuePath = "/${getEventTypeKey(listenerKey.eventType)}/$targetAppKey"
             val exclusiveMsg = if (listenerKey.exclusive) {
                 "exclusive"
@@ -160,8 +181,16 @@ class RabbitMqEventsService(
         eventListeners = newListeners
     }
 
-    override fun emitEvent(targetAppKey: String, event: EcosEvent) {
-        outcomeChannel.publishMsg(EVENTS_EXCHANGE, targetAppKey, event)
+    override fun emitEvent(targetAppKey: String, event: EcosEvent, transactional: Boolean) {
+        if (transactional) {
+            webClient.newRequest()
+                .targetApp(AppKeyUtils.getAppName(targetAppKey))
+                .path(TxnEventsWebExecutor.PATH)
+                .body { it.writeDto(TxnEventsWebExecutor.Body(event)) }
+                .execute {}
+        } else {
+            outcomeChannel.publishMsg(EVENTS_EXCHANGE, targetAppKey, event)
+        }
     }
 
     private fun getEventTypeKey(type: String): String {
@@ -182,8 +211,10 @@ class RabbitMqEventsService(
         AuthContext.runAsSystem {
             // without this try/catch first exception lead to consumer death
             try {
-                RequestContext.doWithTxn {
-                    factory.eventsService.emitEventFromRemote(event, exclusive)
+                TxnContext.doInNewTxn {
+                    RequestContext.doWithCtx {
+                        factory.eventsService.emitEventFromRemote(event, exclusive, false)
+                    }
                 }
             } catch (e: Exception) {
                 log.error(e) {
