@@ -187,7 +187,7 @@ class RabbitMqEventsService(
                 .targetApp(AppKeyUtils.getAppName(targetAppKey))
                 .path(TxnEventsWebExecutor.PATH)
                 .body { it.writeDto(TxnEventsWebExecutor.Body(event)) }
-                .execute {}
+                .execute {}.get()
         } else {
             outcomeChannel.publishMsg(EVENTS_EXCHANGE, targetAppKey, event)
         }
