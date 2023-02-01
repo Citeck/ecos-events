@@ -34,7 +34,7 @@
         <ecos.webapp-api.version>1.6.1</ecos.webapp-api.version>
         <ecos.txn-lib.version>1.0.0</ecos.txn-lib.version>
 
-        <ecos.zookeeper.version>1.4.9</ecos.zookeeper.version>
+        <ecos.zookeeper.version>1.6.0</ecos.zookeeper.version>
         <ecos.curator.version>5.2.0.2</ecos.curator.version>
         <ecos.rabbitmq.version>2.4.2</ecos.rabbitmq.version>
 

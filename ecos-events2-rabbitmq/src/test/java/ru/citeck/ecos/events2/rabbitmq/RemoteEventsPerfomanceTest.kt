@@ -4,6 +4,7 @@ import com.github.javafaker.Faker
 import mu.KotlinLogging
 import org.apache.commons.lang3.time.StopWatch
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,6 +15,7 @@ import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
 import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import java.time.Duration
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
@@ -79,9 +81,6 @@ class RemoteEventsPerfomanceTest {
 
         val dataToEmit0 = generateRandomNodeData(dataCount)
 
-        val watch = StopWatch()
-        watch.start()
-
         val receivedDataFromListener0 = mutableListOf<NodeData>()
         val receivedDataFromListener1 = mutableListOf<NodeData>()
         val receivedDataFromListener2 = mutableListOf<NodeData>()
@@ -125,11 +124,16 @@ class RemoteEventsPerfomanceTest {
 
         Thread.sleep(1000)
 
+        val watch = StopWatch()
+        watch.start()
+
         dataToEmit0.forEach {
             emitter.emit(it)
         }
 
-        Thread.sleep(1000)
+        waitSize(receivedDataFromListener0, dataCount, "receivedDataFromListener0")
+        waitSize(receivedDataFromListener1, dataCount, "receivedDataFromListener1")
+        waitSize(receivedDataFromListener2, dataCount, "receivedDataFromListener2")
 
         watch.stop()
         val receiveTime = watch.time
@@ -140,13 +144,8 @@ class RemoteEventsPerfomanceTest {
 
         assertThat(receiveTime).isLessThan(maxTime)
 
-        assertThat(receivedDataFromListener0.size).isEqualTo(dataCount)
         assertThat(receivedDataFromListener0).containsAnyElementsOf(dataToEmit0)
-
-        assertThat(receivedDataFromListener1.size).isEqualTo(dataCount)
         assertThat(receivedDataFromListener1).containsAnyElementsOf(dataToEmit0)
-
-        assertThat(receivedDataFromListener2.size).isEqualTo(dataCount)
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit0)
     }
 
@@ -214,7 +213,10 @@ class RemoteEventsPerfomanceTest {
             emitter.emit(it)
         }
 
-        Thread.sleep(1000)
+        val expCount = dataCount * emitterCount
+        waitSize(receivedDataFromListener0, expCount, "receivedDataFromListener0")
+        waitSize(receivedDataFromListener1, expCount, "receivedDataFromListener1")
+        waitSize(receivedDataFromListener2, expCount, "receivedDataFromListener2")
 
         watch.stop()
         val receiveTime = watch.time
@@ -225,15 +227,12 @@ class RemoteEventsPerfomanceTest {
 
         assertThat(receiveTime).isLessThan(maxTime)
 
-        assertThat(receivedDataFromListener0.size).isEqualTo(dataCount * emitterCount)
         assertThat(receivedDataFromListener0).containsAnyElementsOf(dataToEmit0)
         assertThat(receivedDataFromListener0).containsAnyElementsOf(dataToEmit1)
 
-        assertThat(receivedDataFromListener1.size).isEqualTo(dataCount * emitterCount)
         assertThat(receivedDataFromListener1).containsAnyElementsOf(dataToEmit0)
         assertThat(receivedDataFromListener1).containsAnyElementsOf(dataToEmit1)
 
-        assertThat(receivedDataFromListener2.size).isEqualTo(dataCount * emitterCount)
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit0)
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit1)
     }
@@ -248,9 +247,6 @@ class RemoteEventsPerfomanceTest {
         val dataToEmit0 = generateRandomNodeData(dataCount)
         val dataToEmit1 = generateRandomNodeData(dataCount)
         val dataToEmit2 = generateRandomNodeData(dataCount)
-
-        val watch = StopWatch()
-        watch.start()
 
         val receivedDataFromListener0 = mutableListOf<NodeData>()
         val receivedDataFromListener1 = mutableListOf<NodeData>()
@@ -295,6 +291,9 @@ class RemoteEventsPerfomanceTest {
 
         Thread.sleep(1000)
 
+        val watch = StopWatch()
+        watch.start()
+
         dataToEmit0.forEach {
             emitter.emit(it)
         }
@@ -307,7 +306,10 @@ class RemoteEventsPerfomanceTest {
             emitter.emit(it)
         }
 
-        Thread.sleep(1000)
+        val expCount = dataCount * emitterCount
+        waitSize(receivedDataFromListener0, expCount, "receivedDataFromListener0")
+        waitSize(receivedDataFromListener1, expCount, "receivedDataFromListener1")
+        waitSize(receivedDataFromListener2, expCount, "receivedDataFromListener2")
 
         watch.stop()
         val receiveTime = watch.time
@@ -318,17 +320,14 @@ class RemoteEventsPerfomanceTest {
 
         assertThat(receiveTime).isLessThan(maxTime)
 
-        assertThat(receivedDataFromListener0.size).isEqualTo(dataCount * emitterCount)
         assertThat(receivedDataFromListener0).containsAnyElementsOf(dataToEmit0)
         assertThat(receivedDataFromListener0).containsAnyElementsOf(dataToEmit1)
         assertThat(receivedDataFromListener0).containsAnyElementsOf(dataToEmit2)
 
-        assertThat(receivedDataFromListener1.size).isEqualTo(dataCount * emitterCount)
         assertThat(receivedDataFromListener1).containsAnyElementsOf(dataToEmit0)
         assertThat(receivedDataFromListener1).containsAnyElementsOf(dataToEmit1)
         assertThat(receivedDataFromListener1).containsAnyElementsOf(dataToEmit2)
 
-        assertThat(receivedDataFromListener2.size).isEqualTo(dataCount * emitterCount)
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit0)
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit1)
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit2)
@@ -366,6 +365,16 @@ class RemoteEventsPerfomanceTest {
             (libCount / 10).coerceAtLeast(1)
         } else {
             libCount
+        }
+    }
+
+    private fun waitSize(collection: Collection<*>, expectedSize: Int, collectionName: String) {
+        val timeout = System.currentTimeMillis() + Duration.ofSeconds(15).toMillis()
+        while (System.currentTimeMillis() < timeout && collection.size != expectedSize) {
+            Thread.sleep(200)
+        }
+        if (collection.size != expectedSize) {
+            fail<Any>("Collection '$collectionName' has incorrect size: ${collection.size} expected size: $expectedSize")
         }
     }
 
