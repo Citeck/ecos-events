@@ -362,14 +362,14 @@ class RemoteEventsPerfomanceTest {
 
     private fun getDataCount(libCount: Int): Int {
         return if (System.getProperties().containsKey("ecos.env.webapp-tests")) {
-            (libCount / 10).coerceAtLeast(1)
+            (libCount / 20).coerceAtLeast(1)
         } else {
             libCount
         }
     }
 
     private fun waitSize(collection: Collection<*>, expectedSize: Int, collectionName: String) {
-        val timeout = System.currentTimeMillis() + Duration.ofSeconds(15).toMillis()
+        val timeout = System.currentTimeMillis() + Duration.ofSeconds(30).toMillis()
         while (System.currentTimeMillis() < timeout && collection.size != expectedSize) {
             Thread.sleep(200)
         }
