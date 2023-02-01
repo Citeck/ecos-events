@@ -176,7 +176,13 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
                 TxnContext.processListAfterCommit(
                     "events-after-commit",
                     { action.accept(convertedValue) }
-                ) { elements -> elements.forEach { it.invoke() } }
+                ) { elements -> elements.forEach {
+                    try {
+                        it.invoke()
+                    } catch (e: Throwable) {
+                        log.error(e) { "Error in after-commit event" }
+                    }
+                } }
             } else {
                 action.accept(convertedValue)
             }
