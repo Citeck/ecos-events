@@ -173,9 +173,10 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
             }
         } else {
             if (calledInTxn) {
-                TxnContext.doAfterCommit(0f, false) {
-                    action.accept(convertedValue)
-                }
+                TxnContext.processListAfterCommit(
+                    "events-after-commit",
+                    { action.accept(convertedValue) }
+                ) { elements -> elements.forEach { it.invoke() } }
             } else {
                 action.accept(convertedValue)
             }
