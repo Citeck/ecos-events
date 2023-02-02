@@ -8,7 +8,7 @@ import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EcosEvent
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.remote.*
-import ru.citeck.ecos.events2.web.TxnEventsWebExecutor
+import ru.citeck.ecos.events2.web.EmitEventWebExecutor
 import ru.citeck.ecos.rabbitmq.RabbitMqChannel
 import ru.citeck.ecos.rabbitmq.RabbitMqConn
 import ru.citeck.ecos.records3.record.request.RequestContext
@@ -185,8 +185,8 @@ class RabbitMqEventsService(
         if (transactional) {
             webClient.newRequest()
                 .targetApp(AppKeyUtils.getAppName(targetAppKey))
-                .path(TxnEventsWebExecutor.PATH)
-                .body { it.writeDto(TxnEventsWebExecutor.Body(event)) }
+                .path(EmitEventWebExecutor.PATH)
+                .body { it.writeDto(EmitEventWebExecutor.Body(event)) }
                 .execute {}.get()
         } else {
             outcomeChannel.publishMsg(EVENTS_EXCHANGE, targetAppKey, event)

@@ -87,7 +87,7 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
                     val listenerConfig = ListenerConfig.create<EcosEvent> {
                         withAttributes(atts)
                         withEventType(eventType)
-                        withTransactional(true)
+                        withTransactional(listener.transactional)
                         withAction { event ->
                             remoteEvents.emitEvent(listener.targetAppKey, event, listener.transactional)
                         }

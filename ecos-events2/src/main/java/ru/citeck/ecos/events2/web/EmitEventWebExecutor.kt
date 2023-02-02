@@ -6,10 +6,10 @@ import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutor
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorReq
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutorResp
 
-class TxnEventsWebExecutor(private val eventsService: EventsService) : EcosWebExecutor {
+class EmitEventWebExecutor(private val eventsService: EventsService) : EcosWebExecutor {
 
     companion object {
-        const val PATH = "/events"
+        const val PATH = "/events/emit"
     }
 
     override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
