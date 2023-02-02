@@ -24,10 +24,10 @@ open class EventsServiceFactory {
     lateinit var modelServices: ModelServiceFactory
 
     open fun init() {
-        //---It is deprecated mechanism for transactional events---//
+        // ---It is deprecated mechanism for transactional events---//
         val remoteEventsExecutor = RemoteEventsTxnActionComponent(this)
         recordsServices.txnActionManager.register(remoteEventsExecutor)
-        //---------------------------------------------------------//
+        // ---------------------------------------------------------//
         recordsServices.getEcosWebAppApi()?.getWebExecutorsApi()?.register(EmitEventWebExecutor(eventsService))
     }
 

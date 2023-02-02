@@ -1,5 +1,6 @@
 package ru.citeck.ecos.events2.web
 
+import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EcosEvent
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.webapp.api.web.executor.EcosWebExecutor
@@ -14,11 +15,13 @@ class EmitEventWebExecutor(private val eventsService: EventsService) : EcosWebEx
 
     override fun execute(request: EcosWebExecutorReq, response: EcosWebExecutorResp) {
         val body = request.getBodyReader().readDto(Body::class.java)
-        eventsService.emitEventFromRemote(
-            body.event,
-            exclusive = true,
-            calledInTxn = true
-        )
+        AuthContext.runAsSystem {
+            eventsService.emitEventFromRemote(
+                body.event,
+                exclusive = true,
+                calledInTxn = true
+            )
+        }
     }
 
     override fun getPath(): String {
