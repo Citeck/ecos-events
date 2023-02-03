@@ -38,6 +38,8 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
     private var listenersToRemote: Map<RemoteEventListenerKey, RemoteEventListenerData> = emptyMap()
     private var listenersFromRemote: Map<String, List<RemoteAppEventListener>> = emptyMap()
 
+    private var listenersToRemoteInitialized = false
+
     init {
         if (remoteEvents != null) {
             remoteEvents.listenListenersChange { type, listeners ->
@@ -61,9 +63,10 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
         val newListenersToRemote = hashMapOf<RemoteEventListenerKey, RemoteEventListenerData>()
         initListeners(newListenersToRemote)
         if (remoteEvents != null) {
-            if (newListenersToRemote != HashMap(listenersToRemote)) {
+            if (!listenersToRemoteInitialized || newListenersToRemote != HashMap(listenersToRemote)) {
                 this.listenersToRemote = newListenersToRemote
                 remoteEvents.listenEventsFromRemote(newListenersToRemote)
+                listenersToRemoteInitialized = true
             }
         }
     }
