@@ -35,6 +35,7 @@ class RabbitMqEventsService(
 
     private var onRemoteListenersChanged: (String, List<RemoteAppEventListener>) -> Unit = { _, _ -> }
     private var eventListeners: Map<RemoteEventListenerKey, RemoteEventListenerData> = emptyMap()
+    private var eventListenersInitialized = false
 
     private lateinit var outcomeChannel: RabbitMqChannel
 
@@ -95,7 +96,7 @@ class RabbitMqEventsService(
     override fun addProducedEventType(eventType: String) {
         if (producedEventTypes.add(eventType)) {
             updateRemoteListeners(eventType)
-            ecosZooKeeper.watchChildrenRecursive("/${getEventTypeKey(eventType)}") {
+            ecosZooKeeper.watchChildrenRecursive("/${getZkKeyForEventType(eventType)}") {
                 val type = it.type
                 if (type != null) {
                     when (type) {
@@ -114,7 +115,7 @@ class RabbitMqEventsService(
 
     private fun updateRemoteListeners(eventType: String) {
 
-        val children = ecosZooKeeper.getChildren("/${getEventTypeKey(eventType)}")
+        val children = ecosZooKeeper.getChildren("/${getZkKeyForEventType(eventType)}")
 
         val listeners = mutableListOf<RemoteAppEventListener>()
         children.forEach { targetAppKey ->
@@ -122,7 +123,7 @@ class RabbitMqEventsService(
             if (!AppKeyUtils.isKeyForApp(appName, appInstanceId, targetAppKey)) {
 
                 val appListener = ecosZooKeeper.getValue(
-                    "/${getEventTypeKey(eventType)}/$targetAppKey",
+                    "/${getZkKeyForEventType(eventType)}/$targetAppKey",
                     ZkAppEventListener::class.java
                 )
                 if (appListener != null) {
@@ -149,8 +150,26 @@ class RabbitMqEventsService(
     override fun listenEventsFromRemote(listeners: Map<RemoteEventListenerKey, RemoteEventListenerData>) {
 
         val newListeners = HashMap(listeners)
-        if (eventListeners == newListeners) {
+        if (eventListenersInitialized && eventListeners == newListeners) {
             return
+        }
+
+        val listenersToRemove = mutableSetOf<RemoteEventListenerKey>()
+        eventListeners.filter { (key, _) ->
+            !newListeners.containsKey(key)
+        }.forEach { (key, _) ->
+            listenersToRemove.add(key)
+        }
+        if (!eventListenersInitialized) {
+            getCurrentAppListenersFromZk().forEach {
+                if (!newListeners.containsKey(it)) {
+                    listenersToRemove.add(it)
+                }
+            }
+        }
+        listenersToRemove.forEach {
+            val targetAppKey = AppKeyUtils.createKey(appName, appInstanceId, it.exclusive)
+            ecosZooKeeper.setValue("/${getZkKeyForEventType(it.eventType)}/$targetAppKey", null)
         }
 
         newListeners.forEach { (listenerKey, listenerData) ->
@@ -160,7 +179,7 @@ class RabbitMqEventsService(
                 listenerData.filter,
                 listenerData.transactional
             )
-            val valuePath = "/${getEventTypeKey(listenerKey.eventType)}/$targetAppKey"
+            val valuePath = "/${getZkKeyForEventType(listenerKey.eventType)}/$targetAppKey"
             val exclusiveMsg = if (listenerKey.exclusive) {
                 "exclusive"
             } else {
@@ -171,14 +190,24 @@ class RabbitMqEventsService(
             ecosZooKeeper.setValue(valuePath, zkListener, persistent = listenerKey.exclusive)
         }
 
-        eventListeners.filter { (key, _) ->
-            !newListeners.containsKey(key)
-        }.forEach { (key, _) ->
-            val targetAppKey = AppKeyUtils.createKey(appName, appInstanceId, key.exclusive)
-            ecosZooKeeper.setValue("/${getEventTypeKey(key.eventType)}/$targetAppKey", null)
-        }
-
         eventListeners = newListeners
+        eventListenersInitialized = true
+    }
+
+    private fun getCurrentAppListenersFromZk(): List<RemoteEventListenerKey> {
+        val currentAppKey = AppKeyUtils.createKey(appName, appInstanceId, true)
+        val eventTypes = ecosZooKeeper.getChildren("/")
+        val result = mutableListOf<RemoteEventListenerKey>()
+        for (eventTypeZkKey in eventTypes) {
+            val value = ecosZooKeeper.getValue(
+                "/$eventTypeZkKey/$currentAppKey",
+                ZkAppEventListener::class.java
+            )
+            if (value != null) {
+                result.add(RemoteEventListenerKey(getEventTypeFromZkKey(eventTypeZkKey), true))
+            }
+        }
+        return result
     }
 
     override fun emitEvent(targetAppKey: String, event: EcosEvent, transactional: Boolean) {
@@ -193,8 +222,12 @@ class RabbitMqEventsService(
         }
     }
 
-    private fun getEventTypeKey(type: String): String {
+    private fun getZkKeyForEventType(type: String): String {
         return EVENT_TYPE_ESCAPER.escape(type)
+    }
+
+    private fun getEventTypeFromZkKey(key: String): String {
+        return EVENT_TYPE_ESCAPER.unescape(key)
     }
 
     private fun onEventReceived(event: EcosEvent, exclusive: Boolean) {
