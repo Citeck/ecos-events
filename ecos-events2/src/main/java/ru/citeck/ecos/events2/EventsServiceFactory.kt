@@ -29,6 +29,9 @@ open class EventsServiceFactory {
         recordsServices.txnActionManager.register(remoteEventsExecutor)
         // ---------------------------------------------------------//
         recordsServices.getEcosWebAppApi()?.getWebExecutorsApi()?.register(EmitEventWebExecutor(eventsService))
+        recordsServices.getEcosWebAppApi()?.doWhenAppReady {
+            listenersContext.update()
+        }
     }
 
     open fun createRecordEventsService(): RecordEventsService {

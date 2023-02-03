@@ -57,7 +57,7 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
     }
 
     @Synchronized
-    private fun update() {
+    fun update() {
         val newListenersToRemote = hashMapOf<RemoteEventListenerKey, RemoteEventListenerData>()
         initListeners(newListenersToRemote)
         if (remoteEvents != null) {
