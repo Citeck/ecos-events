@@ -216,7 +216,7 @@ class RabbitMqEventsService(
                 .targetApp(AppKeyUtils.getAppName(targetAppKey))
                 .path(EmitEventWebExecutor.PATH)
                 .body { it.writeDto(EmitEventWebExecutor.Body(event)) }
-                .execute {}.get()
+                .executeSync {}
         } else {
             outcomeChannel.publishMsg(EVENTS_EXCHANGE, targetAppKey, event)
         }
