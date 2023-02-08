@@ -107,12 +107,12 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
 
             val recordAtts = HashSet<String>()
 
-            val exclusiveRemoteAtts = HashSet<String>()
-            val exclusiveFilter = mutableListOf<Predicate>()
+            val exclusiveNonTxnRemoteAtts = HashSet<String>()
+            val exclusiveNonTxnFilter = mutableListOf<Predicate>()
             val inclusiveRemoteAtts = HashSet<String>()
             val inclusiveFilter = mutableListOf<Predicate>()
-
-            var exclusiveTransactionalListener = false
+            val txnRemoteAtts = HashSet<String>()
+            val txnFilter = mutableListOf<Predicate>()
 
             val listenersInfo = ArrayList<ListenerInfo>()
 
@@ -128,10 +128,12 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
 
                 if (!config.local) {
                     if (config.exclusive) {
-                        exclusiveRemoteAtts.addAll(attsToLoad)
-                        exclusiveFilter.add(config.filter)
                         if (config.transactional) {
-                            exclusiveTransactionalListener = true
+                            txnRemoteAtts.addAll(attsToLoad)
+                            txnFilter.add(config.filter)
+                        } else {
+                            exclusiveNonTxnRemoteAtts.addAll(attsToLoad)
+                            exclusiveNonTxnFilter.add(config.filter)
                         }
                     } else {
                         inclusiveRemoteAtts.addAll(attsToLoad)
@@ -142,17 +144,25 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
                 @Suppress("UNCHECKED_CAST")
                 listenersInfo.add(ListenerInfo(attributes, config as ListenerConfig<Any>))
             }
-            if (exclusiveRemoteAtts.isNotEmpty()) {
-                listenersToRemote[RemoteEventListenerKey(type, true)] = RemoteEventListenerData(
-                    exclusiveRemoteAtts,
-                    createRemoteFilter(exclusiveFilter),
-                    exclusiveTransactionalListener
+            if (exclusiveNonTxnRemoteAtts.isNotEmpty()) {
+                val key = RemoteEventListenerKey(type, exclusive = true, transactional = false)
+                listenersToRemote[key] = RemoteEventListenerData(
+                    exclusiveNonTxnRemoteAtts,
+                    createRemoteFilter(exclusiveNonTxnFilter)
                 )
             }
             if (inclusiveRemoteAtts.isNotEmpty()) {
-                listenersToRemote[RemoteEventListenerKey(type, false)] = RemoteEventListenerData(
+                val key = RemoteEventListenerKey(type, exclusive = false, transactional = false)
+                listenersToRemote[key] = RemoteEventListenerData(
                     inclusiveRemoteAtts,
                     createRemoteFilter(inclusiveFilter)
+                )
+            }
+            if (txnRemoteAtts.isNotEmpty()) {
+                val key = RemoteEventListenerKey(type, exclusive = true, transactional = true)
+                listenersToRemote[key] = RemoteEventListenerData(
+                    txnRemoteAtts,
+                    createRemoteFilter(txnFilter)
                 )
             }
             newListeners[type] = EventsTypeListeners(recordAtts, listenersInfo)

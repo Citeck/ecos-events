@@ -63,9 +63,9 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
         return emitter as EventsEmitter<T>
     }
 
-    override fun emitEventFromRemote(event: EcosEvent, exclusive: Boolean, calledInTxn: Boolean) {
+    override fun emitEventFromRemote(event: EcosEvent, exclusive: Boolean, calledInSameTxn: Boolean) {
         val typeListeners = getListenersForType(event.type) ?: return
-        emitExactEvent(event, typeListeners, false, exclusive, calledInTxn)
+        emitExactEvent(event, typeListeners, false, exclusive, calledInSameTxn)
     }
 
     private fun emitExactEvent(
@@ -73,14 +73,17 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
         listeners: EventsTypeListeners,
         isLocalEvent: Boolean,
         exclusive: Boolean = true,
-        calledInTxn: Boolean = true
+        calledInSameTxn: Boolean = true
     ) {
-        listeners.listeners.forEach { listener ->
+        for (listener in listeners.listeners) {
+            if (listener.config.transactional && !calledInSameTxn) {
+                continue
+            }
             if (isLocalEvent) {
-                triggerListener(listener, event, calledInTxn)
+                triggerListener(listener, event, calledInSameTxn)
             } else {
                 if (!listener.config.local && listener.config.exclusive == exclusive) {
-                    triggerListener(listener, event, calledInTxn)
+                    triggerListener(listener, event, calledInSameTxn)
                 }
             }
         }
@@ -136,7 +139,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
         return typeListeners
     }
 
-    private fun triggerListener(listener: ListenerInfo, event: EcosEvent, calledInTxn: Boolean) {
+    private fun triggerListener(listener: ListenerInfo, event: EcosEvent, calledInSameTxn: Boolean) {
 
         if (listener.config.filter !is VoidPredicate) {
 
@@ -168,11 +171,11 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
 
         val action = listener.config.action
         if (listener.config.transactional) {
-            if (calledInTxn) {
+            if (calledInSameTxn) {
                 action.accept(convertedValue)
             }
         } else {
-            if (calledInTxn) {
+            if (calledInSameTxn) {
                 TxnContext.processListAfterCommit(
                     "events-after-commit",
                     { action.accept(convertedValue) }
@@ -181,7 +184,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
                         try {
                             it.invoke()
                         } catch (e: Throwable) {
-                            log.error(e) { "Error in after-commit event" }
+                            log.error(e) { "Error in after-commit event ${event.id} with type ${event.type}" }
                         }
                     }
                 }

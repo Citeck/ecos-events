@@ -132,7 +132,7 @@ class RabbitMqEventsService(
                             targetAppKey,
                             appListener.attributes,
                             appListener.filter,
-                            appListener.transactional
+                            AppKeyUtils.isKeyTransactional(targetAppKey)
                         )
                     )
                 }
@@ -168,25 +168,32 @@ class RabbitMqEventsService(
             }
         }
         listenersToRemove.forEach {
-            val targetAppKey = AppKeyUtils.createKey(appName, appInstanceId, it.exclusive)
+            val targetAppKey = AppKeyUtils.createKey(appName, appInstanceId, it.exclusive, it.transactional)
             ecosZooKeeper.setValue("/${getZkKeyForEventType(it.eventType)}/$targetAppKey", null)
         }
 
         newListeners.forEach { (listenerKey, listenerData) ->
-            val targetAppKey = AppKeyUtils.createKey(appName, appInstanceId, listenerKey.exclusive)
+            val targetAppKey = AppKeyUtils.createKey(
+                appName,
+                appInstanceId,
+                listenerKey.exclusive,
+                listenerKey.transactional
+            )
             val zkListener = ZkAppEventListener(
                 listenerData.attributes,
-                listenerData.filter,
-                listenerData.transactional
+                listenerData.filter
             )
             val valuePath = "/${getZkKeyForEventType(listenerKey.eventType)}/$targetAppKey"
-            val exclusiveMsg = if (listenerKey.exclusive) {
+            var listenerTypeMsg = if (listenerKey.exclusive) {
                 "exclusive"
             } else {
                 "inclusive"
             }
+            if (listenerKey.transactional) {
+                listenerTypeMsg += " transactional"
+            }
 
-            log.info { "Add $exclusiveMsg ZkListener $zkListener for path $valuePath" }
+            log.info { "Add $listenerTypeMsg ZkListener $zkListener for path $valuePath" }
             ecosZooKeeper.setValue(valuePath, zkListener, persistent = listenerKey.exclusive)
         }
 
@@ -195,16 +202,27 @@ class RabbitMqEventsService(
     }
 
     private fun getCurrentAppListenersFromZk(): List<RemoteEventListenerKey> {
-        val currentAppKey = AppKeyUtils.createKey(appName, appInstanceId, true)
+        val currentAppKeys = listOf(
+            AppKeyUtils.createKey(appName, appInstanceId, exclusive = true, transactional = true),
+            AppKeyUtils.createKey(appName, appInstanceId, exclusive = true, transactional = false)
+        )
         val eventTypes = ecosZooKeeper.getChildren("/")
         val result = mutableListOf<RemoteEventListenerKey>()
         for (eventTypeZkKey in eventTypes) {
-            val value = ecosZooKeeper.getValue(
-                "/$eventTypeZkKey/$currentAppKey",
-                ZkAppEventListener::class.java
-            )
-            if (value != null) {
-                result.add(RemoteEventListenerKey(getEventTypeFromZkKey(eventTypeZkKey), true))
+            for (currentAppKey in currentAppKeys) {
+                val value = ecosZooKeeper.getValue(
+                    "/$eventTypeZkKey/$currentAppKey",
+                    ZkAppEventListener::class.java
+                )
+                if (value != null) {
+                    result.add(
+                        RemoteEventListenerKey(
+                            getEventTypeFromZkKey(eventTypeZkKey),
+                            true,
+                            AppKeyUtils.isKeyTransactional(currentAppKey)
+                        )
+                    )
+                }
             }
         }
         return result

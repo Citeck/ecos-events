@@ -34,5 +34,10 @@ class AppKeyUtilsTest {
         assertThat(inclusiveKeyWithDot).isEqualTo("$escapedAppNameWithDot.$appInstanceId")
         assertThat(AppKeyUtils.isKeyForApp(appNameWithDot, appInstanceId, inclusiveKeyWithDot)).isTrue
         assertThat(AppKeyUtils.isKeyExclusive(inclusiveKeyWithDot)).isFalse
+
+        val transactionalKey = AppKeyUtils.createKey(appNameWithDot, appInstanceId, true, true)
+        assertThat(transactionalKey).endsWith(".T11L")
+        assertThat(AppKeyUtils.isKeyExclusive(transactionalKey)).isTrue
+        assertThat(AppKeyUtils.isKeyTransactional(transactionalKey)).isTrue
     }
 }
