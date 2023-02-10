@@ -271,11 +271,6 @@ class RemoteListenersTest {
         assertEquals(emitData.creator, receiveDataOne!!.creator)
     }
 
-    @AfterEach
-    fun tearDown() {
-        servers.close()
-    }
-
     private data class NodeData(
         val id: String,
         val data: String,

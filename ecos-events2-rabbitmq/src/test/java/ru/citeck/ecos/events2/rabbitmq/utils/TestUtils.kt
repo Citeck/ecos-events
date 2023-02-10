@@ -1,19 +1,18 @@
 package ru.citeck.ecos.events2.rabbitmq.utils
 
-import com.github.fridujo.rabbitmq.mock.MockConnectionFactory
-import com.rabbitmq.client.ConnectionFactory
-import ecos.org.apache.curator.test.TestingServer
-import ru.citeck.ecos.commons.test.EcosWebAppApiMock
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.rabbitmq.RabbitMqEventsService
 import ru.citeck.ecos.events2.remote.RemoteEventsService
 import ru.citeck.ecos.rabbitmq.RabbitMqConn
+import ru.citeck.ecos.rabbitmq.test.EcosRabbitMqTest
 import ru.citeck.ecos.records2.source.dao.local.RecordsDaoBuilder
 import ru.citeck.ecos.records3.RecordsServiceFactory
 import ru.citeck.ecos.records3.record.resolver.RemoteRecordsResolver
+import ru.citeck.ecos.test.commons.EcosWebAppApiMock
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
+import ru.citeck.ecos.zookeeper.test.EcosZooKeeperTest
 import java.util.*
 
 class TestUtils {
@@ -24,17 +23,10 @@ class TestUtils {
         private val recordsServices = mutableMapOf<String, RecordsServiceFactory>()
 
         fun createServers(): MockServers {
-
-            val zkServer = TestingServer()
-            zkServer.start()
-            val ecosZooKeeper = EcosZooKeeper(zkServer.connectString).withNamespace("ecos")
-
-            val factory: ConnectionFactory = MockConnectionFactory()
-            val rabbitMqConn = RabbitMqConn(factory)
-
-            rabbitMqConn.waitUntilReady(5_000)
-
-            return MockServers(zkServer, ecosZooKeeper, rabbitMqConn)
+            return MockServers(
+                EcosZooKeeperTest.createZooKeeper().withNamespace("ecos"),
+                EcosRabbitMqTest.createConnection()
+            )
         }
 
         fun createApp(
@@ -95,13 +87,7 @@ class TestUtils {
     }
 
     class MockServers(
-        val zkServer: TestingServer,
         val zookeeper: EcosZooKeeper,
         val rabbitmq: RabbitMqConn
-    ) {
-        fun close() {
-            zkServer.stop()
-            rabbitmq.close()
-        }
-    }
+    )
 }

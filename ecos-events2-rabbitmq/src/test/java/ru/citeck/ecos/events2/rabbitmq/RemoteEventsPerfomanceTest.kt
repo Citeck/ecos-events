@@ -5,7 +5,6 @@ import mu.KotlinLogging
 import org.apache.commons.lang3.time.StopWatch
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -331,11 +330,6 @@ class RemoteEventsPerfomanceTest {
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit0)
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit1)
         assertThat(receivedDataFromListener2).containsAnyElementsOf(dataToEmit2)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        servers.close()
     }
 
     private fun generateRandomNodeData(size: Int): List<NodeData> {

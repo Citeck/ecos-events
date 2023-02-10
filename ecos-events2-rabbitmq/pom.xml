@@ -29,10 +29,24 @@
         </dependency>
 
         <dependency>
+            <groupId>ru.citeck.ecos.rabbitmq</groupId>
+            <artifactId>ecos-rabbitmq-test</artifactId>
+            <version>${ecos.rabbitmq.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>ru.citeck.ecos.zookeeper</groupId>
             <artifactId>ecos-zookeeper</artifactId>
             <version>${ecos.zookeeper.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.citeck.ecos.zookeeper</groupId>
+            <artifactId>ecos-zookeeper-test</artifactId>
+            <version>${ecos.zookeeper.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -54,13 +68,6 @@
             <artifactId>ecos-curator-framework</artifactId>
             <version>${ecos.curator.version}</version>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>ru.citeck.ecos</groupId>
-            <artifactId>ecos-curator-test</artifactId>
-            <version>${ecos.curator.version}</version>
-            <scope>test</scope>
         </dependency>
 
     </dependencies>

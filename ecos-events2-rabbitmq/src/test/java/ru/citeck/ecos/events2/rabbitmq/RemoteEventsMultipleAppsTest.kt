@@ -1,6 +1,5 @@
 package ru.citeck.ecos.events2.rabbitmq
 
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -41,11 +40,6 @@ class RemoteEventsMultipleAppsTest {
         )
         eventService2 = TestUtils.createApp("app2", servers, emptyMap())
         eventService3 = TestUtils.createApp("app3", servers, emptyMap())
-    }
-
-    @AfterAll
-    fun tearDown() {
-        servers.close()
     }
 
     @Test

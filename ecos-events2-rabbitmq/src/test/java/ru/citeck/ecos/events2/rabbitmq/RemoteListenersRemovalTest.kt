@@ -1,7 +1,6 @@
 package ru.citeck.ecos.events2.rabbitmq
 
 import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -648,11 +647,6 @@ class RemoteListenersRemovalTest {
         Thread.sleep(500)
 
         assertEquals(emitData0, receiveData0)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        servers.close()
     }
 
     private data class NodeData(
