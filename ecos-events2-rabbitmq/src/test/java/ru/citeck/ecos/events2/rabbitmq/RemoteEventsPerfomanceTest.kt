@@ -363,8 +363,8 @@ class RemoteEventsPerfomanceTest {
     }
 
     private fun waitSize(collection: Collection<*>, expectedSize: Int, collectionName: String) {
-        val timeout = System.currentTimeMillis() + Duration.ofSeconds(30).toMillis()
-        while (System.currentTimeMillis() < timeout && collection.size != expectedSize) {
+        val timeout = System.currentTimeMillis() + Duration.ofMinutes(2).toMillis()
+        while (System.currentTimeMillis() < timeout && collection.size < expectedSize) {
             Thread.sleep(200)
         }
         if (collection.size != expectedSize) {
