@@ -1,10 +1,12 @@
 package ru.citeck.ecos.events2.txn
 
+import mu.KotlinLogging
 import ru.citeck.ecos.events2.EcosEvent
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.remote.AppKeyUtils
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.txn.ext.TxnActionComponent
+import ru.citeck.ecos.txn.lib.TxnContext
 
 class RemoteEventsTxnActionComponent(services: EventsServiceFactory) : TxnActionComponent<RemoteEventTxnAction> {
 
@@ -12,6 +14,8 @@ class RemoteEventsTxnActionComponent(services: EventsServiceFactory) : TxnAction
         const val ID = "event"
 
         private const val AFTER_COMMIT_EVENTS_KEY = "__after_commit_events__"
+
+        private val log = KotlinLogging.logger {}
     }
 
     private val remoteEvents = services.remoteEventsService
@@ -62,8 +66,27 @@ class RemoteEventsTxnActionComponent(services: EventsServiceFactory) : TxnAction
         groupByTargetApp(actions) { targetAppKey, events ->
             if (AppKeyUtils.isKeyForApp(currentAppName, currentAppInstanceId, targetAppKey)) {
                 val mergedEvents = mergeEvents(events)
-                mergedEvents.forEach {
-                    eventsService.emitEventFromRemote(it, AppKeyUtils.isKeyExclusive(targetAppKey), false)
+                mergedEvents.forEach { eventToEmit ->
+                    TxnContext.processListAfterCommit(
+                        "legacy-txn-action-component-events-after-commit",
+                        {
+                            eventsService.emitEventFromRemote(
+                                eventToEmit,
+                                AppKeyUtils.isKeyExclusive(targetAppKey),
+                                false
+                            )
+                        }
+                    ) { elements ->
+                        elements.forEach {
+                            try {
+                                it.invoke()
+                            } catch (e: Throwable) {
+                                log.error(e) {
+                                    "Error in after-commit event ${eventToEmit.id} with type ${eventToEmit.type}"
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
                 val context = RequestContext.getCurrent()
