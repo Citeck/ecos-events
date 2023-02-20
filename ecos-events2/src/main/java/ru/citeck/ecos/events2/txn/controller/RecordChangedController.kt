@@ -3,6 +3,7 @@ package ru.citeck.ecos.events2.txn.controller
 import ru.citeck.ecos.events2.EcosEvent
 import ru.citeck.ecos.events2.type.RecordChangedEvent
 
+@Deprecated("Legacy transaction system for events")
 class RecordChangedController : RemoteEventController {
 
     override fun canBeMerged(event0: EcosEvent, event1: EcosEvent): Boolean {

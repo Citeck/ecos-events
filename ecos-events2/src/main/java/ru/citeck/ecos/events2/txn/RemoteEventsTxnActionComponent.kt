@@ -8,6 +8,7 @@ import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.records3.txn.ext.TxnActionComponent
 import ru.citeck.ecos.txn.lib.TxnContext
 
+@Deprecated("Legacy transaction system for events")
 class RemoteEventsTxnActionComponent(services: EventsServiceFactory) : TxnActionComponent<RemoteEventTxnAction> {
 
     companion object {

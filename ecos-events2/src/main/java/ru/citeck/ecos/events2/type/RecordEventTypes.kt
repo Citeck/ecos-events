@@ -160,3 +160,14 @@ class RecordCreatedEvent(
         const val TYPE = "record-created"
     }
 }
+
+class RecordContentChangedEvent(
+    val record: Any,
+    val typeDef: TypeInfo,
+    val before: Any?,
+    val after: Any?
+) {
+    companion object {
+        const val TYPE = "record-content-changed"
+    }
+}
