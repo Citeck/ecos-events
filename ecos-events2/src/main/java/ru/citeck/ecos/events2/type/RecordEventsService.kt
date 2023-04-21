@@ -107,7 +107,7 @@ class RecordEventsService(services: EventsServiceFactory) {
             return
         }
 
-        emitRecChanged(RecordChangedEvent(afterRec, typeInfo, beforeAtts, afterAtts))
+        emitRecChanged(RecordChangedEvent(afterRec, typeInfo, beforeAtts, afterAtts, emptyList()))
     }
 
     private fun getAtts(record: Any?, atts: Map<String, String>): Map<String, Any?> {
@@ -124,7 +124,7 @@ class RecordEventsService(services: EventsServiceFactory) {
 
     fun emitRecChanged(record: Any, before: Map<String, Any?>, after: Map<String, Any?>) {
         val typeInfo = getTypeInfoFromRecord(record) ?: return
-        emitRecChanged(RecordChangedEvent(record, typeInfo, before, after))
+        emitRecChanged(RecordChangedEvent(record, typeInfo, before, after, emptyList()))
     }
 
     fun emitRecChanged(event: RecordChangedEvent) {

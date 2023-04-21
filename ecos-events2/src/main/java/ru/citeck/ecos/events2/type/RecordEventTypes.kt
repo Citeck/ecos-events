@@ -2,28 +2,26 @@ package ru.citeck.ecos.events2.type
 
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.json.Json
+import ru.citeck.ecos.commons.json.serialization.annotation.IncludeNonDefault
 import ru.citeck.ecos.model.lib.attributes.dto.AttributeDef
 import ru.citeck.ecos.model.lib.status.dto.StatusDef
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.value.AttValue
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RecordChangedEvent(
     val record: Any,
     val typeDef: TypeInfo,
     val before: Map<String, Any?>,
-    val after: Map<String, Any?>
+    val after: Map<String, Any?>,
+    val assocs: List<AssocDiff>
 ) {
 
     companion object {
         const val TYPE = "record-changed"
-    }
 
-    init {
-        val atts = typeDef.model.attributes
-        if (atts.size != before.size || atts.size != after.size) {
-            error("Incorrect atts size. Def: ${atts.size} before: ${before.size} after: ${after.size}")
-        }
+        private val EMPTY_ATT_DEF = AttributeDef.create {}
     }
 
     fun getDiff(): Any {
@@ -33,7 +31,7 @@ class RecordChangedEvent(
     inner class Diff : AttValue {
 
         override fun has(name: String): Boolean {
-            return !isEqual(after[name], before[name])
+            return !isEqual(after[name], before[name]) || assocs.any { name == it.assocId }
         }
 
         override fun getAtt(name: String): Any? {
@@ -55,6 +53,17 @@ class RecordChangedEvent(
                                 )
                             )
                         }
+                    }
+                    for (assocDiff in assocs) {
+                        val attDef = attsById[assocDiff.assocId] ?: continue
+                        res.add(
+                            DiffValue(
+                                assocDiff.assocId,
+                                attDef,
+                                added = assocDiff.added,
+                                removed = assocDiff.removed
+                            )
+                        )
                     }
                     return res
                 }
@@ -85,16 +94,26 @@ class RecordChangedEvent(
         }
     }
 
+    @IncludeNonDefault
     class DiffValue(
-        val id: String,
-        val def: AttributeDef,
-        val before: Any?,
-        val after: Any?
+        val id: String = "",
+        val def: AttributeDef = EMPTY_ATT_DEF,
+        val before: Any? = null,
+        val after: Any? = null,
+        val added: List<EntityRef> = emptyList(),
+        val removed: List<EntityRef> = emptyList()
     ) {
         override fun toString(): String {
             return Json.mapper.toString(this) ?: "{}"
         }
     }
+
+    class AssocDiff(
+        val assocId: String,
+        val child: Boolean,
+        val added: List<EntityRef>,
+        val removed: List<EntityRef>,
+    )
 }
 
 class RecordDeletedEvent(
