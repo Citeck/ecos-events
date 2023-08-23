@@ -4,6 +4,7 @@ import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.emitter.EventsEmitter
+import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
 import ru.citeck.ecos.model.lib.type.repo.TypesRepo
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
@@ -12,6 +13,7 @@ import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
 import ru.citeck.ecos.records3.record.atts.schema.resolver.AttSchemaResolver
 import ru.citeck.ecos.records3.record.request.RequestContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 class RecordEventsService(services: EventsServiceFactory) {
 
@@ -87,7 +89,7 @@ class RecordEventsService(services: EventsServiceFactory) {
         val typeInfo = afterRec?.let { getTypeInfoFromRecord(it) } ?: return
 
         if (beforeRec == null) {
-            emitRecCreated(RecordCreatedEvent(afterRec, typeInfo))
+            emitRecCreated(afterRec, typeInfo)
             return
         }
 
@@ -107,7 +109,7 @@ class RecordEventsService(services: EventsServiceFactory) {
             return
         }
 
-        emitRecChanged(RecordChangedEvent(afterRec, typeInfo, beforeAtts, afterAtts, emptyList()))
+        emitRecChanged(RecordChangedEvent(afterRec, typeInfo, beforeAtts, afterAtts, emptyList(), false))
     }
 
     private fun getAtts(record: Any?, atts: Map<String, String>): Map<String, Any?> {
@@ -122,18 +124,51 @@ class RecordEventsService(services: EventsServiceFactory) {
         return result
     }
 
-    fun emitRecChanged(record: Any, before: Map<String, Any?>, after: Map<String, Any?>) {
+    @JvmOverloads
+    fun emitRecChanged(record: Any, before: Map<String, Any?>, after: Map<String, Any?>, isDraft: Boolean = false) {
         val typeInfo = getTypeInfoFromRecord(record) ?: return
-        emitRecChanged(RecordChangedEvent(record, typeInfo, before, after, emptyList()))
+        emitRecChanged(RecordChangedEvent(record, typeInfo, before, after, emptyList(), isDraft))
     }
 
     fun emitRecChanged(event: RecordChangedEvent) {
         recChangedEmitter.emit(event)
     }
 
-    fun emitRecCreated(record: Any) {
-        val typeInfo = getTypeInfoFromRecord(record) ?: return
-        emitRecCreated(RecordCreatedEvent(record, typeInfo))
+    @JvmOverloads
+    fun emitRecCreated(record: Any, typeInfo: TypeInfo? = null, isDraft: Boolean = false) {
+
+        val nnTypeInfo = typeInfo ?: getTypeInfoFromRecord(record) ?: return
+
+        emitRecCreated(
+            RecordCreatedEvent(record, nnTypeInfo, isDraft) {
+                val attsToRequest = mutableMapOf<String, String>()
+                val attsById = nnTypeInfo.model.attributes.associateBy { it.id }
+                for ((id, def) in attsById) {
+                    if (isAssocLikeAttribute(def.type)) {
+                        attsToRequest[id] = "$id[]${ScalarType.ID.schema}"
+                    }
+                }
+                val assocsValues = records.getAtts(record, attsToRequest).getAtts()
+                val assocsInfo = ArrayList<RecordCreatedEvent.AssocInfo>()
+                assocsValues.forEach { id, values ->
+                    if (values.isArray() && values.isNotEmpty()) {
+                        val def = attsById[id]
+                        if (def != null) {
+                            val isChild = def.config.get("child", false)
+                            assocsInfo.add(
+                                RecordCreatedEvent.AssocInfo(
+                                    id,
+                                    def,
+                                    isChild,
+                                    values.asList(EntityRef::class.java)
+                                )
+                            )
+                        }
+                    }
+                }
+                assocsInfo
+            }
+        )
     }
 
     fun emitRecCreated(event: RecordCreatedEvent) {
@@ -158,5 +193,14 @@ class RecordEventsService(services: EventsServiceFactory) {
             return null
         }
         return typesRepo.getTypeInfo(TypeUtils.getTypeRef(typeId))
+    }
+
+    // todo: move this logic to ecos-model-lib
+    private fun isAssocLikeAttribute(type: AttributeType?): Boolean {
+        type ?: return false
+        return type == AttributeType.ASSOC ||
+            type == AttributeType.PERSON ||
+            type == AttributeType.AUTHORITY_GROUP ||
+            type == AttributeType.AUTHORITY
     }
 }

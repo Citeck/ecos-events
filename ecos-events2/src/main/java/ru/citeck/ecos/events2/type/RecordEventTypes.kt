@@ -10,18 +10,19 @@ import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.records3.record.atts.value.AttValue
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
+private val EMPTY_ATT_DEF = AttributeDef.create {}
+
 class RecordChangedEvent(
     val record: Any,
     val typeDef: TypeInfo,
     val before: Map<String, Any?>,
     val after: Map<String, Any?>,
-    val assocs: List<AssocDiff>
+    val assocs: List<AssocDiff>,
+    val isDraft: Boolean
 ) {
 
     companion object {
         const val TYPE = "record-changed"
-
-        private val EMPTY_ATT_DEF = AttributeDef.create {}
     }
 
     fun getDiff(): Any {
@@ -110,6 +111,7 @@ class RecordChangedEvent(
 
     class AssocDiff(
         val assocId: String,
+        val def: AttributeDef = EMPTY_ATT_DEF,
         val child: Boolean,
         val added: List<EntityRef>,
         val removed: List<EntityRef>,
@@ -173,10 +175,32 @@ class RecordDraftStatusChangedEvent(
 
 class RecordCreatedEvent(
     val record: Any,
-    val typeDef: TypeInfo
+    val typeDef: TypeInfo,
+    val isDraft: Boolean,
+    evalAssocs: () -> List<AssocInfo>
 ) {
     companion object {
         const val TYPE = "record-created"
+    }
+
+    constructor(
+        record: Any,
+        typeDef: TypeInfo,
+        isDraft: Boolean,
+        assocs: List<AssocInfo>
+    ) : this(record, typeDef, isDraft, { assocs })
+
+    val assocs by lazy(evalAssocs)
+
+    class AssocInfo(
+        val assocId: String,
+        val def: AttributeDef = EMPTY_ATT_DEF,
+        val child: Boolean,
+        val added: List<EntityRef>
+    ) {
+        fun getRemoved(): List<EntityRef> {
+            return emptyList()
+        }
     }
 }
 
