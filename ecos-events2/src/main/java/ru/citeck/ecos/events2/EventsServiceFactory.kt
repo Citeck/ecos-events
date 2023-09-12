@@ -12,6 +12,10 @@ import ru.citeck.ecos.records3.RecordsServiceFactory
 
 open class EventsServiceFactory {
 
+    companion object {
+        const val LISTENERS_INIT_ORDER = 10_000f
+    }
+
     val eventsService: EventsService by lazy { createEventsService() }
     val remoteEventsService: RemoteEventsService? by lazy { createRemoteEvents() }
     val listenersContext: ListenersContext by lazy { createListenersContext() }
@@ -29,7 +33,7 @@ open class EventsServiceFactory {
         recordsServices.txnActionManager.register(remoteEventsExecutor)
         // ---------------------------------------------------------//
         recordsServices.getEcosWebAppApi()?.getWebExecutorsApi()?.register(EmitEventWebExecutor(eventsService))
-        recordsServices.getEcosWebAppApi()?.doWhenAppReady {
+        recordsServices.getEcosWebAppApi()?.doWhenAppReady(LISTENERS_INIT_ORDER) {
             listenersContext.update()
         }
     }

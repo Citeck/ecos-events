@@ -16,6 +16,7 @@ import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.txn.lib.TxnContext
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -161,7 +162,8 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
         }
 
         val convertedValue = when (val clazz = listener.config.dataClass) {
-            RecordRef::class.java -> RecordRef.valueOf(event.attributes["rec?id"].asText())
+            EntityRef::class.java -> EntityRef.valueOf(event.attributes[ListenersContext.ENTITY_REF_ID_ATT].asText())
+            RecordRef::class.java -> RecordRef.valueOf(event.attributes[ListenersContext.ENTITY_REF_ID_ATT].asText())
             ObjectData::class.java -> listenerAtts
             Unit::class.java -> Unit
             EcosEvent::class.java -> event.withAttributes(listenerAtts)

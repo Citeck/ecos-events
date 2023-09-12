@@ -16,6 +16,7 @@ import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.OrPredicate
 import ru.citeck.ecos.records2.predicate.model.Predicate
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
@@ -24,6 +25,8 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
 
     companion object {
         val log = KotlinLogging.logger {}
+
+        const val ENTITY_REF_ID_ATT = "record?id"
     }
 
     private val dtoSchemaReader = serviceFactory.recordsServices.dtoSchemaReader
@@ -183,8 +186,8 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
             return emptyMap()
         }
 
-        if (clazz == RecordRef::class.java) {
-            return mapOf("rec?id" to "rec?id")
+        if (clazz == RecordRef::class.java || clazz == EntityRef::class.java) {
+            return mapOf(ENTITY_REF_ID_ATT to ENTITY_REF_ID_ATT)
         }
 
         if (clazz != Unit::class.java &&
