@@ -20,6 +20,7 @@ import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.system.measureTimeMillis
 
 class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
 
@@ -142,57 +143,72 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
 
     private fun triggerListener(listener: ListenerInfo, event: EcosEvent, calledInSameTxn: Boolean) {
 
-        if (listener.config.filter !is VoidPredicate) {
+        val triggerTime = measureTimeMillis {
+            if (listener.config.filter !is VoidPredicate) {
 
-            val resolvedFilter = recordsTemplateService.resolve(
-                listener.config.filter,
-                RecordRef.create("meta", "")
-            )
+                val resolvedFilter = recordsTemplateService.resolve(
+                    listener.config.filter,
+                    RecordRef.create("meta", "")
+                )
 
-            val element = RecordAttsElement.create(RecordAtts(RecordRef.EMPTY, event.attributes))
-            if (!predicateService.isMatch(element, resolvedFilter)) {
-                return
+                val element = RecordAttsElement.create(RecordAtts(RecordRef.EMPTY, event.attributes))
+                if (!predicateService.isMatch(element, resolvedFilter)) {
+                    return
+                }
             }
-        }
 
-        val listenerAtts = ObjectData.create()
-        listener.attributes.forEach { (alias, attribute) ->
-            val value = event.attributes[attribute]
-            listenerAtts[alias] = value
-        }
-
-        val convertedValue = when (val clazz = listener.config.dataClass) {
-            EntityRef::class.java -> EntityRef.valueOf(event.attributes[ListenersContext.ENTITY_REF_ID_ATT].asText())
-            RecordRef::class.java -> RecordRef.valueOf(event.attributes[ListenersContext.ENTITY_REF_ID_ATT].asText())
-            ObjectData::class.java -> listenerAtts
-            Unit::class.java -> Unit
-            EcosEvent::class.java -> event.withAttributes(listenerAtts)
-            else -> dtoSchemaReader.instantiate(clazz, listenerAtts)
-                ?: error("Event data can't be converted to $clazz. Data: $listenerAtts")
-        }
-
-        val action = listener.config.action
-        if (listener.config.transactional) {
-            if (calledInSameTxn) {
-                action.accept(convertedValue)
+            val listenerAtts = ObjectData.create()
+            listener.attributes.forEach { (alias, attribute) ->
+                val value = event.attributes[attribute]
+                listenerAtts[alias] = value
             }
-        } else {
-            if (calledInSameTxn) {
-                TxnContext.processListAfterCommit(
-                    "events-after-commit",
-                    { action.accept(convertedValue) }
-                ) { elements ->
-                    elements.forEach {
-                        try {
-                            it.invoke()
-                        } catch (e: Throwable) {
-                            log.error(e) { "Error in after-commit event ${event.id} with type ${event.type}" }
-                        }
-                    }
+
+            val convertedValue = when (val clazz = listener.config.dataClass) {
+                EntityRef::class.java -> EntityRef.valueOf(event.attributes[ListenersContext.ENTITY_REF_ID_ATT].asText())
+                RecordRef::class.java -> RecordRef.valueOf(event.attributes[ListenersContext.ENTITY_REF_ID_ATT].asText())
+                ObjectData::class.java -> listenerAtts
+                Unit::class.java -> Unit
+                EcosEvent::class.java -> event.withAttributes(listenerAtts)
+                else -> dtoSchemaReader.instantiate(clazz, listenerAtts)
+                    ?: error("Event data can't be converted to $clazz. Data: $listenerAtts")
+            }
+
+            val action = listener.config.action
+            if (listener.config.transactional) {
+                if (calledInSameTxn) {
+                    action.accept(convertedValue)
                 }
             } else {
-                action.accept(convertedValue)
+                if (calledInSameTxn) {
+                    TxnContext.processListAfterCommit(
+                        "events-after-commit",
+                        { action.accept(convertedValue) }
+                    ) { elements ->
+
+                        val afterCommitTime = measureTimeMillis {
+                            elements.forEach {
+                                try {
+                                    it.invoke()
+                                } catch (e: Throwable) {
+                                    log.error(e) { "Error in after-commit event ${event.id} with type ${event.type}" }
+                                }
+                            }
+                        }
+
+                        log.debug {
+                            "Trigger listeners after commit for event ${event.id} " +
+                                    "with type ${event.type} in $afterCommitTime ms"
+                        }
+                    }
+                } else {
+                    action.accept(convertedValue)
+                }
             }
+        }
+
+        log.debug {
+            "Triggered listener ${listener.config.id} for event ${event.id} " +
+                    "with type ${event.type} in $triggerTime ms"
         }
     }
 
