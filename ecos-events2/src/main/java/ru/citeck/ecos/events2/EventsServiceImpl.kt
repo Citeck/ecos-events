@@ -197,7 +197,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
 
                         log.debug {
                             "Trigger listeners after commit for event ${event.id} " +
-                                    "with type ${event.type} in $afterCommitTime ms"
+                                "with type ${event.type} in $afterCommitTime ms"
                         }
                     }
                 } else {
@@ -208,7 +208,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
 
         log.debug {
             "Triggered listener ${listener.config.id} for event ${event.id} " +
-                    "with type ${event.type} in $triggerTime ms"
+                "with type ${event.type} in $triggerTime ms"
         }
     }
 
