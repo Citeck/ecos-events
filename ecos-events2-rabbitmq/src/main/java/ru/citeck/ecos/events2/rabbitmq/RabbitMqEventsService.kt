@@ -3,6 +3,7 @@ package ru.citeck.ecos.events2.rabbitmq
 import com.rabbitmq.client.BuiltinExchangeType
 import ecos.curator.org.apache.zookeeper.Watcher
 import mu.KotlinLogging
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.EcosEvent
@@ -17,6 +18,7 @@ import ru.citeck.ecos.webapp.api.EcosWebAppApi
 import ru.citeck.ecos.zookeeper.EcosZooKeeper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.system.measureTimeMillis
 
 class RabbitMqEventsService(
     rabbitMqConnection: RabbitMqConn,
@@ -106,6 +108,7 @@ class RabbitMqEventsService(
                         Watcher.Event.EventType.NodeChildrenChanged -> {
                             updateRemoteListeners(eventType)
                         }
+
                         else -> {}
                     }
                 }
@@ -249,13 +252,17 @@ class RabbitMqEventsService(
     }
 
     private fun onEventReceived(event: EcosEvent, exclusive: Boolean) {
-        if (event.user.isNotBlank()) {
-            AuthContext.runAsFull(event.user) {
+        val ackTime = measureTimeMillis {
+            if (event.user.isNotBlank()) {
+                AuthContext.runAsFull(event.user) {
+                    onEventReceivedImpl(event, exclusive)
+                }
+            } else {
                 onEventReceivedImpl(event, exclusive)
             }
-        } else {
-            onEventReceivedImpl(event, exclusive)
         }
+
+        log.trace { "Received exclusive: $exclusive event: \n${Json.mapper.toPrettyString(event)} \nackTime: $ackTime ms" }
     }
 
     private fun onEventReceivedImpl(event: EcosEvent, exclusive: Boolean) {
@@ -270,7 +277,7 @@ class RabbitMqEventsService(
             } catch (e: Exception) {
                 log.error(e) {
                     "Exception while event processing. " +
-                        "Event id: ${event.id} source: ${event.source} type: ${event.type}"
+                            "Event id: ${event.id} source: ${event.source} type: ${event.type}"
                 }
             }
         }
