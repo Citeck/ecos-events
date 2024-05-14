@@ -277,7 +277,7 @@ class RabbitMqEventsService(
             } catch (e: Exception) {
                 log.error(e) {
                     "Exception while event processing. " +
-                            "Event id: ${event.id} source: ${event.source} type: ${event.type}"
+                        "Event id: ${event.id} source: ${event.source} type: ${event.type}"
                 }
             }
         }
