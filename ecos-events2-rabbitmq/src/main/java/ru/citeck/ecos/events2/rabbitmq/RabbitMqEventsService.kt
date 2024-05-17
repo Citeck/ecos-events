@@ -10,8 +10,8 @@ import ru.citeck.ecos.events2.EcosEvent
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.remote.*
 import ru.citeck.ecos.events2.web.EmitEventWebExecutor
-import ru.citeck.ecos.rabbitmq.RabbitMqChannel
 import ru.citeck.ecos.rabbitmq.RabbitMqConn
+import ru.citeck.ecos.rabbitmq.publish.RabbitMqPublisher
 import ru.citeck.ecos.records3.record.request.RequestContext
 import ru.citeck.ecos.txn.lib.TxnContext
 import ru.citeck.ecos.webapp.api.EcosWebAppApi
@@ -39,10 +39,9 @@ class RabbitMqEventsService(
     private var eventListeners: Map<RemoteEventListenerKey, RemoteEventListenerData> = emptyMap()
     private var eventListenersInitialized = false
 
-    private lateinit var outcomeChannel: RabbitMqChannel
-
     private val producedEventTypes: MutableSet<String> = Collections.newSetFromMap(ConcurrentHashMap())
     private val remoteListeners: MutableMap<String, List<RemoteAppEventListener>> = ConcurrentHashMap()
+    private val rmqPublisher: RabbitMqPublisher
 
     private val appName: String
     private val appInstanceId: String
@@ -68,7 +67,6 @@ class RabbitMqEventsService(
             // occurred and multiple consumers should not be registered
             rabbitMqConnection.doWithNewChannel { channel ->
 
-                outcomeChannel = channel
                 channel.declareExchange(
                     EVENTS_EXCHANGE,
                     BuiltinExchangeType.TOPIC,
@@ -89,6 +87,8 @@ class RabbitMqEventsService(
                 }
             }
         }
+
+        rmqPublisher = rabbitMqConnection.getPublisher()
     }
 
     override fun listenListenersChange(action: (String, List<RemoteAppEventListener>) -> Unit) {
@@ -239,7 +239,7 @@ class RabbitMqEventsService(
                 .body { it.writeDto(EmitEventWebExecutor.Body(event)) }
                 .executeSync {}
         } else {
-            outcomeChannel.publishMsg(EVENTS_EXCHANGE, targetAppKey, event)
+            rmqPublisher.publishMsg(EVENTS_EXCHANGE, targetAppKey, event)
         }
     }
 
