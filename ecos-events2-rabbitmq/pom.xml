@@ -44,6 +44,13 @@
 
         <dependency>
             <groupId>ru.citeck.ecos.zookeeper</groupId>
+            <artifactId>ecos-zookeeper-deps</artifactId>
+            <version>${ecos.zookeeper.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.citeck.ecos.zookeeper</groupId>
             <artifactId>ecos-zookeeper-test</artifactId>
             <version>${ecos.zookeeper.version}</version>
             <scope>test</scope>
@@ -52,21 +59,6 @@
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
-            <version>${amqp-client.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.6</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>ru.citeck.ecos</groupId>
-            <artifactId>ecos-curator-framework</artifactId>
-            <version>${ecos.curator.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -76,14 +68,25 @@
         <plugins>
 
             <plugin>
+                <groupId>com.github.gantsign.maven</groupId>
+                <artifactId>ktlint-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+
+            <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
             </plugin>
 
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.2</version>
                 <executions>
                     <execution>
                         <goals>

@@ -1,6 +1,6 @@
 package ru.citeck.ecos.events2
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.context.lib.auth.AuthContext
 import ru.citeck.ecos.events2.emitter.EmitterConfig
@@ -10,7 +10,6 @@ import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.events2.listener.ctx.EventsTypeListeners
 import ru.citeck.ecos.events2.listener.ctx.ListenerInfo
 import ru.citeck.ecos.events2.listener.ctx.ListenersContext
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -36,7 +35,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
     private val emitters: MutableMap<EmitterConfig<*>, EventsEmitter<*>> = ConcurrentHashMap()
 
     private val predicateService = serviceFactory.recordsServices.predicateService
-    private val recordsService = serviceFactory.recordsServices.recordsServiceV1
+    private val recordsService = serviceFactory.recordsServices.recordsService
     private val dtoSchemaReader = serviceFactory.recordsServices.dtoSchemaReader
 
     private val listenersContext: ListenersContext = serviceFactory.listenersContext
@@ -148,10 +147,10 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
 
                 val resolvedFilter = recordsTemplateService.resolve(
                     listener.config.filter,
-                    RecordRef.create("meta", "")
+                    EntityRef.create("meta", "")
                 )
 
-                val element = RecordAttsElement.create(RecordAtts(RecordRef.EMPTY, event.attributes))
+                val element = RecordAttsElement.create(RecordAtts(EntityRef.EMPTY, event.attributes))
                 if (!predicateService.isMatch(element, resolvedFilter)) {
                     return
                 }
@@ -165,7 +164,6 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
 
             val convertedValue = when (val clazz = listener.config.dataClass) {
                 EntityRef::class.java -> EntityRef.valueOf(event.attributes[ListenersContext.ENTITY_REF_ID_ATT].asText())
-                RecordRef::class.java -> RecordRef.valueOf(event.attributes[ListenersContext.ENTITY_REF_ID_ATT].asText())
                 ObjectData::class.java -> listenerAtts
                 Unit::class.java -> Unit
                 EcosEvent::class.java -> event.withAttributes(listenerAtts)

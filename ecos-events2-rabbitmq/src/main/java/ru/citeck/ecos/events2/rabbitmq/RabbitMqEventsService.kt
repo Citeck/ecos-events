@@ -1,8 +1,8 @@
 package ru.citeck.ecos.events2.rabbitmq
 
 import com.rabbitmq.client.BuiltinExchangeType
-import ecos.curator.org.apache.zookeeper.Watcher
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.apache.zookeeper.Watcher
 import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.commons.utils.NameUtils
 import ru.citeck.ecos.context.lib.auth.AuthContext

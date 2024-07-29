@@ -1,6 +1,6 @@
 package ru.citeck.ecos.events2.listener.ctx
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import ru.citeck.ecos.commons.data.DataValue
 import ru.citeck.ecos.commons.data.MLText
 import ru.citeck.ecos.commons.data.ObjectData
@@ -11,7 +11,6 @@ import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.events2.remote.RemoteAppEventListener
 import ru.citeck.ecos.events2.remote.RemoteEventListenerData
 import ru.citeck.ecos.events2.remote.RemoteEventListenerKey
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records2.predicate.PredicateUtils
 import ru.citeck.ecos.records2.predicate.model.OrPredicate
 import ru.citeck.ecos.records2.predicate.model.Predicate
@@ -186,7 +185,7 @@ class ListenersContext(serviceFactory: EventsServiceFactory) {
             return emptyMap()
         }
 
-        if (clazz == RecordRef::class.java || clazz == EntityRef::class.java) {
+        if (clazz == EntityRef::class.java) {
             return mapOf(ENTITY_REF_ID_ATT to ENTITY_REF_ID_ATT)
         }
 

@@ -10,7 +10,7 @@ import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class RemoteListenersRemovalTest {
@@ -28,7 +28,7 @@ class RemoteListenersRemovalTest {
     private lateinit var eventServiceReceiverApp1: EventsService
     private lateinit var eventServiceReceiverApp2: EventsService
 
-    private val personIvanRecordRef = RecordRef.create(
+    private val personIvanRecordRef = EntityRef.create(
         TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
         "ivan"
     ).toString()
@@ -39,13 +39,15 @@ class RemoteListenersRemovalTest {
         servers = TestUtils.createServers()
 
         eventServiceEmitterApp0 = TestUtils.createApp(
-            "app0", servers,
+            "app0",
+            servers,
             mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )
         )
         eventServiceEmitterApp1 = TestUtils.createApp(
-            "app1", servers,
+            "app1",
+            servers,
             mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )
@@ -67,7 +69,7 @@ class RemoteListenersRemovalTest {
                 id = "config0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData0 = evData
                 }
             }
@@ -89,7 +91,7 @@ class RemoteListenersRemovalTest {
                 id = "config0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData0 = evData
                 }
             }
@@ -116,7 +118,7 @@ class RemoteListenersRemovalTest {
                 id = "config0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData0 = evData
                 }
             }
@@ -159,7 +161,7 @@ class RemoteListenersRemovalTest {
                 id = "config0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData0 = evData
                 }
             }
@@ -252,7 +254,7 @@ class RemoteListenersRemovalTest {
                 id = "config2"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData2 = evData
                 }
             }
@@ -304,7 +306,7 @@ class RemoteListenersRemovalTest {
                 id = "config_0_0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData00.add(evData)
                 }
             }
@@ -315,7 +317,7 @@ class RemoteListenersRemovalTest {
                 id = "config_0_1"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData01.add(evData)
                 }
             }
@@ -326,7 +328,7 @@ class RemoteListenersRemovalTest {
                 id = "config_1_0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData10.add(evData)
                 }
             }
@@ -337,7 +339,7 @@ class RemoteListenersRemovalTest {
                 id = "config_1_1"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData11.add(evData)
                 }
             }
@@ -401,7 +403,7 @@ class RemoteListenersRemovalTest {
                 id = "config_0_0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData00 = evData
                 }
             }
@@ -412,7 +414,7 @@ class RemoteListenersRemovalTest {
                 id = "config_0_1"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData01 = evData
                 }
             }
@@ -423,7 +425,7 @@ class RemoteListenersRemovalTest {
                 id = "config_1_0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData10 = evData
                 }
             }
@@ -434,7 +436,7 @@ class RemoteListenersRemovalTest {
                 id = "config_1_1"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData11 = evData
                 }
             }
@@ -487,7 +489,7 @@ class RemoteListenersRemovalTest {
                 id = "config_0_0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData00 = evData
                 }
             }
@@ -498,7 +500,7 @@ class RemoteListenersRemovalTest {
                 id = "config_0_1"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData01 = evData
                 }
             }
@@ -509,7 +511,7 @@ class RemoteListenersRemovalTest {
                 id = "config_1_0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData10 = evData
                 }
             }
@@ -520,7 +522,7 @@ class RemoteListenersRemovalTest {
                 id = "config_1_1"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData11 = evData
                 }
             }
@@ -571,7 +573,7 @@ class RemoteListenersRemovalTest {
                 id = "config0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData0 = evData
                 }
             }
@@ -593,7 +595,7 @@ class RemoteListenersRemovalTest {
                 id = "config1"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData0 = evData
                 }
             }
@@ -620,7 +622,7 @@ class RemoteListenersRemovalTest {
                 id = "config0"
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receiveData0 = evData
                 }
             }

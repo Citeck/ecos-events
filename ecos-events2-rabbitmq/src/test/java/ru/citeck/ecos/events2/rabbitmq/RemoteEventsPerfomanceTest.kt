@@ -1,7 +1,7 @@
 package ru.citeck.ecos.events2.rabbitmq
 
 import com.github.javafaker.Faker
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.lang3.time.StopWatch
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
@@ -12,8 +12,8 @@ import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Duration
 import java.util.*
 
@@ -37,7 +37,7 @@ class RemoteEventsPerfomanceTest {
     private lateinit var eventServiceReceiverApp1: EventsService
     private lateinit var eventServiceReceiverApp2: EventsService
 
-    private val personIvanRecordRef = RecordRef.create(
+    private val personIvanRecordRef = EntityRef.create(
         TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
         "ivan"
     ).toString()
@@ -49,19 +49,22 @@ class RemoteEventsPerfomanceTest {
         servers = TestUtils.createServers()
 
         eventServiceEmitterApp0 = TestUtils.createApp(
-            "appEmit0", servers,
+            "appEmit0",
+            servers,
             mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )
         )
         eventServiceEmitterApp1 = TestUtils.createApp(
-            "appEmit1", servers,
+            "appEmit1",
+            servers,
             mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )
         )
         eventServiceEmitterApp2 = TestUtils.createApp(
-            "appEmit2", servers,
+            "appEmit2",
+            servers,
             mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )
@@ -262,7 +265,7 @@ class RemoteEventsPerfomanceTest {
             ListenerConfig.create<NodeData> {
                 eventType = NODE_TYPE
                 dataClass = NodeData::class.java
-                setAction { evData ->
+                withAction { evData ->
                     receivedDataFromListener0.add(evData)
                 }
             }

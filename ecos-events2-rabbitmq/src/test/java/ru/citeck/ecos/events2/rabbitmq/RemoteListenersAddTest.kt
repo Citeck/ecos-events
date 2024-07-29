@@ -9,7 +9,7 @@ import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
-import ru.citeck.ecos.records2.RecordRef
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class RemoteListenersAddTest {
@@ -23,7 +23,7 @@ class RemoteListenersAddTest {
 
     private lateinit var eventServiceReceiverApp0: EventsService
 
-    private val personIvanRecordRef = RecordRef.create(
+    private val personIvanRecordRef = EntityRef.create(
         TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
         "ivan"
     ).toString()
@@ -36,7 +36,8 @@ class RemoteListenersAddTest {
         servers = TestUtils.createServers()
 
         eventServiceEmitterApp0 = TestUtils.createApp(
-            "app0", servers,
+            "app0",
+            servers,
             mapOf(
                 Pair(personIvanRecordRef, personIvanRecord)
             )

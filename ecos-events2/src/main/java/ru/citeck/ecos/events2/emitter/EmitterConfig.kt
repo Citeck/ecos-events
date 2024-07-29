@@ -1,6 +1,6 @@
 package ru.citeck.ecos.events2.emitter
 
-import ecos.com.fasterxml.jackson210.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 @JsonDeserialize(builder = EmitterConfig.Builder::class)
 class EmitterConfig<T : Any>(

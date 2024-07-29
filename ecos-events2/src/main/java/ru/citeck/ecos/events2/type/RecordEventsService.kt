@@ -8,6 +8,7 @@ import ru.citeck.ecos.model.lib.attributes.dto.AttributeType
 import ru.citeck.ecos.model.lib.type.dto.TypeInfo
 import ru.citeck.ecos.model.lib.type.repo.TypesRepo
 import ru.citeck.ecos.model.lib.type.service.utils.TypeUtils
+import ru.citeck.ecos.model.lib.utils.ModelUtils
 import ru.citeck.ecos.records2.RecordConstants
 import ru.citeck.ecos.records3.RecordsService
 import ru.citeck.ecos.records3.record.atts.schema.ScalarType
@@ -24,7 +25,7 @@ class RecordEventsService(services: EventsServiceFactory) {
     private var recDeletedEmitter: EventsEmitter<RecordDeletedEvent>
 
     private val typesRepo: TypesRepo = services.modelServices.typesRepo
-    private val records: RecordsService = services.recordsServices.recordsServiceV1
+    private val records: RecordsService = services.recordsServices.recordsService
 
     init {
         val eventsService = services.eventsService
@@ -192,7 +193,7 @@ class RecordEventsService(services: EventsServiceFactory) {
         if (typeId.isBlank()) {
             return null
         }
-        return typesRepo.getTypeInfo(TypeUtils.getTypeRef(typeId))
+        return typesRepo.getTypeInfo(ModelUtils.getTypeRef(typeId))
     }
 
     // todo: move this logic to ecos-model-lib

@@ -1,5 +1,7 @@
 package ru.citeck.ecos.events2.rabbitmq.utils
 
+import com.fasterxml.jackson.databind.node.ObjectNode
+import ru.citeck.ecos.commons.json.Json
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.EventsServiceFactory
 import ru.citeck.ecos.events2.rabbitmq.RabbitMqEventsService
@@ -45,7 +47,7 @@ class TestUtils {
 
             val recordsServiceFactory = createRecordsServices(name)
 
-            recordsServiceFactory.recordsServiceV1.register(
+            recordsServiceFactory.recordsService.register(
                 RecordsDaoBuilder.create(RECORD_SOURCE_TEMPLATE.format(name))
                     .addRecords(records)
                     .build()
@@ -70,11 +72,11 @@ class TestUtils {
                     ctx.webClientExecuteImpl = { appName, path, body ->
                         val services = recordsServices[appName]!!
                         val restHandler = services.restHandlerAdapter
+                        val bodyNode = Json.mapper.convertNotNull(body, ObjectNode::class.java)
                         when (path) {
-                            RemoteRecordsResolver.QUERY_PATH -> restHandler.queryRecords(body)
-                            RemoteRecordsResolver.MUTATE_PATH -> restHandler.mutateRecords(body)
-                            RemoteRecordsResolver.DELETE_PATH -> restHandler.deleteRecords(body)
-                            RemoteRecordsResolver.TXN_PATH -> restHandler.txnAction(body)
+                            RemoteRecordsResolver.QUERY_PATH -> restHandler.queryRecords(bodyNode, 2)
+                            RemoteRecordsResolver.MUTATE_PATH -> restHandler.mutateRecords(bodyNode, 1)
+                            RemoteRecordsResolver.DELETE_PATH -> restHandler.deleteRecords(bodyNode, 1)
                             else -> error("Unknown path: '$path'")
                         }
                     }

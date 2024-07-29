@@ -9,8 +9,8 @@ import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
 import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils.Companion.RECORD_SOURCE_TEMPLATE
-import ru.citeck.ecos.records2.RecordRef
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
+import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RemoteEventsMultipleAppsTest {
@@ -22,7 +22,7 @@ class RemoteEventsMultipleAppsTest {
     private lateinit var eventService2: EventsService
     private lateinit var eventService3: EventsService
 
-    private val testRecordRecordRef = RecordRef.create(RECORD_SOURCE_TEMPLATE.format("app1"), "rec")
+    private val testRecordRecordRef = EntityRef.create(RECORD_SOURCE_TEMPLATE.format("app1"), "rec")
         .toString()
     private val testRecord = TestRecord("abcdefg", 999)
 
@@ -33,7 +33,8 @@ class RemoteEventsMultipleAppsTest {
 
         eventService0 = TestUtils.createApp("app0", servers, emptyMap())
         eventService1 = TestUtils.createApp(
-            "app1", servers,
+            "app1",
+            servers,
             mapOf(
                 Pair(testRecordRecordRef, testRecord)
             )
@@ -113,8 +114,8 @@ class RemoteEventsMultipleAppsTest {
         )
 
         val targetDataWithRecordRef = arrayListOf(
-            DataClassWithRecordRef(RecordRef.valueOf("app0/ecos-config@test-config"), "some-str"),
-            DataClassWithRecordRef(RecordRef.valueOf("app0/notification@temlate/email-template"), "some-str_0")
+            DataClassWithRecordRef(EntityRef.valueOf("app0/ecos-config@test-config"), "some-str"),
+            DataClassWithRecordRef(EntityRef.valueOf("app0/notification@temlate/email-template"), "some-str_0")
         )
 
         targetData.forEach { emitter.emit(it) }
@@ -135,7 +136,7 @@ class RemoteEventsMultipleAppsTest {
     }
 
     private data class DataClassWithRecordRef(
-        val record: RecordRef,
+        val record: EntityRef,
         val someStr: String
     )
 
