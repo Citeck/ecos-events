@@ -7,40 +7,35 @@ import org.junit.jupiter.api.TestInstance
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
-import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
-import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils.Companion.RECORD_SOURCE_TEMPLATE
+import ru.citeck.ecos.events2.rabbitmq.utils.TestAppsCtx
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
 import ru.citeck.ecos.webapp.api.entity.EntityRef
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RemoteEventsMultipleAppsTest {
 
-    private lateinit var servers: TestUtils.MockServers
+    private lateinit var servers: TestAppsCtx
 
     private lateinit var eventService0: EventsService
     private lateinit var eventService1: EventsService
     private lateinit var eventService2: EventsService
     private lateinit var eventService3: EventsService
 
-    private val testRecordRecordRef = EntityRef.create(RECORD_SOURCE_TEMPLATE.format("app1"), "rec")
-        .toString()
     private val testRecord = TestRecord("abcdefg", 999)
 
     @BeforeAll
     fun setUp() {
 
-        servers = TestUtils.createServers()
+        servers = TestAppsCtx()
 
-        eventService0 = TestUtils.createApp("app0", servers, emptyMap())
-        eventService1 = TestUtils.createApp(
-            "app1",
-            servers,
-            mapOf(
-                Pair(testRecordRecordRef, testRecord)
-            )
-        )
-        eventService2 = TestUtils.createApp("app2", servers, emptyMap())
-        eventService3 = TestUtils.createApp("app3", servers, emptyMap())
+        eventService0 = servers.createApp("app0").eventsService
+
+        val app1 = servers.createApp("app1")
+        app1.registerRecord("rec", testRecord)
+        eventService1 = app1.eventsService
+
+        eventService2 = servers.createApp("app2").eventsService
+        eventService3 = servers.createApp("app3").eventsService
     }
 
     @Test

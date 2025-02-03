@@ -8,8 +8,7 @@ import org.junit.jupiter.api.TestInstance
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
-import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
-import ru.citeck.ecos.webapp.api.entity.EntityRef
+import ru.citeck.ecos.events2.rabbitmq.utils.TestAppsCtx
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class RemoteListenersAddTest {
@@ -18,32 +17,25 @@ class RemoteListenersAddTest {
         const val NODE_TYPE: String = "type"
     }
 
-    private lateinit var servers: TestUtils.MockServers
+    private lateinit var servers: TestAppsCtx
     private lateinit var eventServiceEmitterApp0: EventsService
 
     private lateinit var eventServiceReceiverApp0: EventsService
 
-    private val personIvanRecordRef = EntityRef.create(
-        TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
-        "ivan"
-    ).toString()
+    private val personIvanLocalId = "ivan"
 
     private val personIvanRecord = PersonRecord("Ivan", "Petrov")
 
     @BeforeEach
     fun setUp() {
 
-        servers = TestUtils.createServers()
+        servers = TestAppsCtx()
 
-        eventServiceEmitterApp0 = TestUtils.createApp(
-            "app0",
-            servers,
-            mapOf(
-                Pair(personIvanRecordRef, personIvanRecord)
-            )
-        )
+        val app0Ctx = servers.createApp("app0")
+        app0Ctx.registerRecord(personIvanLocalId, personIvanRecord)
+        eventServiceEmitterApp0 = app0Ctx.eventsService
 
-        eventServiceReceiverApp0 = TestUtils.createApp("app_rec_0", servers, emptyMap())
+        eventServiceReceiverApp0 = servers.createApp("app_rec_0").eventsService
     }
 
     @Test

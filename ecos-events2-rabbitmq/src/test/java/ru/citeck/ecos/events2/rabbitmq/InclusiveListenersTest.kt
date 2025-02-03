@@ -6,24 +6,24 @@ import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
-import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
+import ru.citeck.ecos.events2.rabbitmq.utils.TestAppsCtx
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class InclusiveListenersTest {
 
-    private lateinit var servers: TestUtils.MockServers
+    private lateinit var servers: TestAppsCtx
     private lateinit var app0Events: EventsService
     private lateinit var app10Events: EventsService
     private lateinit var app11Events: EventsService
 
     @BeforeEach
     fun setUp() {
-        servers = TestUtils.createServers()
+        servers = TestAppsCtx()
 
-        app0Events = TestUtils.createApp("app0", servers, emptyMap())
+        app0Events = servers.createApp("app0").eventsService
 
-        app10Events = TestUtils.createApp("app1", servers, emptyMap())
-        app11Events = TestUtils.createApp("app1", servers, emptyMap())
+        app10Events = servers.createApp("app1").eventsService
+        app11Events = servers.createApp("app1").eventsService
     }
 
     @Test

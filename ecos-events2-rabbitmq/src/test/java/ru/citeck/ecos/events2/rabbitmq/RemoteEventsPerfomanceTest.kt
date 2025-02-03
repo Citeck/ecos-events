@@ -11,9 +11,8 @@ import org.junit.jupiter.api.TestInstance
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
-import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
+import ru.citeck.ecos.events2.rabbitmq.utils.TestAppsCtx
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.time.Duration
 import java.util.*
 
@@ -27,7 +26,7 @@ class RemoteEventsPerfomanceTest {
 
     private val faker = Faker()
 
-    private lateinit var servers: TestUtils.MockServers
+    private lateinit var servers: TestAppsCtx
 
     private lateinit var eventServiceEmitterApp0: EventsService
     private lateinit var eventServiceEmitterApp1: EventsService
@@ -37,42 +36,29 @@ class RemoteEventsPerfomanceTest {
     private lateinit var eventServiceReceiverApp1: EventsService
     private lateinit var eventServiceReceiverApp2: EventsService
 
-    private val personIvanRecordRef = EntityRef.create(
-        TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
-        "ivan"
-    ).toString()
+    private val personIvanLocalId = "ivan"
     private val personIvanRecord = PersonRecord("Ivan", "Petrov")
 
     @BeforeEach
     fun setUp() {
 
-        servers = TestUtils.createServers()
+        servers = TestAppsCtx()
 
-        eventServiceEmitterApp0 = TestUtils.createApp(
-            "appEmit0",
-            servers,
-            mapOf(
-                Pair(personIvanRecordRef, personIvanRecord)
-            )
-        )
-        eventServiceEmitterApp1 = TestUtils.createApp(
-            "appEmit1",
-            servers,
-            mapOf(
-                Pair(personIvanRecordRef, personIvanRecord)
-            )
-        )
-        eventServiceEmitterApp2 = TestUtils.createApp(
-            "appEmit2",
-            servers,
-            mapOf(
-                Pair(personIvanRecordRef, personIvanRecord)
-            )
-        )
+        val eventServiceEmitterApp0Ctx = servers.createApp("appEmit0")
+        eventServiceEmitterApp0Ctx.registerRecord(personIvanLocalId, personIvanRecord)
+        eventServiceEmitterApp0 = eventServiceEmitterApp0Ctx.eventsService
 
-        eventServiceReceiverApp0 = TestUtils.createApp("appRec0", servers, emptyMap())
-        eventServiceReceiverApp1 = TestUtils.createApp("appRec1", servers, emptyMap())
-        eventServiceReceiverApp2 = TestUtils.createApp("appRec2", servers, emptyMap())
+        val eventServiceEmitterApp1Ctx = servers.createApp("appEmit1")
+        eventServiceEmitterApp1Ctx.registerRecord(personIvanLocalId, personIvanRecord)
+        eventServiceEmitterApp1 = eventServiceEmitterApp1Ctx.eventsService
+
+        val eventServiceEmitterApp2Ctx = servers.createApp("appEmit2")
+        eventServiceEmitterApp2Ctx.registerRecord(personIvanLocalId, personIvanRecord)
+        eventServiceEmitterApp2 = eventServiceEmitterApp2Ctx.eventsService
+
+        eventServiceReceiverApp0 = servers.createApp("appRec0").eventsService
+        eventServiceReceiverApp1 = servers.createApp("appRec1").eventsService
+        eventServiceReceiverApp2 = servers.createApp("appRec2").eventsService
     }
 
     @Test

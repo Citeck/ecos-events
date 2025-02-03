@@ -5,22 +5,22 @@ import org.junit.jupiter.api.*
 import ru.citeck.ecos.commons.data.ObjectData
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.listener.ListenerConfig
-import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
+import ru.citeck.ecos.events2.rabbitmq.utils.TestAppsCtx
 import ru.citeck.ecos.records2.predicate.model.Predicates
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class EventsFilterTest {
 
-    private lateinit var servers: TestUtils.MockServers
+    private lateinit var appsCtx: TestAppsCtx
     private lateinit var app0Events: EventsService
     private lateinit var app1Events: EventsService
 
     @BeforeEach
     fun setUp() {
-        servers = TestUtils.createServers()
+        appsCtx = TestAppsCtx()
 
-        app0Events = TestUtils.createApp("app0", servers, emptyMap())
-        app1Events = TestUtils.createApp("app1", servers, emptyMap())
+        app0Events = appsCtx.createApp("app0").eventsService
+        app1Events = appsCtx.createApp("app1").eventsService
     }
 
     @Test

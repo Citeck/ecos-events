@@ -6,9 +6,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import ru.citeck.ecos.events2.EventsService
 import ru.citeck.ecos.events2.emitter.EmitterConfig
 import ru.citeck.ecos.events2.listener.ListenerConfig
-import ru.citeck.ecos.events2.rabbitmq.utils.TestUtils
+import ru.citeck.ecos.events2.rabbitmq.utils.TestAppsCtx
 import ru.citeck.ecos.records3.record.atts.schema.annotation.AttName
-import ru.citeck.ecos.webapp.api.entity.EntityRef
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
@@ -18,14 +17,11 @@ class RemoteListenersTest {
         const val NODE_TYPE: String = "type"
     }
 
-    private lateinit var servers: TestUtils.MockServers
+    private lateinit var servers: TestAppsCtx
     private lateinit var eventServiceEmitterApp0: EventsService
     private lateinit var eventServiceReceiverApp1: EventsService
 
-    private val personIvanRecordRef = EntityRef.create(
-        TestUtils.RECORD_SOURCE_TEMPLATE.format("app0"),
-        "ivan"
-    ).toString()
+    private val personIvanLocalId = "ivan"
     private val personIvanRecord = PersonRecord(
         "Ivan",
         "Petrov",
@@ -37,16 +33,12 @@ class RemoteListenersTest {
 
     @BeforeEach
     fun setUp() {
-        servers = TestUtils.createServers()
+        servers = TestAppsCtx()
 
-        eventServiceEmitterApp0 = TestUtils.createApp(
-            "app0",
-            servers,
-            mapOf(
-                Pair(personIvanRecordRef, personIvanRecord)
-            )
-        )
-        eventServiceReceiverApp1 = TestUtils.createApp("app1", servers, emptyMap())
+        val eventServiceEmitterApp0Ctx = servers.createApp("app0")
+        eventServiceEmitterApp0Ctx.registerRecord(personIvanLocalId, personIvanRecord)
+        eventServiceEmitterApp0 = eventServiceEmitterApp0Ctx.eventsService
+        eventServiceReceiverApp1 = servers.createApp("app1").eventsService
     }
 
     @Test

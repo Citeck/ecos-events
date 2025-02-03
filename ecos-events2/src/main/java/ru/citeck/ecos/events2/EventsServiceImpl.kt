@@ -83,6 +83,9 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
             if (isLocalEvent) {
                 triggerListener(listener, event, calledInSameTxn)
             } else {
+                if (!listener.config.transactional && calledInSameTxn) {
+                    continue
+                }
                 if (!listener.config.local && listener.config.exclusive == exclusive) {
                     triggerListener(listener, event, calledInSameTxn)
                 }
