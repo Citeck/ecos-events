@@ -24,7 +24,7 @@ class RabbitMqEventsService(
     rabbitMqConnection: RabbitMqConn,
     private val factory: EventsServiceFactory,
     ecosZooKeeper: EcosZooKeeper,
-    webAppApi: EcosWebAppApi
+    private val webAppApi: EcosWebAppApi
 ) : RemoteEventsService {
 
     companion object {
@@ -233,11 +233,19 @@ class RabbitMqEventsService(
 
     override fun emitEvent(targetAppKey: String, event: EcosEvent, transactional: Boolean) {
         if (transactional) {
-            webClient.newRequest()
-                .targetApp(AppKeyUtils.getAppName(targetAppKey))
-                .path(EmitEventWebExecutor.PATH)
-                .body { it.writeDto(EmitEventWebExecutor.Body(event)) }
-                .executeSync {}
+            val targetApp = AppKeyUtils.getAppName(targetAppKey)
+            if (webAppApi.isReady()) {
+                webClient.newRequest()
+                    .targetApp(targetApp)
+                    .path(EmitEventWebExecutor.PATH)
+                    .body { it.writeDto(EmitEventWebExecutor.Body(event)) }
+                    .executeSync {}
+            } else {
+                log.debug {
+                    "Skipping transactional event emission: Current application is not ready. " +
+                        "Target app: $targetApp, event: $event"
+                }
+            }
         } else {
             rmqPublisher.publishMsg(EVENTS_EXCHANGE, targetAppKey, event)
         }
