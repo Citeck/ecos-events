@@ -46,11 +46,12 @@ class RemoteEventsMultipleAppsTest {
         val data2 = ArrayList<TestRecordMetaWithEventData>()
         val dataWithRecordRef = ArrayList<DataClassWithRecordRef>()
 
-        val testEventType = "test-event-type"
+        val testEventType0 = "test-event-type0"
+        val testEventType1 = "test-event-type1"
 
         eventService0.addListener(
             ListenerConfig.create<DataClass> {
-                eventType = testEventType
+                eventType = testEventType0
                 dataClass = DataClass::class.java
                 withAction { evData ->
                     data0.add(evData)
@@ -60,7 +61,7 @@ class RemoteEventsMultipleAppsTest {
 
         eventService1.addListener(
             ListenerConfig.create<DataClass> {
-                eventType = testEventType
+                eventType = testEventType0
                 dataClass = DataClass::class.java
                 withAction { evData ->
                     data1.add(evData)
@@ -70,7 +71,7 @@ class RemoteEventsMultipleAppsTest {
 
         eventService2.addListener(
             ListenerConfig.create<TestRecordMetaWithEventData> {
-                eventType = testEventType
+                eventType = testEventType0
                 dataClass = TestRecordMetaWithEventData::class.java
                 withAction { evData ->
                     data2.add(evData)
@@ -80,7 +81,7 @@ class RemoteEventsMultipleAppsTest {
 
         eventService3.addListener(
             ListenerConfig.create<DataClassWithRecordRef> {
-                eventType = testEventType
+                eventType = testEventType1
                 dataClass = DataClassWithRecordRef::class.java
                 withAction { evData ->
                     dataWithRecordRef.add(evData)
@@ -90,14 +91,14 @@ class RemoteEventsMultipleAppsTest {
 
         val emitter = eventService1.getEmitter<DataClass>(
             EmitterConfig.create {
-                eventType = testEventType
+                eventType = testEventType0
                 eventClass = DataClass::class.java
             }
         )
 
         val emitterWithRecordRef = eventService3.getEmitter<DataClassWithRecordRef>(
             EmitterConfig.create {
-                eventType = testEventType
+                eventType = testEventType1
                 eventClass = DataClassWithRecordRef::class.java
             }
         )
