@@ -18,17 +18,17 @@
 
     <properties>
 
-        <revision>2.20.3</revision>
+        <revision>2.21.0</revision>
 
-        <ecos.commons.version>3.3.0</ecos.commons.version>
-        <ecos.records.version>3.71.0</ecos.records.version>
-        <ecos.model-lib.version>2.34.0</ecos.model-lib.version>
-        <ecos.txn-lib.version>1.4.0</ecos.txn-lib.version>
+        <ecos.commons.version>3.8.4</ecos.commons.version>
+        <ecos.records.version>3.76.12</ecos.records.version>
+        <ecos.model-lib.version>2.39.0</ecos.model-lib.version>
+        <ecos.txn-lib.version>1.4.4</ecos.txn-lib.version>
 
-        <ecos.zookeeper.version>1.9.0</ecos.zookeeper.version>
-        <ecos.rabbitmq.version>2.9.0</ecos.rabbitmq.version>
+        <ecos.zookeeper.version>1.10.2</ecos.zookeeper.version>
+        <ecos.rabbitmq.version>2.11.0</ecos.rabbitmq.version>
 
-        <ecos-test-commons.version>1.10.0</ecos-test-commons.version>
+        <ecos-test-commons.version>1.13.0</ecos-test-commons.version>
 
     </properties>
 
@@ -99,5 +99,16 @@
         <module>ecos-events2</module>
         <module>ecos-events2-rabbitmq</module>
     </modules>
+
+    <distributionManagement>
+        <repository>
+            <id>citeck-community-releases</id>
+            <url>${community.releases.distr.url}</url>
+        </repository>
+        <snapshotRepository>
+            <id>citeck-community-snapshots</id>
+            <url>${community.snapshots.distr.url}</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 </project>

@@ -214,3 +214,14 @@ class RecordContentChangedEvent(
         const val TYPE = "record-content-changed"
     }
 }
+
+class RecordRefChangedEvent(
+    val record: Any,
+    val typeDef: TypeInfo,
+    val before: EntityRef,
+    val after: EntityRef
+) {
+    companion object {
+        const val TYPE = "record-ref-changed"
+    }
+}
