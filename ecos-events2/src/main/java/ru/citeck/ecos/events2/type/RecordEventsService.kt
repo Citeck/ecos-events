@@ -22,6 +22,7 @@ class RecordEventsService(services: EventsServiceFactory) {
     private var recStatusChangedEmitter: EventsEmitter<RecordStatusChangedEvent>
     private var recDraftStatusChangedEmitter: EventsEmitter<RecordDraftStatusChangedEvent>
     private var recDeletedEmitter: EventsEmitter<RecordDeletedEvent>
+    private var recTypeChangedEmitter: EventsEmitter<RecordTypeChangedEvent>
 
     private val typesRepo: TypesRepo = services.modelServices.typesRepo
     private val records: RecordsService = services.recordsServices.recordsService
@@ -62,6 +63,13 @@ class RecordEventsService(services: EventsServiceFactory) {
                 withEventType(RecordDraftStatusChangedEvent.TYPE)
                 withSource(RecordDraftStatusChangedEvent::class.java.simpleName)
                 withEventClass(RecordDraftStatusChangedEvent::class.java)
+            }
+        )
+        recTypeChangedEmitter = eventsService.getEmitter(
+            EmitterConfig.create {
+                withEventType(RecordTypeChangedEvent.TYPE)
+                withSource(RecordTypeChangedEvent::class.java.simpleName)
+                withEventClass(RecordTypeChangedEvent::class.java)
             }
         )
     }

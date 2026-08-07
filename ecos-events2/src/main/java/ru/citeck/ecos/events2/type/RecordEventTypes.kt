@@ -127,6 +127,17 @@ class RecordDeletedEvent(
     }
 }
 
+class RecordTypeChangedEvent(
+    val record: Any,
+    val isDraft: Boolean,
+    val typeDef: TypeInfo,
+    val before: TypeInfo
+) {
+    companion object {
+        const val TYPE = "record-type-changed"
+    }
+}
+
 class RecordStatusChangedEvent(
     val record: Any,
     val typeDef: TypeInfo,
