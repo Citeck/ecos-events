@@ -187,6 +187,10 @@ class RecordEventsService(services: EventsServiceFactory) {
         recStatusChangedEmitter.emit(event)
     }
 
+    fun emitRecTypeChanged(event: RecordTypeChangedEvent) {
+        recTypeChangedEmitter.emit(event)
+    }
+
     fun emitRecDeleted(event: RecordDeletedEvent) {
         recDeletedEmitter.emit(event)
     }
