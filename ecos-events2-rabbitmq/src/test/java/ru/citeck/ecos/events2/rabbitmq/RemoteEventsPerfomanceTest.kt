@@ -20,7 +20,11 @@ import java.util.*
 class RemoteEventsPerfomanceTest {
 
     companion object {
-        const val NODE_TYPE: String = "type"
+        // Must stay unique per test class: the event type is the ZooKeeper routing key
+        // (RabbitMqEventsService.updateRemoteListeners reads /{eventType}/{targetAppKey}) and
+        // registrations are never removed, so a shared type turns every test into a listener
+        // for every other test that uses it.
+        const val NODE_TYPE: String = "remote-events-perfomance-type"
         val log = KotlinLogging.logger {}
     }
 

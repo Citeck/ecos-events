@@ -34,7 +34,20 @@ class TestAppsCtx {
         const val RECORD_SOURCE_TEMPLATE = "source_%s"
 
         private val instanceIdCounters = ConcurrentHashMap<String, AtomicInteger>()
+        private val ctxIdCounter = AtomicInteger()
     }
+
+    /**
+     * Every context gets its own application namespace.
+     *
+     * RabbitMqEventsService names the exclusive queue after the application alone -
+     * AppKeyUtils.createKey drops the instance id for exclusive keys - and declares it durable,
+     * while these tests never shut an application down. Two contexts asking for the same
+     * application name therefore end up as two live consumers on one persistent queue, and
+     * RabbitMQ hands each message to only one of them: an event emitted by one test can be
+     * swallowed by a listener belonging to a test that has already finished.
+     */
+    private val appNamePrefix = "t" + ctxIdCounter.getAndIncrement() + "-"
 
     val zookeeper = EcosZooKeeperTest.createZooKeeper().withNamespace("ecos")
     val rabbitmq = EcosRabbitMqTest.createConnection()
@@ -65,9 +78,10 @@ class TestAppsCtx {
     fun createApp(
         appName: String
     ): TestApp {
-        val instanceIdx = instanceIdCounters.computeIfAbsent(appName) { AtomicInteger() }.getAndIncrement()
-        val app = TestApp(appName, "i-$instanceIdx")
-        appsByName.computeIfAbsent(appName) { CopyOnWriteArrayList() }.add(app)
+        val uniqueAppName = appNamePrefix + appName
+        val instanceIdx = instanceIdCounters.computeIfAbsent(uniqueAppName) { AtomicInteger() }.getAndIncrement()
+        val app = TestApp(uniqueAppName, "i-$instanceIdx")
+        appsByName.computeIfAbsent(uniqueAppName) { CopyOnWriteArrayList() }.add(app)
         return app
     }
 

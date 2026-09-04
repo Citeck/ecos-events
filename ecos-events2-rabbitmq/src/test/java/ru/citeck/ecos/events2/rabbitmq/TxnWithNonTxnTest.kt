@@ -19,14 +19,23 @@ class TxnWithNonTxnTest {
     private lateinit var eventsService0: EventsService
     private lateinit var eventsService1: EventsService
 
+    // TestAppsCtx gives every context its own application namespace, so the names have to be
+    // taken from the created applications instead of being written out again.
+    private lateinit var app0Name: String
+    private lateinit var app1Name: String
+
     @BeforeEach
     fun beforeEach() {
         val apps = TestAppsCtx()
-        eventsService0 = apps.createApp("app0").eventsService
-        eventsService1 = apps.createApp("app1").eventsService
+        val app0 = apps.createApp("app0")
+        val app1 = apps.createApp("app1")
+        eventsService0 = app0.eventsService
+        eventsService1 = app1.eventsService
+        app0Name = app0.appName
+        app1Name = app1.appName
 
         val txnManager = TransactionManagerImpl()
-        txnManager.init(EcosWebAppApiMock("app1"))
+        txnManager.init(EcosWebAppApiMock(app1Name))
         TxnContext.setManager(txnManager)
     }
 
@@ -56,7 +65,7 @@ class TxnWithNonTxnTest {
         )
 
         val app1Emitter = eventsService1.getEmitter {
-            withSource("app1")
+            withSource(app1Name)
             withEventType(EVENT_TYPE)
             withEventClass(EventData::class.java)
         }
@@ -76,7 +85,7 @@ class TxnWithNonTxnTest {
         nonTxnEvents.clear()
 
         val app0Emitter = eventsService1.getEmitter {
-            withSource("app0")
+            withSource(app0Name)
             withEventType(EVENT_TYPE)
             withEventClass(EventData::class.java)
         }

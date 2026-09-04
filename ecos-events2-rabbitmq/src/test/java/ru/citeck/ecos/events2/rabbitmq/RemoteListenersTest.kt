@@ -14,12 +14,20 @@ import java.util.*
 class RemoteListenersTest {
 
     companion object {
-        const val NODE_TYPE: String = "type"
+        // Must stay unique per test class: the event type is the ZooKeeper routing key
+        // (RabbitMqEventsService.updateRemoteListeners reads /{eventType}/{targetAppKey}) and
+        // registrations are never removed, so a shared type turns every test into a listener
+        // for every other test that uses it.
+        const val NODE_TYPE: String = "remote-listeners-type"
     }
 
     private lateinit var servers: TestAppsCtx
     private lateinit var eventServiceEmitterApp0: EventsService
     private lateinit var eventServiceReceiverApp1: EventsService
+
+    // TestAppsCtx gives every context its own application namespace, so the ZooKeeper
+    // listener path has to be built from the created application, not from a literal.
+    private lateinit var app1Name: String
 
     private val personIvanLocalId = "ivan"
     private val personIvanRecord = PersonRecord(
@@ -38,7 +46,9 @@ class RemoteListenersTest {
         val eventServiceEmitterApp0Ctx = servers.createApp("app0")
         eventServiceEmitterApp0Ctx.registerRecord(personIvanLocalId, personIvanRecord)
         eventServiceEmitterApp0 = eventServiceEmitterApp0Ctx.eventsService
-        eventServiceReceiverApp1 = servers.createApp("app1").eventsService
+        val eventServiceReceiverApp1Ctx = servers.createApp("app1")
+        eventServiceReceiverApp1 = eventServiceReceiverApp1Ctx.eventsService
+        app1Name = eventServiceReceiverApp1Ctx.appName
     }
 
     @Test
@@ -180,7 +190,7 @@ class RemoteListenersTest {
 
         Thread.sleep(500)
         val listenerWithCreatorMeta = servers.zookeeper.getValue(
-            "/events/$NODE_TYPE/app1",
+            "/events/$NODE_TYPE/$app1Name",
             ZkAppEventListener::class.java
         )
         assertEquals(6, listenerWithCreatorMeta!!.attributes.size)
@@ -244,7 +254,7 @@ class RemoteListenersTest {
         Thread.sleep(1000)
 
         val listenerWithCreatorMeta = servers.zookeeper.getValue(
-            "/events/$NODE_TYPE/app1",
+            "/events/$NODE_TYPE/$app1Name",
             ZkAppEventListener::class.java
         )
 
