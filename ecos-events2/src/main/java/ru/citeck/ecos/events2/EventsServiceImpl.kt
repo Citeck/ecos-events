@@ -10,6 +10,8 @@ import ru.citeck.ecos.events2.listener.ListenerHandle
 import ru.citeck.ecos.events2.listener.ctx.EventsTypeListeners
 import ru.citeck.ecos.events2.listener.ctx.ListenerInfo
 import ru.citeck.ecos.events2.listener.ctx.ListenersContext
+import ru.citeck.ecos.events2.obs.EventsObsCtx
+import ru.citeck.ecos.micrometer.obs.EcosObs
 import ru.citeck.ecos.records2.predicate.element.elematts.RecordAttsElement
 import ru.citeck.ecos.records2.predicate.model.VoidPredicate
 import ru.citeck.ecos.records3.record.atts.dto.RecordAtts
@@ -28,6 +30,8 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
 
         private val log = KotlinLogging.logger {}
     }
+
+    private val micrometerContext = serviceFactory.recordsServices.micrometerContext
 
     private val remoteEvents = serviceFactory.remoteEventsService
     private val recordsTemplateService = serviceFactory.recordsServices.recordsTemplateService
@@ -65,8 +69,12 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
     }
 
     override fun emitEventFromRemote(event: EcosEvent, exclusive: Boolean, calledInSameTxn: Boolean) {
-        val typeListeners = getListenersForType(event.type) ?: return
-        emitExactEvent(event, typeListeners, false, exclusive, calledInSameTxn)
+
+        micrometerContext.createObs(EventsObsCtx.RemoteDispatch(event, exclusive, calledInSameTxn))
+            .observe {
+                val typeListeners = getListenersForType(event.type) ?: return@observe
+                emitExactEvent(event, typeListeners, false, exclusive, calledInSameTxn)
+            }
     }
 
     private fun emitExactEvent(
@@ -143,47 +151,67 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
         return typeListeners
     }
 
+    private fun createListenerObs(listener: ListenerInfo, event: EcosEvent, phase: EventsObsCtx.Phase): EcosObs {
+
+        return micrometerContext.createObs(EventsObsCtx.Listener(event, listener, phase))
+    }
+
     private fun triggerListener(listener: ListenerInfo, event: EcosEvent, calledInSameTxn: Boolean) {
 
+        createListenerObs(listener, event, EventsObsCtx.Phase.PREPARE)
+            .observe { triggerListenerImpl(listener, event, calledInSameTxn) }
+    }
+
+    private fun triggerListenerImpl(listener: ListenerInfo, event: EcosEvent, calledInSameTxn: Boolean) {
+
         val triggerTime = measureTimeMillis {
-            if (listener.config.filter !is VoidPredicate) {
-
-                val resolvedFilter = recordsTemplateService.resolve(
-                    listener.config.filter,
-                    EntityRef.create("meta", "")
-                )
-
-                val element = RecordAttsElement.create(RecordAtts(EntityRef.EMPTY, event.attributes))
-                if (!predicateService.isMatch(element, resolvedFilter)) {
-                    return
+            val matches = createListenerObs(listener, event, EventsObsCtx.Phase.FILTER)
+                .observe {
+                    if (listener.config.filter is VoidPredicate) {
+                        true
+                    } else {
+                        val resolvedFilter = recordsTemplateService.resolve(
+                            listener.config.filter,
+                            EntityRef.create("meta", "")
+                        )
+                        val element = RecordAttsElement.create(RecordAtts(EntityRef.EMPTY, event.attributes))
+                        predicateService.isMatch(element, resolvedFilter)
+                    }
                 }
+            if (!matches) {
+                return
             }
 
-            val listenerAtts = ObjectData.create()
-            listener.attributes.forEach { (alias, attribute) ->
-                val value = event.attributes[attribute]
-                listenerAtts[alias] = value
-            }
+            val convertedValue = createListenerObs(listener, event, EventsObsCtx.Phase.CONVERT)
+                .observe {
+                    val listenerAtts = ObjectData.create()
+                    listener.attributes.forEach { (alias, attribute) ->
+                        listenerAtts[alias] = event.attributes[attribute]
+                    }
+                    when (val clazz = listener.config.dataClass) {
+                        EntityRef::class.java ->
+                            EntityRef.valueOf(event.attributes[ListenersContext.ENTITY_REF_ID_ATT].asText())
+                        ObjectData::class.java -> listenerAtts
+                        Unit::class.java -> Unit
+                        EcosEvent::class.java -> event.withAttributes(listenerAtts)
+                        else -> dtoSchemaReader.instantiate(clazz, listenerAtts)
+                            ?: error("Event data can't be converted to $clazz. Data: $listenerAtts")
+                    }
+                }
 
-            val convertedValue = when (val clazz = listener.config.dataClass) {
-                EntityRef::class.java -> EntityRef.valueOf(event.attributes[ListenersContext.ENTITY_REF_ID_ATT].asText())
-                ObjectData::class.java -> listenerAtts
-                Unit::class.java -> Unit
-                EcosEvent::class.java -> event.withAttributes(listenerAtts)
-                else -> dtoSchemaReader.instantiate(clazz, listenerAtts)
-                    ?: error("Event data can't be converted to $clazz. Data: $listenerAtts")
+            val action: (Any) -> Unit = { value ->
+                createListenerObs(listener, event, EventsObsCtx.Phase.ACTION)
+                    .observe { listener.config.action.accept(value) }
             }
-
-            val action = listener.config.action
             if (listener.config.transactional) {
                 if (calledInSameTxn) {
-                    action.accept(convertedValue)
+                    action(convertedValue)
                 }
             } else {
                 if (calledInSameTxn) {
                     TxnContext.processListAfterCommit(
                         "events-after-commit",
-                        { action.accept(convertedValue) }
+                        { action(convertedValue) }
                     ) { elements ->
 
                         val afterCommitTime = measureTimeMillis {
@@ -202,7 +230,7 @@ class EventsServiceImpl(serviceFactory: EventsServiceFactory) : EventsService {
                         }
                     }
                 } else {
-                    action.accept(convertedValue)
+                    action(convertedValue)
                 }
             }
         }
